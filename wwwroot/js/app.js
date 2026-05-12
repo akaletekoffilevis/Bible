@@ -194,6 +194,7 @@ window.bibleTts = {
     voicesLoaded: false,
     ready: false,
     bestVoice: null,
+    primed: false,
 
     init: function () {
         var self = this;
@@ -220,12 +221,25 @@ window.bibleTts = {
                     var v = self.synth.getVoices();
                     self.pickVoice(v);
                 }
-            }, 1500);
+            }, 3000);
             return true;
         } catch (e) {
             this.ready = true;
             return true;
         }
+    },
+
+    prime: function () {
+        if (this.primed || !this.synth) return;
+        this.primed = true;
+        try {
+            var u = new SpeechSynthesisUtterance(' ');
+            u.volume = 0;
+            u.rate = 1;
+            u.lang = 'fr-FR';
+            this.synth.speak(u);
+            this.synth.cancel();
+        } catch (e) {}
     },
 
     pickVoice: function (voices) {
@@ -273,6 +287,7 @@ window.bibleTts = {
         this.currentVerse = 0;
 
         this.init();
+        this.prime();
 
         if (this.onVerseChange) {
             this.onVerseChange.invokeMethodAsync('OnVerseChanged', 1);
@@ -280,7 +295,7 @@ window.bibleTts = {
 
         setTimeout(function () {
             self.speakNext();
-        }, 200);
+        }, 300);
     },
 
     speakNext: function () {
@@ -318,7 +333,7 @@ window.bibleTts = {
             }
         };
 
-        this.utterance.onerror = function () {
+        this.utterance.onerror = function (e) {
             if (!self.isPaused) {
                 self.verseIndex = idx + 1;
                 setTimeout(function () { self.speakNext(); }, 500);
@@ -500,14 +515,10 @@ window.biblePrint = {
 // Drawer helper — close sans casser MudBlazor
 window.bibleDrawer = {
     close: function () {
-        document.querySelectorAll('.mud-drawer--open.mud-drawer--temporary').forEach(function (d) {
-            d.style.transform = 'translateX(-100%)';
-        });
-        document.querySelectorAll('.mud-overlay').forEach(function (o) {
-            o.style.opacity = '0';
-            o.style.pointerEvents = 'none';
-        });
         document.body.style.overflow = '';
+    },
+    opened: function () {
+        document.body.style.overflow = 'hidden';
     }
 };
 
