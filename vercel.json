@@ -3,6 +3,10 @@
   "outputDirectory": "bin/Release/net9.0/publish/wwwroot",
   "installCommand": "",
   "rewrites": [
+    { "source": "/sitemap.xml", "destination": "/sitemap.xml" },
+    { "source": "/robots.txt", "destination": "/robots.txt" },
+    { "source": "/data/(.*)", "destination": "/data/$1" },
+    { "source": "/(.*)\\.(json|js|css|wasm|dll|png|svg|ico|webmanifest)", "destination": "/$1.$2" },
     { "source": "/(.*)", "destination": "/index.html" }
   ],
   "headers": [
@@ -15,7 +19,13 @@
     {
       "source": "/(.*)\\.dll",
       "headers": [
-        { "key": "Content-Type", "value": "application/octet-stream" }
+      { "key": "Content-Type", "value": "application/octet-stream" }
+        ]
+      },
+    {
+      "source": "/data/(.*)\\.json",
+      "headers": [
+        { "key": "Content-Type", "value": "application/json; charset=utf-8" }
       ]
     },
     {
