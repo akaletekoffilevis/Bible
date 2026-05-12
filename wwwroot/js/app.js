@@ -497,21 +497,16 @@ window.biblePrint = {
     }
 };
 
-// Drawer helper — force close in case MudBlazor JS fails
+// Drawer helper — close sans casser MudBlazor
 window.bibleDrawer = {
     close: function () {
         document.querySelectorAll('.mud-drawer--open.mud-drawer--temporary').forEach(function (d) {
-            d.classList.remove('mud-drawer--open');
+            d.style.transform = 'translateX(-100%)';
         });
         document.querySelectorAll('.mud-overlay').forEach(function (o) {
-            o.style.display = 'none';
-            o.remove();
+            o.style.opacity = '0';
+            o.style.pointerEvents = 'none';
         });
-        document.querySelectorAll('.mud-drawer').forEach(function (d) {
-            d.style.transform = '';
-            d.style.visibility = 'hidden';
-        });
-        document.body.classList.remove('mud-drawer-overflow');
         document.body.style.overflow = '';
     }
 };

@@ -43,7 +43,10 @@ public class BibleService
             }
 
             if (livre != null)
+            {
                 _cache[slug] = livre;
+                _ = CacheEnIndexedDbAsync(slug, livre);
+            }
 
             return livre;
         }
@@ -51,6 +54,16 @@ public class BibleService
         {
             return null;
         }
+    }
+
+    private async Task CacheEnIndexedDbAsync(string slug, Livre livre)
+    {
+        try
+        {
+            await _db.InitializeAsync();
+            await _db.PutAsync("books", slug, new { id = slug, data = System.Text.Json.JsonSerializer.Serialize(livre) });
+        }
+        catch { }
     }
 
     public async Task<Chapitre?> GetChapitreAsync(string slug, int chapitre)

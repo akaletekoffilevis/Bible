@@ -178,6 +178,32 @@ body {
     }
     .verset-ligne {
         line-height: 1.8;
+        flex-wrap: wrap;
+    }
+    .lecture-container {
+        padding: 0 0.25rem;
+        overflow-x: hidden;
+        word-break: break-word;
+    }
+    .verse-actions {
+        opacity: 0.6;
+        flex-shrink: 0;
+        margin-left: auto;
+    }
+    .verse-actions span {
+        padding: 4px 6px !important;
+        font-size: 0.85em !important;
+    }
+    .lecture-nav .mud-button-root {
+        padding: 12px 16px;
+    }
+    .verset-ligne .flex-grow-1 {
+        max-width: 100%;
+        overflow-wrap: break-word;
+    }
+}
+    .verset-ligne {
+        line-height: 1.8;
     }
     .lecture-container {
         padding: 0 0.25rem;
