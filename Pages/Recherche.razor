@@ -1,7 +1,13 @@
 @page "/recherche"
+@using BibleApp.Models
 @using BibleApp.Services
 @inject BibleApp.Services.BibleService BibleService
 @inject SearchIndexService SearchService
+
+<Breadcrumb Nodes="@(new List<BreadcrumbNode> {
+    new() { Label = "Accueil", Href = "/", Icon = Icons.Material.Filled.Home },
+    new() { Label = "Recherche" }
+})" />
 
 <MudTextField @ref="_searchRef"
               @bind-Value="_query"

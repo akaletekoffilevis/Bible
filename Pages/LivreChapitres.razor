@@ -3,6 +3,11 @@
 @inject BibleApp.Services.BibleService BibleService
 @inject IJSRuntime JsRuntime
 
+<Breadcrumb Nodes="@(new List<BreadcrumbNode> {
+    new() { Label = "Accueil", Href = "/", Icon = Icons.Material.Filled.Home },
+    new() { Label = _livre?.NomLivre ?? "..." }
+})" />
+
 <MudText Typo="Typo.h6" Class="mb-0 font-weight-bold">@_livre?.NomLivre</MudText>
 <MudText Typo="Typo.caption" Class="mb-3 mud-text-secondary d-flex align-center" Style="gap:4px;">
     <MudIcon Icon="@Icons.Material.Filled.AutoStories" Size="Size.Small" />

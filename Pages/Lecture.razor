@@ -8,6 +8,12 @@
 @inject ISnackbar Snackbar
 @inject IDialogService DialogService
 
+<Breadcrumb Nodes="@(new List<BreadcrumbNode> {
+    new() { Label = "Accueil", Href = "/", Icon = Icons.Material.Filled.Home },
+    new() { Label = _livre?.NomLivre ?? "...", Href = $"/livre-chapitres/{Slug}" },
+    new() { Label = $"Chapitre {Chapitre}" }
+})" />
+
 <MudText Typo="Typo.h6" Class="mb-0 font-weight-bold">@_livre?.NomLivre — Chapitre @Chapitre</MudText>
 
 @if (_chapitre == null)
@@ -165,13 +171,14 @@ else
     {
         var texte = verset.TextePropre;
         var reference = $"{_livre?.NomLivre} {Chapitre}:{verset.Numero}";
+        var url = $"https://bibeli.vercel.app/lecture/{Slug}/{Chapitre}/{verset.Numero}";
         try
         {
-            await JsRuntime.InvokeVoidAsync("bibleImage.share", texte, reference);
+            await JsRuntime.InvokeVoidAsync("bibleImage.share", texte, reference, url);
         }
         catch
         {
-            try { await JsRuntime.InvokeVoidAsync("bibleUtils.shareOrCopy", $"{reference} (LSG) — {texte}"); }
+            try { await JsRuntime.InvokeVoidAsync("bibleUtils.shareOrCopy", $"{reference} (LSG) — {texte}\n\n📖 {url}"); }
             catch { }
         }
     }
@@ -221,9 +228,10 @@ else
     {
         var texte = verset.TextePropre;
         var reference = $"{_livre?.NomLivre} {Chapitre}:{verset.Numero}";
+        var url = $"https://bibeli.vercel.app/lecture/{Slug}/{Chapitre}/{verset.Numero}";
         try
         {
-            await JsRuntime.InvokeVoidAsync("bibleImage.generate", texte, reference);
+            await JsRuntime.InvokeVoidAsync("bibleImage.generate", texte, reference, url);
         }
         catch { }
     }

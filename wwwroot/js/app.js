@@ -487,23 +487,24 @@ window.bibleImage = {
         return this._palettes[Math.abs(h) % this._palettes.length];
     },
 
-    _draw: function (texte, reference) {
+    _draw: function (texte, reference, versetUrl) {
         var canvas = document.createElement('canvas');
         canvas.width = 600;
-        canvas.height = 400;
+        canvas.height = 440;
         var ctx = canvas.getContext('2d');
         var palette = this._pick(reference);
+        var siteUrl = versetUrl || 'bibeli.vercel.app';
 
         // Background gradient
-        var grad = ctx.createLinearGradient(0, 0, 600, 400);
+        var grad = ctx.createLinearGradient(0, 0, 600, 440);
         grad.addColorStop(0, palette.bg[0]);
         grad.addColorStop(1, palette.bg[1]);
         ctx.fillStyle = grad;
-        ctx.fillRect(0, 0, 600, 400);
+        ctx.fillRect(0, 0, 600, 440);
 
         // Inner border decoration
         ctx.fillStyle = palette.text + '15';
-        ctx.fillRect(16, 16, 568, 368);
+        ctx.fillRect(16, 16, 568, 408);
 
         ctx.textAlign = 'center';
 
@@ -531,7 +532,7 @@ window.bibleImage = {
 
         var lineHeight = 32;
         var totalHeight = lines.length * lineHeight;
-        var yPos = (400 - totalHeight) / 2;
+        var yPos = (440 - totalHeight - 60) / 2;
 
         // Draw text with shadow for readability
         ctx.shadowColor = 'rgba(0,0,0,0.3)';
@@ -558,43 +559,51 @@ window.bibleImage = {
         ctx.fillStyle = palette.accent + '50';
         ctx.fillRect(200, yPos + 28, 200, 2);
 
+        // Site URL branding
+        ctx.shadowColor = 'transparent';
+        ctx.shadowBlur = 0;
+        ctx.font = '12px sans-serif';
+        ctx.fillStyle = palette.text + '80';
+        ctx.fillText('📖 ' + siteUrl, 300, 420);
+
         return canvas;
     },
 
-    generate: function (texte, reference) {
-        var canvas = this._draw(texte, reference);
+    generate: function (texte, reference, url) {
+        var canvas = this._draw(texte, reference, url);
         var link = document.createElement('a');
         link.download = 'verset-' + reference.replace(/[^a-zA-Z0-9]/g, '-') + '.png';
         link.href = canvas.toDataURL();
         link.click();
     },
 
-    generateBlob: function (texte, reference) {
-        var canvas = this._draw(texte, reference);
+    generateBlob: function (texte, reference, url) {
+        var canvas = this._draw(texte, reference, url);
         return new Promise(function (resolve) {
             canvas.toBlob(function (blob) { resolve(blob); }, 'image/png');
         });
     },
 
-    share: function (texte, reference) {
+    share: function (texte, reference, url) {
         var self = this;
-        var canvas = this._draw(texte, reference);
+        var siteUrl = url || 'https://bibeli.vercel.app';
+        var shareText = '"' + texte + '" — ' + reference + ' (LSG)\n\n📖 ' + siteUrl;
+        var canvas = this._draw(texte, reference, siteUrl.replace('https://', ''));
         canvas.toBlob(function (blob) {
             var file = new File([blob], 'verset.png', { type: 'image/png' });
             if (navigator.share && navigator.canShare({ files: [file] })) {
                 navigator.share({
                     title: reference + ' — LSG',
-                    text: '"' + texte + '" — ' + reference,
+                    text: shareText,
                     files: [file]
                 }).catch(function () {});
             } else {
-                // Fallback: download + copy text
                 var link = document.createElement('a');
                 link.download = 'verset-' + reference.replace(/[^a-zA-Z0-9]/g, '-') + '.png';
                 link.href = canvas.toDataURL();
                 link.click();
                 if (navigator.clipboard && navigator.clipboard.writeText) {
-                    navigator.clipboard.writeText('"' + texte + '" — ' + reference + ' (LSG)');
+                    navigator.clipboard.writeText(shareText);
                 }
             }
         }, 'image/png');

@@ -1,6 +1,6 @@
 # Bible Louis Segond (LSG)
 
-Application **Progressive Web App (PWA)** pour lire la Bible Louis Segond en ligne et hors-ligne. Développée en **Blazor WebAssembly .NET 9** avec **MudBlazor**.
+Application **Progressive Web App (PWA)** pour lire la Bible Louis Segond en ligne et hors-ligne. Développée en **Blazor WebAssembly .NET 9** avec **MudBlazor 8.x**.
 
 **Site :** [bibeli.vercel.app](https://bibeli.vercel.app)
 
@@ -15,15 +15,16 @@ Application **Progressive Web App (PWA)** pour lire la Bible Louis Segond en lig
 - **Notes personnelles** — attacher une note à chaque verset
 - **Surlignage** — mettre en évidence des versets
 - **Copie / Partage** — Web Share API + copie au clic
-- **Image de verset** — génération Canvas PNG téléchargeable
+- **Image de verset** — génération Canvas PNG avec 12 palettes, dégradé, lien `bibeli.vercel.app` en bas
 - **Export PDF** — impression du chapitre en PDF
 - **Mode nuit** — thème sombre/clair
 - **Navigation clavier** — flèches entre chapitres
-- **Carte biblique** — 12 lieux avec Leaflet
-- **Quiz** — mot manquant, 10 questions par partie
-- **Progression** — suivi des chapitres lus
-- **PWA** — installation sur téléphone/desktop, fonctionnement hors-ligne
-- **SEO** — sitemap, robots.txt, JSON-LD structuré
+- **Fil d'Ariane (breadcrumb)** — navigation contextuelle sur toutes les pages
+- **Carte biblique** — 12 lieux avec Leaflet (lazy-load)
+- **Quiz** — mot manquant, 10 questions aléatoires par partie
+- **Progression** — suivi des chapitres lus avec statistiques AT/NT
+- **PWA** — installation sur téléphone/desktop, fonctionnement hors-ligne, cache 66 livres à l'install
+- **SEO** — sitemap.xml, robots.txt, JSON-LD structuré, balises Open Graph
 
 ---
 
@@ -34,11 +35,27 @@ Application **Progressive Web App (PWA)** pour lire la Bible Louis Segond en lig
 | **Blazor WebAssembly .NET 9** | Framework frontend |
 | **MudBlazor 8.x** | UI components |
 | **IndexedDB** | Stockage local (marque-pages, notes, progression) |
-| **Leaflet** | Carte biblique interactive |
+| **Leaflet** | Carte biblique interactive (lazy-load via unpkg) |
 | **Web Speech API** | Synthèse vocale TTS |
-| **Web Share API** | Partage natif |
-| **Canvas API** | Génération d'images de versets |
-| **PWA** | Service worker + manifeste |
+| **Web Share API** | Partage natif avec image PNG |
+| **Canvas API** | Génération d'images de versets (12 palettes, gradient, URL branding) |
+| **PWA** | Service worker + manifeste + cache offline complet |
+
+---
+
+## Nouveautés (v2.0+)
+
+- **Fil d'Ariane** : `Shared/Breadcrumb.razor` avec navigation contextuelle sur chaque page
+- **Image de verset** : lien `bibeli.vercel.app` visible en bas + partage avec URL directe du verset
+- **Loading screen** : barre de progression avec pourcentage, étapes progressives (ralentissement vers la fin)
+- **Paramètres** : bindings corrigés avec `@bind-Value:after`, réinitialisation complète avec dialogue de confirmation
+- **`EffacerDonnees`** : boîte de dialogue `ShowMessageBox`, réinitialisation UI + Snackbar
+- **`MainLayout.razor`** : chargement global des préférences (police, taille, interligne, mode nuit) à chaque page
+- **`app.css`** : transitions de page, ombres portées, skeleton shimmer, scrollbar subtile, print media query
+- **Service worker** : cache `bible-data-v1` séparé, 66 livres mis en cache à l'installation
+- **SEO** : sitemap.xml (66 livres), robots.txt, JSON-LD structuré, canonical
+- **PWA** : notification d'installation après 30s puis toutes les 5 min
+- **Performance** : `PublishTrimmed` + `AggressiveTrimming` (8.9 MB Brotli, 3.6 MB framework)
 
 ---
 
@@ -47,46 +64,47 @@ Application **Progressive Web App (PWA)** pour lire la Bible Louis Segond en lig
 ```
 BibleApp/
 ├── Layout/
-│   └── MainLayout.razor       # Layout principal + drawer
+│   └── MainLayout.razor       # Layout principal + drawer + chargement préférences
 ├── Pages/
-│   ├── Index.razor            # Accueil (verset du jour)
-│   ├── LivreChapitres.razor   # Sélection de chapitre
-│   ├── Lecture.razor          # Lecture chapitre + actions verset
-│   ├── Recherche.razor        # Recherche plein texte
-│   ├── Favoris.razor          # Marque-pages et notes
-│   ├── Progression.razor      # Suivi de lecture
-│   ├── Quiz.razor             # Quiz biblique
-│   ├── Carte.razor            # Carte des lieux
-│   └── Parametres.razor       # Paramètres (police, voix, etc.)
+│   ├── Index.razor            # Accueil (verset du jour + skeleton)
+│   ├── LivreChapitres.razor   # Sélection de chapitre + breadcrumb
+│   ├── Lecture.razor          # Lecture chapitre + TTS + actions verset + breadcrumb
+│   ├── Recherche.razor        # Recherche plein texte + breadcrumb
+│   ├── Favoris.razor          # Marque-pages et notes + breadcrumb
+│   ├── Progression.razor      # Suivi de lecture AT/NT + breadcrumb
+│   ├── Quiz.razor             # Quiz biblique (Random.Shared) + breadcrumb
+│   ├── Carte.razor            # Carte Leaflet lazy-load + breadcrumb
+│   └── Parametres.razor       # Paramètres (police, voix, traduction, données) + breadcrumb
 ├── Shared/
-│   ├── NavMenu.razor          # Navigation sidebar
+│   ├── NavMenu.razor          # Navigation sidebar 2 colonnes + MudChip
 │   ├── NoteDialog.razor       # Dialog de note
-│   └── VersetCard.razor       # Carte verset réutilisable
+│   ├── VersetCard.razor       # Carte verset réutilisable
+│   └── Breadcrumb.razor       # Fil d'Ariane contextuel
 ├── Services/
 │   ├── BibleService.cs        # Chargement livres JSON + cache IndexedDB
-│   ├── SearchIndexService.cs  # Index recherche inversé
+│   ├── SearchIndexService.cs  # Index recherche inversé (Singleton)
 │   ├── IndexedDbService.cs    # CRUD IndexedDB
 │   └── ThemeService.cs        # Thème clair/sombre
 ├── Models/
-│   └── Bible.cs               # Modèles de données
+│   ├── Bible.cs               # Modèles de données (Livre, Chapitre, Verset)
+│   └── BreadcrumbNode.cs      # Modèle pour le fil d'Ariane
 ├── wwwroot/
-│   ├── css/app.css            # Styles personnalisés + responsive
-│   ├── js/app.js              # JS interop (TTS, IndexedDB, drawer, etc.)
-│   ├── data/books/*.json      # 66 fichiers livres
+│   ├── css/app.css            # Styles personnalisés + responsive + transitions
+│   ├── js/app.js              # JS interop (TTS, IndexedDB, image, drawer, etc.)
+│   ├── data/books/*.json      # 66 fichiers livres (LSG)
 │   ├── data/index.json        # Index des livres
-│   ├── index.html             # Point d'entrée + SEO JSON-LD
+│   ├── index.html             # Point d'entrée + loading screen + SEO JSON-LD + CSP
 │   ├── favicon.svg            # Icône vectorielle personnalisée
-│   ├── favicon.png            # Favicon fallback
 │   ├── icon-192.png           # Icône PWA
 │   ├── icon-512.png           # Icône PWA haute résolution
 │   ├── manifest.webmanifest   # Manifeste PWA
 │   ├── service-worker.js      # Service worker
-│   ├── service-worker.published.js  # Service worker production
-│   ├── sitemap.xml            # SEO
+│   ├── service-worker.published.js  # Service worker production (cache offline)
+│   ├── sitemap.xml            # SEO (66 livres)
 │   └── robots.txt             # SEO
-├── vercel.json                # Configuration déploiement Vercel
+├── vercel.json                # Configuration déploiement Vercel + en-têtes sécurité
 ├── LICENSE                    # Licence MIT
-└── BibleApp.csproj            # Projet .NET
+└── BibleApp.csproj            # Projet .NET 9 (PublishTrimmed)
 ```
 
 ---
@@ -103,6 +121,8 @@ BibleApp/
 dotnet run
 ```
 
+Dev server : `http://localhost:5106`
+
 ### Build
 
 ```bash
@@ -113,8 +133,8 @@ dotnet publish -c Release
 
 Le projet est connecté à GitHub + Vercel. Chaque push sur `main` déclenche automatiquement :
 
-1. Installation de .NET 9 SDK
-2. `dotnet publish -c Release`
+1. Installation de .NET 9 SDK via `dotnet-install.sh`
+2. `dotnet publish -c Release --nologo`
 3. Déploiement sur **bibeli.vercel.app**
 
 ---
@@ -145,7 +165,7 @@ Distribué sous licence **MIT**. Voir le fichier [LICENSE](LICENSE).
 
 ## Crédits
 
-**Koffi Levis** — [koffilevis21@gmail.com](mailto:koffilevis21@gmail.com)
+**AKALETE Koffi Levis** — [koffilevis21@gmail.com](mailto:koffilevis21@gmail.com) — [WhatsApp +227 91 53 52 20](https://wa.me/22791535220)
 
 ---
 

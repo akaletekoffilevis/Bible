@@ -32,6 +32,7 @@
     <link href="manifest.webmanifest" rel="manifest" />
     <link rel="apple-touch-icon" sizes="512x512" href="icon-512.png" />
     <link rel="apple-touch-icon" sizes="192x192" href="icon-192.png" />
+    <meta name="google-site-verification" content="dKMVckGESWBaVzAYgMT9muEyYC-Gc-RaF8QLjMqRT8A" />
     <link rel="canonical" href="https://bibeli.vercel.app/" />
     <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.vercel.app https://translate.googleapis.com https://translate.google.com; img-src 'self' data: https://*.tile.openstreetmap.org; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://unpkg.com; font-src 'self' https://fonts.gstatic.com; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://unpkg.com https://translate.google.com https://*.googleapis.com; connect-src 'self' https://*.vercel.app; frame-src https://translate.google.com;" />
 
@@ -116,6 +117,13 @@
             border-radius: 4px;
             transition: width 0.3s ease;
         }
+        .loader-percent {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #ffd54f;
+            margin: 0.5rem 0 0.25rem;
+            transition: opacity 0.3s;
+        }
         .loader-text {
             font-size: 0.85rem;
             color: rgba(255,255,255,0.5);
@@ -142,6 +150,7 @@
             <div class="loader-progress-bar">
                 <div class="loader-progress-fill" id="loader-progress-fill"></div>
             </div>
+            <div class="loader-percent" id="loader-percent">0%</div>
             <div class="loader-text" id="loader-text">Chargement de l'application</div>
         </div>
     </div>
@@ -154,26 +163,40 @@
     <script>
         (function() {
             var fill = document.getElementById('loader-progress-fill');
+            var pct = document.getElementById('loader-percent');
             var text = document.getElementById('loader-text');
             var subtitle = document.getElementById('loader-subtitle');
             var steps = [
-                [5, "Préparation..."],
+                [3, "Préparation..."],
+                [8, "Initialisation..."],
                 [15, "Chargement du noyau..."],
-                [30, "Téléchargement des composants..."],
-                [50, "Optimisation..."],
-                [70, "Configuration de l'interface..."],
-                [85, "Finalisation..."],
-                [95, "Presque prêt..."],
+                [22, "Vérification du cache..."],
+                [30, "Modules principaux..."],
+                [38, "Composants d'interface..."],
+                [47, "Téléchargement des ressources..."],
+                [55, "Optimisation..."],
+                [62, "Configuration du thème..."],
+                [70, "Préparation de la Bible..."],
+                [77, "Indexation des textes..."],
+                [83, "Configuration de l'interface..."],
+                [89, "Finalisation..."],
+                [94, "Presque prêt..."],
+                [98, "Dernière vérification..."],
                 [100, "Lancement..."]
             ];
             var i = 0;
             (function next() {
                 if (window._loaderDone || i >= steps.length) return;
                 fill.style.width = steps[i][0] + '%';
+                if (pct) pct.textContent = steps[i][0] + '%';
                 text.textContent = steps[i][1];
                 if (steps[i][0] >= 100) subtitle.textContent = 'Prêt ✓';
                 i++;
-                setTimeout(next, 900 + Math.random() * 1100);
+                var delay = i < 5 ? 600 + Math.random() * 400 :
+                            i < 10 ? 900 + Math.random() * 600 :
+                            i < 14 ? 1200 + Math.random() * 800 :
+                                     1800 + Math.random() * 1200;
+                setTimeout(next, delay);
             })();
 
             window.hideLoader = function() {
@@ -183,7 +206,9 @@
                 if (el) {
                     var f = document.getElementById('loader-progress-fill');
                     var t = document.getElementById('loader-text');
+                    var p = document.getElementById('loader-percent');
                     if (f) f.style.width = '100%';
+                    if (p) p.textContent = '100%';
                     if (t) t.textContent = 'Bienvenue !';
                     el.classList.add('hidden');
                     setTimeout(function() { el.style.display = 'none'; }, 400);

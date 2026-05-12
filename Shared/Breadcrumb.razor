@@ -1,0 +1,38 @@
+@using BibleApp.Models
+
+@if (Nodes.Count > 0)
+{
+    <nav aria-label="Fil d'Ariane" class="breadcrumb-nav">
+        @for (int i = 0; i < Nodes.Count; i++)
+        {
+            var node = Nodes[i];
+            var isLast = i == Nodes.Count - 1;
+
+            <span class="breadcrumb-item">
+                @if (!string.IsNullOrEmpty(node.Icon))
+                {
+                    <MudIcon Icon="@node.Icon" Size="Size.Small" Class="breadcrumb-icon" />
+                }
+
+                @if (isLast || string.IsNullOrEmpty(node.Href))
+                {
+                    <span class="breadcrumb-current" aria-current="page">@node.Label</span>
+                }
+                else
+                {
+                    <a href="@node.Href" class="breadcrumb-link">@node.Label</a>
+                }
+            </span>
+
+            @if (!isLast)
+            {
+                <span class="breadcrumb-sep">›</span>
+            }
+        }
+    </nav>
+}
+
+@code {
+    [Parameter, EditorRequired]
+    public List<BreadcrumbNode> Nodes { get; set; } = new();
+}

@@ -99,8 +99,17 @@
             _drawerVariant = width > 960 ? DrawerVariant.Persistent : DrawerVariant.Temporary;
             var consent = await JsRuntime.InvokeAsync<string?>("bibleUtils.localStorageGet", "consent");
             _showConsent = consent != "true";
-            StateHasChanged();
 
+            // Appliquer les préférences utilisateur globalement
+            var fs = await JsRuntime.InvokeAsync<string?>("bibleUtils.localStorageGet", "fontSize");
+            var ff = await JsRuntime.InvokeAsync<string?>("bibleUtils.localStorageGet", "fontFamily");
+            var lh = await JsRuntime.InvokeAsync<string?>("bibleUtils.localStorageGet", "lineHeight");
+            var dm = await JsRuntime.InvokeAsync<string?>("bibleUtils.localStorageGet", "darkMode");
+            if (dm == "true" != ThemeService.IsDarkMode) ThemeService.SetDarkMode(dm == "true");
+            await JsRuntime.InvokeVoidAsync("bibleUtils.setBodyStyles",
+                (fs ?? "18") + "px", ff ?? "serif", lh ?? "2");
+
+            StateHasChanged();
             _ = VerifierInstallationPwaAsync();
         }
     }

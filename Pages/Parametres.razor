@@ -1,7 +1,15 @@
 @page "/parametres"
+@using BibleApp.Models
 @using MudBlazor
 @inject IJSRuntime JsRuntime
 @inject BibleApp.Services.ThemeService ThemeService
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+
+<Breadcrumb Nodes="@(new List<BreadcrumbNode> {
+    new() { Label = "Accueil", Href = "/", Icon = Icons.Material.Filled.Home },
+    new() { Label = "Paramètres" }
+})" />
 
 <MudText Typo="Typo.h6" Class="mb-4 font-weight-bold d-flex align-center">
     <MudIcon Icon="@Icons.Material.Filled.Settings" Class="mr-2" /> Paramètres
@@ -11,22 +19,22 @@
     <MudExpansionPanel Text="Affichage" Class="mb-2">
         <div class="d-flex align-center justify-space-between mb-3">
             <MudText Typo="Typo.body2">Mode nuit</MudText>
-            <MudSwitch @bind-Value="_isDark" Color="Color.Primary" />
+            <MudSwitch @bind-Value="_isDark" @bind-Value:after="OnIsDarkChanged" Color="Color.Primary" />
         </div>
 
         <MudText Typo="Typo.body2" Class="mb-1">Taille de police</MudText>
-        <MudSlider @bind-Value="_fontSize" Min="14" Max="28" Step="2" Class="mb-1" />
+        <MudSlider @bind-Value="_fontSize" @bind-Value:after="OnFontSizeChanged" Min="14" Max="28" Step="2" Class="mb-1" />
         <MudText Typo="Typo.caption" Class="mud-text-secondary mb-3 d-block">@_fontSize px</MudText>
 
         <MudText Typo="Typo.body2" Class="mb-1">Famille de police</MudText>
-        <MudSelect T="string" @bind-Value="_fontFamily" Variant="Variant.Outlined" Dense="true" Immediate="true" Class="mb-3">
+        <MudSelect T="string" @bind-Value="_fontFamily" @bind-Value:after="OnFontFamilyChanged" Variant="Variant.Outlined" Dense="true" Immediate="true" Class="mb-3">
             <MudSelectItem Value="@("serif")">Serif (défaut)</MudSelectItem>
             <MudSelectItem Value="@("sans-serif")">Sans-serif</MudSelectItem>
             <MudSelectItem Value="@("Georgia, serif")">Georgia</MudSelectItem>
         </MudSelect>
 
         <MudText Typo="Typo.body2" Class="mb-1">Interlignage</MudText>
-        <MudSlider @bind-Value="_lineHeight" Min="1.5" Max="2.8" Step="0.1" Class="mb-1" />
+        <MudSlider @bind-Value="_lineHeight" @bind-Value:after="OnLineHeightChanged" Min="1.5" Max="2.8" Step="0.1" Class="mb-1" />
         <MudText Typo="Typo.caption" Class="mud-text-secondary d-block">@_lineHeight.ToString("0.0")</MudText>
     </MudExpansionPanel>
 
@@ -36,7 +44,7 @@
                 <MudText Typo="Typo.body2">Google Translate</MudText>
                 <MudText Typo="Typo.caption" Class="mud-text-secondary">Traduit l'interface en 11 langues</MudText>
             </div>
-            <MudSwitch @bind-Value="_showTranslate" Color="Color.Secondary" />
+            <MudSwitch @bind-Value="_showTranslate" @bind-Value:after="OnShowTranslateChanged" Color="Color.Secondary" />
         </div>
     </MudExpansionPanel>
 
@@ -152,38 +160,34 @@
         }
     }
 
-    private async Task OnIsDarkChanged(bool value)
+    private async Task OnIsDarkChanged()
     {
-        ThemeService.SetDarkMode(value);
-        await SetSettingAsync("darkMode", value.ToString().ToLower());
+        ThemeService.SetDarkMode(_isDark);
+        await SetSettingAsync("darkMode", _isDark.ToString().ToLower());
     }
 
-    private async Task OnShowTranslateChanged(bool value)
+    private async Task OnShowTranslateChanged()
     {
-        _showTranslate = value;
-        await SetSettingAsync("showTranslate", value.ToString().ToLower());
-        await JsRuntime.InvokeVoidAsync("bibleUtils.toggleGoogleTranslate", value);
+        await SetSettingAsync("showTranslate", _showTranslate.ToString().ToLower());
+        await JsRuntime.InvokeVoidAsync("bibleUtils.toggleGoogleTranslate", _showTranslate);
     }
 
-    private async Task OnFontSizeChanged(int value)
+    private async Task OnFontSizeChanged()
     {
-        _fontSize = value;
         await ApplyStylesAsync();
-        await SetSettingAsync("fontSize", value.ToString());
+        await SetSettingAsync("fontSize", _fontSize.ToString());
     }
 
-    private async Task OnFontFamilyChanged(string value)
+    private async Task OnFontFamilyChanged()
     {
-        _fontFamily = value;
         await ApplyStylesAsync();
-        await SetSettingAsync("fontFamily", value);
+        await SetSettingAsync("fontFamily", _fontFamily);
     }
 
-    private async Task OnLineHeightChanged(double value)
+    private async Task OnLineHeightChanged()
     {
-        _lineHeight = value;
         await ApplyStylesAsync();
-        await SetSettingAsync("lineHeight", value.ToString("0.0"));
+        await SetSettingAsync("lineHeight", _lineHeight.ToString("0.0"));
     }
 
     private async Task ApplyStylesAsync()
@@ -194,8 +198,24 @@
 
     private async Task EffacerDonnees()
     {
+        var confirm = await DialogService.ShowMessageBox(
+            "Effacer les données ?",
+            "Toutes les données locales (marque-pages, notes, progression, préférences) seront supprimées. Cette action est irréversible.",
+            yesText: "Oui, effacer",
+            cancelText: "Annuler");
+        if (confirm != true) return;
+
         await JsRuntime.InvokeVoidAsync("bibleUtils.localStorageClear");
         await JsRuntime.InvokeVoidAsync("bibleUtils.clearIndexedDB");
+        _isDark = false;
+        _fontSize = 18;
+        _fontFamily = "serif";
+        _lineHeight = 2.0;
+        _showTranslate = false;
+        ThemeService.SetDarkMode(false);
+        await ApplyStylesAsync();
+        Snackbar.Add("Données effacées", Severity.Success);
+        StateHasChanged();
     }
 
     private async Task<string?> GetSettingAsync(string key)

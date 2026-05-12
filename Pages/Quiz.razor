@@ -2,6 +2,11 @@
 @using BibleApp.Models
 @inject BibleApp.Services.BibleService BibleService
 
+<Breadcrumb Nodes="@(new List<BreadcrumbNode> {
+    new() { Label = "Accueil", Href = "/", Icon = Icons.Material.Filled.Home },
+    new() { Label = "Quiz biblique" }
+})" />
+
 <MudText Typo="Typo.h6" Class="mb-4 font-weight-bold d-flex align-center">
     <MudIcon Icon="@Icons.Material.Filled.Quiz" Class="mr-2" /> Quiz biblique
 </MudText>
