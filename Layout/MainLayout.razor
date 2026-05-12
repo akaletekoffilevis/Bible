@@ -31,7 +31,7 @@
         <div class="d-flex align-center drawer-close-bar" Style="justify-content:flex-end;">
             <MudIconButton Icon="@Icons.Material.Filled.Close" Color="Color.Inherit" OnClick="@(() => CloseDrawer())" Size="Size.Small" />
         </div>
-        <NavMenu OnNavigated="CloseDrawer" />
+        <NavMenu OnNavigated="OnNavMenuNavigated" />
     </MudDrawer>
 
     <MudMainContent>
@@ -208,6 +208,15 @@
     {
         _drawerOpen = value;
         StateHasChanged();
+    }
+
+    private void OnNavMenuNavigated()
+    {
+        if (_drawerVariant == DrawerVariant.Temporary)
+        {
+            _drawerOpen = false;
+            StateHasChanged();
+        }
     }
 
     private void CloseDrawer()
