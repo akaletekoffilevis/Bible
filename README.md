@@ -1,0 +1,148 @@
+# 📖 Bible Louis Segond (LSG)
+
+Application **Progressive Web App (PWA)** pour lire la Bible Louis Segond en ligne et hors-ligne. Développée en **Blazor WebAssembly .NET 9** avec **MudBlazor**.
+
+🔗 **Site :** [bibeli.vercel.app](https://bibeli.vercel.app)
+
+---
+
+## ✨ Fonctionnalités
+
+- 📖 **66 livres** — Ancien et Nouveau Testament chargés en lazy-loading
+- 🔍 **Recherche plein texte** — index inversé, filtre par testament/livre, intersection
+- 🔊 **Audio TTS** — lecture verset-par-verset avec voix française, pause/reprise
+- 🔖 **Marque-pages** — sauvegardés en IndexedDB
+- 📝 **Notes personnelles** — attacher une note à chaque verset
+- 🎨 **Surlignage** — mettre en évidence des versets
+- 📋 **Copie / Partage** — Web Share API + copie au clic
+- 🖼️ **Image de verset** — génération Canvas PNG téléchargeable
+- 📄 **Export PDF** — impression du chapitre en PDF
+- 🌙 **Mode nuit** — thème sombre/clair
+- ⌨️ **Navigation clavier** — flèches ← → entre chapitres
+- 🗺️ **Carte biblique** — 12 lieux avec Leaflet
+- ❓ **Quiz** — mot manquant, 10 questions par partie
+- 📊 **Progression** — suivi des chapitres lus
+- 📲 **PWA** — installation sur téléphone/desktop, fonctionnement hors-ligne
+- 🌐 **SEO** — sitemap, robots.txt, JSON-LD structuré
+
+---
+
+## 🛠️ Stack technique
+
+| Technologie | Usage |
+|---|---|
+| **Blazor WebAssembly .NET 9** | Framework frontend |
+| **MudBlazor 8.x** | UI components |
+| **IndexedDB** | Stockage local (marque-pages, notes, progression) |
+| **Leaflet** | Carte biblique interactive |
+| **Web Speech API** | Synthèse vocale TTS |
+| **Web Share API** | Partage natif |
+| **Canvas API** | Génération d'images de versets |
+| **PWA** | Service worker + manifeste |
+
+---
+
+## 📁 Structure du projet
+
+```
+BibleApp/
+├── Layout/
+│   └── MainLayout.razor       # Layout principal + drawer
+├── Pages/
+│   ├── Index.razor            # Accueil (verset du jour)
+│   ├── LivreChapitres.razor   # Sélection de chapitre
+│   ├── Lecture.razor          # Lecture chapitre + actions verset
+│   ├── Recherche.razor        # Recherche plein texte
+│   ├── Favoris.razor          # Marque-pages et notes
+│   ├── Progression.razor      # Suivi de lecture
+│   ├── Quiz.razor             # Quiz biblique
+│   ├── Carte.razor            # Carte des lieux
+│   └── Parametres.razor       # Paramètres (police, voix, etc.)
+├── Shared/
+│   ├── NavMenu.razor          # Navigation sidebar
+│   ├── NoteDialog.razor       # Dialog de note
+│   └── VersetCard.razor       # Carte verset réutilisable
+├── Services/
+│   ├── BibleService.cs        # Chargement livres JSON
+│   ├── SearchIndexService.cs  # Index recherche inversé
+│   ├── IndexedDbService.cs    # CRUD IndexedDB
+│   └── ThemeService.cs        # Thème clair/sombre
+├── Models/
+│   └── Bible.cs               # Modèles de données
+├── wwwroot/
+│   ├── css/app.css            # Styles personnalisés
+│   ├── js/app.js              # JS interop (TTS, IndexedDB, etc.)
+│   ├── data/books/*.json      # 66 fichiers livres
+│   ├── data/index.json        # Index des livres
+│   ├── index.html             # Point d'entrée
+│   ├── manifest.webmanifest   # Manifeste PWA
+│   ├── service-worker.js      # Service worker
+│   ├── sitemap.xml            # SEO
+│   └── robots.txt             # SEO
+├── vercel.json                # Configuration déploiement Vercel
+└── BibleApp.csproj            # Projet .NET
+```
+
+---
+
+## 🚀 Déploiement
+
+### Prérequis
+
+- [.NET 9 SDK](https://dotnet.microsoft.com/download/dotnet/9.0)
+- Node.js (pour Vercel CLI)
+
+### Développement local
+
+```bash
+dotnet run
+# → http://localhost:5106
+```
+
+### Build
+
+```bash
+dotnet publish -c Release
+```
+
+### Déploiement Vercel (automatique)
+
+Le projet est connecté à GitHub + Vercel. Chaque push sur `main` déclenche automatiquement :
+
+1. Installation de .NET 9 SDK
+2. `dotnet publish -c Release`
+3. Déploiement sur **bibeli.vercel.app**
+
+### Déploiement manuel
+
+```bash
+npx vercel --prod
+```
+
+---
+
+## 🔧 Configuration
+
+### vercel.json
+
+```json
+{
+  "buildCommand": "curl -sSL https://dot.net/v1/dotnet-install.sh | bash /dev/stdin --channel 9.0 && dotnet publish -c Release --nologo",
+  "outputDirectory": "bin/Release/net9.0/publish/wwwroot",
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
+}
+```
+
+> La commande de build installe .NET 9 SDK avant de compiler, car Vercel ne l'inclut pas nativement.
+
+---
+
+## 📄 Licence
+
+Ce projet est open source. Utilisation libre pour tout usage personnel ou communautaire.
+
+---
+
+*"Car la parole de Dieu est vivante et efficace." — Hébreux 4:12*
