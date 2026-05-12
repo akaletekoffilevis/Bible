@@ -11,12 +11,21 @@
 </MudPaper>
 
 @code {
+    private bool _leafletLoaded;
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (firstRender)
+        if (firstRender && !_leafletLoaded)
         {
+            _leafletLoaded = true;
+            await LoadLeafletAsync();
             await JsRuntime.InvokeVoidAsync("bibleMap.init", "bible-map");
         }
+    }
+
+    private async Task LoadLeafletAsync()
+    {
+        await JsRuntime.InvokeVoidAsync("bibleLeaflet.load");
     }
 
     public void Dispose()

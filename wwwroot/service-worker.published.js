@@ -27,18 +27,12 @@ async function onInstall(event) {
     const cache = await caches.open(cacheName);
     await cache.addAll(assetsRequests);
 
-    // Cache Bible data files for offline reading
+    // Cache Bible index for offline; books are cached on-demand when accessed
     try {
-        const indexResponse = await fetch('/data/index.json');
-        const books = await indexResponse.json();
-        const dataUrls = ['/data/index.json'];
-        for (const book of books) {
-            dataUrls.push(`/data/books/${book.slug}.json`);
-        }
-        await cache.addAll(dataUrls);
-        console.info(`Service worker: Cached ${books.length} Bible books for offline`);
+        await cache.addAll(['/data/index.json']);
+        console.info('Service worker: Cached Bible index for offline');
     } catch (err) {
-        console.warn('Service worker: Could not cache Bible data files', err);
+        console.warn('Service worker: Could not cache Bible index', err);
     }
 }
 
@@ -55,9 +49,27 @@ async function onActivate(event) {
 async function onFetch(event) {
     let cachedResponse = null;
     if (event.request.method === 'GET') {
-        // For all navigation requests, try to serve index.html from cache,
-        // unless that request is for an offline resource.
-        // If you need some URLs to be server-rendered, edit the following check to exclude those URLs
+        const url = new URL(event.request.url);
+
+        // Cache Bible data files on-demand for offline reading
+        if (url.pathname.startsWith('/data/')) {
+            const cache = await caches.open(cacheName);
+            cachedResponse = await cache.match(event.request);
+            if (!cachedResponse) {
+                try {
+                    const response = await fetch(event.request);
+                    if (response.ok) {
+                        cache.put(event.request, response.clone());
+                    }
+                    return response;
+                } catch (err) {
+                    return new Response('', { status: 503 });
+                }
+            }
+            return cachedResponse;
+        }
+
+        // For all navigation requests, try to serve index.html from cache
         const shouldServeIndexHtml = event.request.mode === 'navigate'
             && !manifestUrlList.some(url => url === event.request.url);
 

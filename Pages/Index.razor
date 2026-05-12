@@ -96,7 +96,15 @@
     protected override async Task OnInitializedAsync()
     {
         _index = await BibleService.GetIndexAsync();
-        _versetDuJour = await BibleService.GetVersetDuJourAsync();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            _versetDuJour = await BibleService.GetVersetDuJourAsync();
+            StateHasChanged();
+        }
     }
 
     private void NavigateTo(string slug)

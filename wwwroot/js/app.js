@@ -137,7 +137,26 @@ window.bibleUtils = {
 
     toggleGoogleTranslate: function (show) {
         var el = document.getElementById('google_translate_element');
-        if (el) el.style.display = show ? 'block' : 'none';
+        if (!el) return;
+        if (show) {
+            if (!window._googleTranslateLoaded) {
+                window._googleTranslateLoaded = true;
+                window.googleTranslateElementInit = function () {
+                    new google.translate.TranslateElement({
+                        pageLanguage: 'fr',
+                        includedLanguages: 'en,es,pt,de,it,nl,ru,ar,zh-CN,ja,ko',
+                        layout: google.translate.TranslateElement.InlineLayout.SIMPLE,
+                        autoDisplay: false
+                    }, 'google_translate_element');
+                };
+                var s = document.createElement('script');
+                s.src = 'https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit';
+                document.body.appendChild(s);
+            }
+            el.style.display = 'block';
+        } else {
+            el.style.display = 'none';
+        }
     },
 
     setBodyStyles: function (fontSize, fontFamily, lineHeight) {
@@ -555,6 +574,38 @@ window.bibleInstall = {
             window.bibleInstall.canInstall = false;
         });
         return true;
+    }
+};
+
+// Dynamic Leaflet loader (lazy load only on Carte page)
+window.bibleLeaflet = {
+    loaded: false,
+    pending: [],
+
+    load: function () {
+        var self = this;
+        if (this.loaded) return Promise.resolve();
+        if (this.pending.length > 0) return new Promise(function (r) { self.pending.push(r); });
+
+        return new Promise(function (resolve, reject) {
+            self.pending.push(resolve);
+            var link = document.createElement('link');
+            link.rel = 'stylesheet';
+            link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+            link.onload = function () {
+                var script = document.createElement('script');
+                script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+                script.onload = function () {
+                    self.loaded = true;
+                    self.pending.forEach(function (r) { r(); });
+                    self.pending = [];
+                };
+                script.onerror = reject;
+                document.body.appendChild(script);
+            };
+            link.onerror = reject;
+            document.head.appendChild(link);
+        });
     }
 };
 

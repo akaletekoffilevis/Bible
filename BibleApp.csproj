@@ -5,6 +5,8 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <ServiceWorkerAssetsManifest>service-worker-assets.js</ServiceWorkerAssetsManifest>
+    <PublishTrimmed>true</PublishTrimmed>
+    <BlazorWebAssemblyEnableAggressiveTrimming>true</BlazorWebAssemblyEnableAggressiveTrimming>
   </PropertyGroup>
 
   <ItemGroup>
