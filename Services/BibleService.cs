@@ -6,18 +6,20 @@ namespace BibleApp.Services;
 public class BibleService
 {
     private readonly HttpClient _http;
+    private readonly IndexedDbService _db;
     private readonly Dictionary<string, Livre> _cache = new();
     private List<LivreIndex>? _index;
 
-    public BibleService(HttpClient http)
+    public BibleService(HttpClient http, IndexedDbService db)
     {
         _http = http;
+        _db = db;
     }
 
     public async Task<List<LivreIndex>> GetIndexAsync()
     {
         if (_index != null) return _index;
-        _index = await _http.GetFromJsonAsync<List<LivreIndex>>("data/index.json");
+        try { _index = await _http.GetFromJsonAsync<List<LivreIndex>>("data/index.json"); } catch { }
         return _index ?? [];
     }
 

@@ -160,6 +160,18 @@ body {
     }
 }
 
+/* Loading skeleton */
+.skeleton-line {
+    background: linear-gradient(90deg, transparent 0%, rgba(0,0,0,0.06) 50%, transparent 100%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+    border-radius: 4px;
+}
+@keyframes shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
 @media (max-width: 600px) {
     :root {
         --bible-font-size: 17px;
@@ -199,13 +211,6 @@ body {
 }
 
 @media (max-width: 960px) {
-    .mud-drawer.mud-drawer--open.mud-drawer--temporary {
-        top: 0 !important;
-        height: 100dvh !important;
-        max-height: 100dvh !important;
-        width: 90% !important;
-        max-width: 90vw !important;
-    }
     .mud-drawer .mud-navmenu {
         padding-top: 0;
     }
