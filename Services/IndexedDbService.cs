@@ -23,11 +23,6 @@ public class IndexedDbService
         return await _js.InvokeAsync<List<T>>("bibleDb.getAll", storeName);
     }
 
-    public async Task<T?> GetByIdAsync<T>(string storeName, string id)
-    {
-        return await _js.InvokeAsync<T?>("bibleDb.getById", storeName, id);
-    }
-
     public async Task PutAsync<T>(string storeName, string id, T value)
     {
         await _js.InvokeVoidAsync("bibleDb.put", storeName, id, value);
@@ -36,15 +31,5 @@ public class IndexedDbService
     public async Task DeleteAsync(string storeName, string id)
     {
         await _js.InvokeVoidAsync("bibleDb.delete", storeName, id);
-    }
-
-    public async Task ClearAsync(string storeName)
-    {
-        await _js.InvokeVoidAsync("bibleDb.clear", storeName);
-    }
-
-    public async Task<int> CountAsync(string storeName)
-    {
-        return await _js.InvokeAsync<int>("bibleDb.count", storeName);
     }
 }

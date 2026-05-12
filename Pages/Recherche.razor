@@ -100,11 +100,6 @@ else
         }
     }
 
-    protected override void OnParametersSet()
-    {
-        Rechercher();
-    }
-
     private void Rechercher()
     {
         if (string.IsNullOrWhiteSpace(_query) || _query.Length < 2)

@@ -224,8 +224,13 @@ body {
     background: inherit;
 }
 
-/* Desktop sidebar: compact look */
+/* Desktop sidebar: largeur fixe + compact look */
 @media (min-width: 961px) {
+    .mud-drawer {
+        width: 380px !important;
+        min-width: 380px !important;
+        flex: 0 0 380px !important;
+    }
     .mud-drawer .mud-navmenu {
         padding-top: 8px;
     }

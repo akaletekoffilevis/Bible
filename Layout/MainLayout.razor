@@ -42,11 +42,11 @@
 </MudLayout>
 
 @code {
-    private bool _drawerOpen;
+    private bool _drawerOpen = true;
     private bool _showBackButton;
     private string _backUrl = "/";
     private string _pageTitle = "Bible Louis Segond";
-    private DrawerVariant _drawerVariant = DrawerVariant.Temporary;
+    private DrawerVariant _drawerVariant = DrawerVariant.Persistent;
     private MudTheme _theme = new()
     {
         PaletteLight = new PaletteLight
@@ -94,9 +94,11 @@
         try
         {
             await Task.Delay(30_000);
-            var installable = await JsRuntime.InvokeAsync<bool>("bibleInstall.isInstallable");
-            if (installable)
+            for (int i = 0; i < 12; i++)
             {
+                var installable = await JsRuntime.InvokeAsync<bool>("bibleInstall.isInstallable");
+                if (!installable) break;
+
                 Snackbar.Add("📲 Installer l'application Bible pour une expérience hors-ligne", Severity.Info, config =>
                 {
                     config.Action = "Installer";
@@ -108,6 +110,8 @@
                     config.VisibleStateDuration = 10000;
                     config.ShowCloseIcon = true;
                 });
+
+                await Task.Delay(300_000); // 5 minutes
             }
         }
         catch { }

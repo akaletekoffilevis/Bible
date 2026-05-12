@@ -52,10 +52,10 @@ async function onInstall(event) {
 async function onActivate(event) {
     console.info('Service worker: Activate');
 
-    // Delete unused caches
+    // Delete unused caches (framework + data)
     const cacheKeys = await caches.keys();
     await Promise.all(cacheKeys
-        .filter(key => key.startsWith(cacheNamePrefix) && key !== cacheName)
+        .filter(key => (key.startsWith(cacheNamePrefix) && key !== cacheName) || (key.startsWith('bible-data-') && key !== 'bible-data-v1'))
         .map(key => caches.delete(key)));
 }
 

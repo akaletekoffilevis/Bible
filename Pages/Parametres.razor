@@ -50,13 +50,17 @@
         </MudButton>
     </MudExpansionPanel>
 
-    <MudExpansionPanel Text="À propos" Class="mb-2">
-        <MudText Typo="Typo.body2" Class="mb-1">Bible Louis Segond (LSG)</MudText>
-        <MudText Typo="Typo.caption" Class="mud-text-secondary mb-2 d-block">
-            Application PWA pour lire la Bible en ligne et hors-ligne.
+    <MudExpansionPanel Text="À propos de Bibeli" Class="mb-2">
+        <MudText Typo="Typo.body2" Class="mb-1">Bibeli — Bible Louis Segond (LSG)</MudText>
+        <MudText Typo="Typo.caption" Class="mud-text-secondary mb-2 d-block" Style="line-height:1.6;">
+            Bibeli est une application PWA gratuite et hors-ligne pour lire, étudier et partager la Bible Louis Segond en français.
+            Elle offre la lecture chapitre par chapitre, la recherche plein texte dans les 66 livres, un quiz biblique pour tester vos connaissances,
+            une carte des lieux bibliques, des marque-pages, des notes personnelles, la génération d'images de versets,
+            et la lecture audio (TTS). Toutes les données sont stockées localement dans votre navigateur.
+            Aucune donnée personnelle n'est collectée ni transmise à un serveur tiers.
         </MudText>
         <MudText Typo="Typo.caption" Class="mb-1">
-            Créé par <strong>Koffi Levis Akalete</strong>
+            Créé par <strong>AKALETE Koffi Levis</strong>
         </MudText>
         <MudLink Href="mailto:koffilevis21@gmail.com" Typo="Typo.caption" Class="d-block mb-1">
             <MudIcon Icon="@Icons.Material.Filled.Email" Size="Size.Small" Class="mr-1" /> koffilevis21@gmail.com
@@ -65,7 +69,54 @@
             <MudIcon Icon="@Icons.Material.Filled.Chat" Size="Size.Small" Class="mr-1" /> +227 91 53 52 20 (WhatsApp)
         </MudLink>
         <MudText Typo="Typo.caption" Class="mud-text-secondary">
-            Version 1.0 — .NET 9 &bull; MudBlazor &bull; PWA &mdash; Retours &amp; suggestions bienvenus
+            Version 2.0 — .NET 9 &bull; MudBlazor &bull; PWA
+        </MudText>
+    </MudExpansionPanel>
+
+    <MudExpansionPanel Text="Confidentialité" Class="mb-2">
+        <MudText Typo="Typo.caption" Class="mud-text-secondary" Style="line-height:1.6;">
+            <strong>Bibeli</strong> respecte votre vie privée. Aucune donnée personnelle n'est collectée, stockée ou transmise à un serveur tiers.
+            <br /><br />
+            <strong>Données locales :</strong> Les marque-pages, notes, progression de lecture et préférences (thème, taille de police) sont stockés
+            exclusivement dans votre navigateur via IndexedDB et localStorage. Ces données ne quittent jamais votre appareil.
+            <br /><br />
+            <strong>Données de la Bible :</strong> Les textes bibliques (Louis Segond) sont chargés depuis le serveur d'hébergement (Vercel)
+            et mis en cache par le service worker pour une utilisation hors-ligne. Aucune lecture individuelle n'est suivie.
+            <br /><br />
+            <strong>Traduction Google :</strong> Si vous activez Google Translate dans les paramètres, le script de Google est chargé
+            depuis leurs serveurs et est soumis à leur politique de confidentialité.
+            <br /><br />
+            <strong>Aucun cookie</strong> tiers n'est utilisé à des fins de traçage ou de publicité.
+            <br /><br />
+            Pour toute question, contactez-nous :
+            <MudLink Href="mailto:koffilevis21@gmail.com" Typo="Typo.caption">koffilevis21@gmail.com</MudLink>
+            ou <MudLink Href="https://wa.me/22791535220" Target="_blank" Typo="Typo.caption">WhatsApp</MudLink>.
+        </MudText>
+    </MudExpansionPanel>
+
+    <MudExpansionPanel Text="Conditions d'utilisation" Class="mb-2">
+        <MudText Typo="Typo.caption" Class="mud-text-secondary" Style="line-height:1.6;">
+            <strong>1. Acceptation</strong><br />
+            En utilisant Bibeli, vous acceptez les présentes conditions.
+            <br /><br />
+            <strong>2. Licence</strong><br />
+            La Bible Louis Segond (LSG) est une traduction du domaine public. L'application Bibeli est fournie gratuitement,
+            sans garantie d'aucune sorte.
+            <br /><br />
+            <strong>3. Utilisation</strong><br />
+            Vous êtes autorisé à lire, copier et partager les textes bibliques à des fins personnelles et non commerciales.
+            L'application est conçue pour un usage personnel et éducatif.
+            <br /><br />
+            <strong>4. Disponibilité</strong><br />
+            Nous faisons de notre mieux pour maintenir l'application accessible, mais nous ne garantissons pas
+            une disponibilité ininterrompue ou sans erreur.
+            <br /><br />
+            <strong>5. Responsabilité</strong><br />
+            Bibeli est fournie "telle quelle". Le créateur ne peut être tenu responsable des dommages directs ou indirects
+            résultant de l'utilisation de l'application.
+            <br /><br />
+            <strong>6. Contact</strong><br />
+            AKALETE Koffi Levis &mdash; <MudLink Href="https://wa.me/22791535220" Target="_blank" Typo="Typo.caption">+227 91 53 52 20</MudLink>
         </MudText>
     </MudExpansionPanel>
 </MudExpansionPanels>
