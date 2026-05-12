@@ -1,0 +1,553 @@
+window.bibleDb = {
+    db: null,
+
+    initialize: function (dbName, version) {
+        return new Promise((resolve, reject) => {
+            const request = indexedDB.open(dbName, version);
+            request.onerror = () => reject(request.error);
+            request.onsuccess = () => {
+                this.db = request.result;
+                resolve();
+            };
+            request.onupgradeneeded = (event) => {
+                const db = event.target.result;
+                const stores = ['bookmarks', 'notes', 'highlights', 'history', 'progress'];
+                stores.forEach(store => {
+                    if (!db.objectStoreNames.contains(store)) {
+                        db.createObjectStore(store, { keyPath: 'id' });
+                    }
+                });
+            };
+        });
+    },
+
+    getAll: function (storeName) {
+        return new Promise((resolve, reject) => {
+            const tx = this.db.transaction(storeName, 'readonly');
+            const store = tx.objectStore(storeName);
+            const request = store.getAll();
+            request.onerror = () => reject(request.error);
+            request.onsuccess = () => resolve(request.result);
+        });
+    },
+
+    getById: function (storeName, id) {
+        return new Promise((resolve, reject) => {
+            const tx = this.db.transaction(storeName, 'readonly');
+            const store = tx.objectStore(storeName);
+            const request = store.get(id);
+            request.onerror = () => reject(request.error);
+            request.onsuccess = () => resolve(request.result);
+        });
+    },
+
+    put: function (storeName, id, value) {
+        return new Promise((resolve, reject) => {
+            const tx = this.db.transaction(storeName, 'readwrite');
+            const store = tx.objectStore(storeName);
+            value.id = id;
+            const request = store.put(value);
+            request.onerror = () => reject(request.error);
+            request.onsuccess = () => resolve();
+        });
+    },
+
+    delete: function (storeName, id) {
+        return new Promise((resolve, reject) => {
+            const tx = this.db.transaction(storeName, 'readwrite');
+            const store = tx.objectStore(storeName);
+            const request = store.delete(id);
+            request.onerror = () => reject(request.error);
+            request.onsuccess = () => resolve();
+        });
+    },
+
+    clear: function (storeName) {
+        return new Promise((resolve, reject) => {
+            const tx = this.db.transaction(storeName, 'readwrite');
+            const store = tx.objectStore(storeName);
+            const request = store.clear();
+            request.onerror = () => reject(request.error);
+            request.onsuccess = () => resolve();
+        });
+    },
+
+    count: function (storeName) {
+        return new Promise((resolve, reject) => {
+            const tx = this.db.transaction(storeName, 'readonly');
+            const store = tx.objectStore(storeName);
+            const request = store.count();
+            request.onerror = () => reject(request.error);
+            request.onsuccess = () => resolve(request.result);
+        });
+    }
+};
+
+// Keyboard shortcuts for navigation
+window.bibleKeyboard = {
+    dotNetRef: null,
+
+    init: function (dotNetRef) {
+        this.dotNetRef = dotNetRef;
+        document.addEventListener('keydown', this.handler);
+    },
+
+    handler: function (e) {
+        if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+        if (window.bibleKeyboard.dotNetRef == null) return;
+
+        if (e.key === 'ArrowLeft') {
+            e.preventDefault();
+            window.bibleKeyboard.dotNetRef.invokeMethodAsync('OnKeyDown', 'prev');
+        } else if (e.key === 'ArrowRight') {
+            e.preventDefault();
+            window.bibleKeyboard.dotNetRef.invokeMethodAsync('OnKeyDown', 'next');
+        }
+    },
+
+    dispose: function () {
+        document.removeEventListener('keydown', this.handler);
+        this.dotNetRef = null;
+    }
+};
+
+// Clipboard helper + localStorage helpers
+window.bibleUtils = {
+    getWindowWidth: function () {
+        return window.innerWidth;
+    },
+
+    localStorageGet: function (key) {
+        return localStorage.getItem(key);
+    },
+
+    localStorageSet: function (key, value) {
+        localStorage.setItem(key, value);
+    },
+
+    localStorageClear: function () {
+        localStorage.clear();
+    },
+
+    clearIndexedDB: function () {
+        return indexedDB.databases().then(function (dbs) {
+            dbs.forEach(function (db) { indexedDB.deleteDatabase(db.name); });
+        });
+    },
+
+    toggleGoogleTranslate: function (show) {
+        var el = document.getElementById('google_translate_element');
+        if (el) el.style.display = show ? 'block' : 'none';
+    },
+
+    setBodyStyles: function (fontSize, fontFamily, lineHeight) {
+        document.body.style.setProperty('--bible-font-size', fontSize);
+        document.body.style.setProperty('--bible-font-family', fontFamily);
+        document.body.style.setProperty('--bible-line-height', lineHeight);
+    },
+
+    scrollToElement: function (elementId) {
+        setTimeout(function () {
+            var el = document.getElementById(elementId);
+            if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }, 200);
+    },
+
+    copyToClipboard: function (text) {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            return navigator.clipboard.writeText(text).then(function () {
+                return true;
+            });
+        }
+        return new Promise(function (resolve) {
+            var ta = document.createElement('textarea');
+            ta.value = text;
+            ta.style.position = 'fixed';
+            ta.style.opacity = '0';
+            document.body.appendChild(ta);
+            ta.select();
+            document.execCommand('copy');
+            document.body.removeChild(ta);
+            resolve(true);
+        });
+    },
+
+    shareOrCopy: function (text) {
+        if (navigator.share) {
+            navigator.share({ text: text }).catch(function () { });
+        } else {
+            return this.copyToClipboard(text);
+        }
+        return Promise.resolve(true);
+    }
+};
+
+// Text-to-Speech
+window.bibleTts = {
+    synth: window.speechSynthesis,
+    utterance: null,
+    currentVerse: -1,
+    onVerseChange: null,
+    isPaused: false,
+    verses: [],
+    verseIndex: 0,
+    voicesLoaded: false,
+    ready: false,
+    bestVoice: null,
+
+    init: function () {
+        var self = this;
+        if (!this.synth) return false;
+        if (this.voicesLoaded) return true;
+
+        try {
+            var voices = this.synth.getVoices();
+            if (voices.length > 0) {
+                self.pickVoice(voices);
+                this.voicesLoaded = true;
+                this.ready = true;
+                return true;
+            }
+            this.synth.onvoiceschanged = function () {
+                var v = self.synth.getVoices();
+                self.pickVoice(v);
+                self.voicesLoaded = true;
+                self.ready = true;
+            };
+            setTimeout(function () {
+                self.ready = true;
+                if (!self.bestVoice && self.synth) {
+                    var v = self.synth.getVoices();
+                    self.pickVoice(v);
+                }
+            }, 1500);
+            return true;
+        } catch (e) {
+            this.ready = true;
+            return true;
+        }
+    },
+
+    pickVoice: function (voices) {
+        if (!voices || voices.length === 0) return;
+
+        var self = this;
+        var frenchVoices = [];
+        for (var i = 0; i < voices.length; i++) {
+            if (voices[i].lang && voices[i].lang.startsWith('fr')) {
+                frenchVoices.push(voices[i]);
+            }
+        }
+
+        var priority = ['Google français', 'Microsoft Hortense', 'Microsoft Julie',
+            'Amélie', 'Monica', 'Samantha', 'Thomas', 'Pierre'];
+
+        for (var p = 0; p < priority.length; p++) {
+            for (var f = 0; f < frenchVoices.length; f++) {
+                if (frenchVoices[f].name.indexOf(priority[p]) !== -1) {
+                    self.bestVoice = frenchVoices[f];
+                    return;
+                }
+            }
+        }
+
+        if (frenchVoices.length > 0) {
+            var defaultVoice = null;
+            for (var f = 0; f < frenchVoices.length; f++) {
+                if (frenchVoices[f].default) {
+                    defaultVoice = frenchVoices[f];
+                    break;
+                }
+            }
+            self.bestVoice = defaultVoice || frenchVoices[0];
+        }
+    },
+
+    speak: function (verses, lang, dotNetRef) {
+        var self = this;
+        this.stop();
+        this.onVerseChange = dotNetRef;
+        this.verses = verses;
+        this.verseIndex = 0;
+        this.isPaused = false;
+        this.currentVerse = 0;
+
+        this.init();
+
+        if (this.onVerseChange) {
+            this.onVerseChange.invokeMethodAsync('OnVerseChanged', 1);
+        }
+
+        setTimeout(function () {
+            self.speakNext();
+        }, 200);
+    },
+
+    speakNext: function () {
+        if (this.isPaused) return;
+        if (this.verseIndex >= this.verses.length) {
+            this.currentVerse = -1;
+            return;
+        }
+
+        var text = this.verses[this.verseIndex];
+        this.currentVerse = this.verseIndex + 1;
+
+        this.utterance = new SpeechSynthesisUtterance(text);
+        this.utterance.lang = 'fr-FR';
+        this.utterance.rate = 0.85;
+        this.utterance.pitch = 1.0;
+
+        if (this.bestVoice) {
+            this.utterance.voice = this.bestVoice;
+        }
+
+        var self = this;
+        var idx = this.verseIndex;
+
+        this.utterance.onstart = function () {
+            if (self.onVerseChange) {
+                self.onVerseChange.invokeMethodAsync('OnVerseChanged', idx + 1);
+            }
+        };
+
+        this.utterance.onend = function () {
+            if (!self.isPaused) {
+                self.verseIndex = idx + 1;
+                self.speakNext();
+            }
+        };
+
+        this.utterance.onerror = function () {
+            if (!self.isPaused) {
+                self.verseIndex = idx + 1;
+                setTimeout(function () { self.speakNext(); }, 500);
+            }
+        };
+
+        try {
+            this.synth.speak(this.utterance);
+        } catch (e) {
+            this.verseIndex = idx + 1;
+            setTimeout(function () { self.speakNext(); }, 500);
+        }
+    },
+
+    pause: function () {
+        this.isPaused = true;
+        if (this.synth.speaking) {
+            this.synth.pause();
+        }
+    },
+
+    resume: function () {
+        this.isPaused = false;
+        if (this.synth.paused) {
+            this.synth.resume();
+        } else {
+            this.speakNext();
+        }
+    },
+
+    stop: function () {
+        this.isPaused = false;
+        this.currentVerse = -1;
+        this.verseIndex = 0;
+        this.verses = [];
+        if (this.synth) {
+            try {
+                if (this.synth.speaking) {
+                    this.synth.cancel();
+                }
+            } catch (e) { }
+        }
+        this.utterance = null;
+    },
+
+    isSpeaking: function () {
+        return this.synth && this.synth.speaking;
+    }
+};
+
+// Bible Map
+window.bibleMap = {
+    map: null,
+    markers: null,
+
+    init: function (elementId) {
+        if (this.map) this.destroy();
+
+        this.map = L.map(elementId).setView([31.5, 35.5], 8);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 18,
+            attribution: '© OpenStreetMap'
+        }).addTo(this.map);
+
+        var locations = [
+            { name: 'Jérusalem', lat: 31.7683, lng: 35.2137, ref: 'Genèse 14:18' },
+            { name: 'Bethléem', lat: 31.7054, lng: 35.2024, ref: 'Michée 5:1' },
+            { name: 'Nazareth', lat: 32.6996, lng: 35.3049, ref: 'Luc 1:26' },
+            { name: 'Jéricho', lat: 31.8572, lng: 35.4446, ref: 'Josué 6:1' },
+            { name: 'Mer Morte', lat: 31.5, lng: 35.5, ref: 'Genèse 19:24' },
+            { name: 'Mont Sinaï', lat: 28.5392, lng: 33.9733, ref: 'Exode 19:2' },
+            { name: 'Galilée', lat: 32.8, lng: 35.5, ref: 'Matthieu 4:18' },
+            { name: 'Capharnaüm', lat: 32.8804, lng: 35.5753, ref: 'Matthieu 4:13' },
+            { name: 'Damascus', lat: 33.5138, lng: 36.2765, ref: 'Actes 9:3' },
+            { name: 'Antioche', lat: 36.2, lng: 36.15, ref: 'Actes 11:26' },
+            { name: 'Babylone', lat: 32.5364, lng: 44.4208, ref: 'Daniel 1:1' },
+            { name: 'Egypte (Gizeh)', lat: 29.9792, lng: 31.1342, ref: 'Genèse 12:10' },
+        ];
+
+        this.markers = L.layerGroup();
+
+        locations.forEach(function (loc) {
+            var marker = L.marker([loc.lat, loc.lng])
+                .bindPopup('<strong>' + loc.name + '</strong><br/><em>' + loc.ref + '</em>');
+            window.bibleMap.markers.addLayer(marker);
+        });
+
+        this.markers.addTo(this.map);
+        this.map.fitBounds(this.markers.getBounds().pad(0.1));
+    },
+
+    destroy: function () {
+        if (this.map) {
+            this.map.remove();
+            this.map = null;
+            this.markers = null;
+        }
+    }
+};
+
+// Fullscreen
+window.bibleFullscreen = {
+    toggle: function () {
+        if (!document.fullscreenElement) {
+            document.documentElement.requestFullscreen();
+        } else {
+            document.exitFullscreen();
+        }
+    }
+};
+
+// Verset image generation
+window.bibleImage = {
+    generate: function (texte, reference) {
+        var canvas = document.createElement('canvas');
+        canvas.width = 600;
+        canvas.height = 400;
+        var ctx = canvas.getContext('2d');
+
+        var gradient = ctx.createLinearGradient(0, 0, 600, 400);
+        gradient.addColorStop(0, '#1a237e');
+        gradient.addColorStop(1, '#3949ab');
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, 600, 400);
+
+        ctx.fillStyle = 'rgba(255,255,255,0.1)';
+        ctx.fillRect(20, 20, 560, 360);
+
+        ctx.textAlign = 'center';
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 22px serif';
+        ctx.fillText('«', 300, 80);
+
+        ctx.font = '18px serif';
+        var words = texte.split(' ');
+        var lines = [];
+        var line = '';
+        for (var i = 0; i < words.length; i++) {
+            var test = line + words[i] + ' ';
+            if (ctx.measureText(test).width > 500) {
+                lines.push(line.trim());
+                line = words[i] + ' ';
+            } else {
+                line = test;
+            }
+        }
+        lines.push(line.trim());
+
+        var startY = 120;
+        var lineHeight = 30;
+        var totalHeight = lines.length * lineHeight;
+        var yPos = (400 - totalHeight) / 2;
+
+        lines.forEach(function (l) {
+            ctx.fillStyle = '#ffffff';
+            ctx.font = '18px serif';
+            ctx.fillText(l, 300, yPos);
+            yPos += lineHeight;
+        });
+
+        ctx.font = 'bold 14px serif';
+        ctx.fillStyle = '#ffd54f';
+        ctx.fillText('— ' + reference + ' —', 300, yPos + 20);
+
+        var link = document.createElement('a');
+        link.download = 'verset-' + reference.replace(/[^a-zA-Z0-9]/g, '-') + '.png';
+        link.href = canvas.toDataURL();
+        link.click();
+    }
+};
+
+// Print chapter
+window.biblePrint = {
+    print: function () {
+        window.print();
+    }
+};
+
+// Drawer helper — fallback close in case MudBlazor JS fails
+window.bibleDrawer = {
+    close: function () {
+        var openDrawers = document.querySelectorAll('.mud-drawer--open.mud-drawer--temporary');
+        openDrawers.forEach(function (d) {
+            d.classList.remove('mud-drawer--open');
+            d.classList.add('mud-drawer--closed');
+        });
+        var overlays = document.querySelectorAll('.mud-overlay');
+        overlays.forEach(function (o) { o.remove(); });
+        document.body.classList.remove('mud-drawer-overflow');
+    }
+};
+
+// PWA install prompt
+window.bibleInstall = {
+    deferredPrompt: null,
+    canInstall: false,
+
+    init: function () {
+        var self = this;
+        window.addEventListener('beforeinstallprompt', function (e) {
+            e.preventDefault();
+            self.deferredPrompt = e;
+            self.canInstall = true;
+        });
+        window.addEventListener('appinstalled', function () {
+            self.canInstall = false;
+            self.deferredPrompt = null;
+        });
+    },
+
+    isInstallable: function () {
+        return this.canInstall;
+    },
+
+    promptInstall: function () {
+        if (!this.deferredPrompt) return false;
+        this.deferredPrompt.prompt();
+        this.deferredPrompt.userChoice.then(function (result) {
+            if (result.outcome === 'accepted') {
+                console.log('App installed');
+            }
+            window.bibleInstall.deferredPrompt = null;
+            window.bibleInstall.canInstall = false;
+        });
+        return true;
+    }
+};
+
+// Auto-init
+document.addEventListener('DOMContentLoaded', function () {
+    window.bibleInstall.init();
+});

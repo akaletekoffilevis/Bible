@@ -1,0 +1,95 @@
+@namespace BibleApp.Shared
+@inject BibleApp.Services.BibleService BibleService
+
+<MudNavMenu Class="pb-16" Style="min-width: 260px;">
+    <MudTextField @bind-Value="_filter"
+                  Label="Filtrer les livres..."
+                  Variant="Variant.Outlined"
+                  Immediate="true"
+                  Class="ma-4"
+                  Adornment="Adornment.End"
+                  AdornmentIcon="@Icons.Material.Filled.Search" />
+
+    <MudNavLink Href="/" Match="NavLinkMatch.All" OnClick="NotifyNavigated" Class="py-2">
+        <MudIcon Icon="@Icons.Material.Filled.Home" Class="mr-3" Size="Size.Small" /> Accueil
+    </MudNavLink>
+    <MudNavLink Href="/recherche" OnClick="NotifyNavigated" Class="py-2">
+        <MudIcon Icon="@Icons.Material.Filled.Search" Class="mr-3" Size="Size.Small" /> Recherche
+    </MudNavLink>
+    <MudNavLink Href="/quiz" OnClick="NotifyNavigated" Class="py-2">
+        <MudIcon Icon="@Icons.Material.Filled.Quiz" Class="mr-3" Size="Size.Small" /> Quiz biblique
+    </MudNavLink>
+    <MudNavLink Href="/carte" OnClick="NotifyNavigated" Class="py-2">
+        <MudIcon Icon="@Icons.Material.Filled.Map" Class="mr-3" Size="Size.Small" /> Carte biblique
+    </MudNavLink>
+
+    <MudDivider Class="my-2" />
+
+    <MudText Typo="Typo.subtitle2" Class="px-4 py-3 d-flex align-center" Style="cursor:pointer" @onclick="@(() => _atExpanded = !_atExpanded)">
+        <MudIcon Icon="@(_atExpanded ? Icons.Material.Filled.ExpandLess : Icons.Material.Filled.ExpandMore)" Size="Size.Small" Class="mr-2" />
+        Ancien Testament (@_livresAt.Count())
+    </MudText>
+    @if (_atExpanded || !string.IsNullOrEmpty(_filter))
+    {
+        @foreach (var livre in _livresAt)
+        {
+            <MudNavLink Href="@($"/lecture/{livre.Slug}/1")" Match="NavLinkMatch.Prefix" OnClick="NotifyNavigated" Class="py-2">
+                @livre.NomLivre
+            </MudNavLink>
+        }
+    }
+
+    <MudDivider Class="my-2" />
+
+    <MudText Typo="Typo.subtitle2" Class="px-4 py-3 d-flex align-center" Style="cursor:pointer" @onclick="@(() => _ntExpanded = !_ntExpanded)">
+        <MudIcon Icon="@(_ntExpanded ? Icons.Material.Filled.ExpandLess : Icons.Material.Filled.ExpandMore)" Size="Size.Small" Class="mr-2" />
+        Nouveau Testament (@_livresNt.Count())
+    </MudText>
+    @if (_ntExpanded || !string.IsNullOrEmpty(_filter))
+    {
+        @foreach (var livre in _livresNt)
+        {
+            <MudNavLink Href="@($"/lecture/{livre.Slug}/1")" Match="NavLinkMatch.Prefix" OnClick="NotifyNavigated" Class="py-2">
+                @livre.NomLivre
+            </MudNavLink>
+        }
+    }
+
+    <MudDivider Class="my-2" />
+
+    <MudNavLink Href="/favoris" OnClick="NotifyNavigated" Class="py-2">
+        <MudIcon Icon="@Icons.Material.Filled.Bookmark" Class="mr-3" Size="Size.Small" /> Favoris
+    </MudNavLink>
+    <MudNavLink Href="/progression" OnClick="NotifyNavigated" Class="py-2">
+        <MudIcon Icon="@Icons.Material.Filled.TrendingUp" Class="mr-3" Size="Size.Small" /> Progression
+    </MudNavLink>
+    <MudNavLink Href="/parametres" OnClick="NotifyNavigated" Class="py-2">
+        <MudIcon Icon="@Icons.Material.Filled.Settings" Class="mr-3" Size="Size.Small" /> Paramètres
+    </MudNavLink>
+</MudNavMenu>
+
+@code {
+    [Parameter]
+    public EventCallback OnNavigated { get; set; }
+
+    private List<BibleApp.Models.LivreIndex> _index = new();
+    private bool _atExpanded = true;
+    private bool _ntExpanded = true;
+    private string _filter = string.Empty;
+
+    private IEnumerable<BibleApp.Models.LivreIndex> _livresAt =>
+        _index.Where(l => l.Testament.StartsWith("Ancien") && l.NomLivre.Contains(_filter, StringComparison.OrdinalIgnoreCase));
+
+    private IEnumerable<BibleApp.Models.LivreIndex> _livresNt =>
+        _index.Where(l => l.Testament.StartsWith("Nouveau") && l.NomLivre.Contains(_filter, StringComparison.OrdinalIgnoreCase));
+
+    protected override async Task OnInitializedAsync()
+    {
+        _index = await BibleService.GetIndexAsync();
+    }
+
+    private void NotifyNavigated()
+    {
+        OnNavigated.InvokeAsync();
+    }
+}

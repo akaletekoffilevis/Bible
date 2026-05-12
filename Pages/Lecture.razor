@@ -1,0 +1,319 @@
+@page "/lecture/{Slug}/{Chapitre:int}"
+@page "/lecture/{Slug}/{Chapitre:int}/{Verset:int}"
+@using BibleApp.Models
+@implements IDisposable
+@inject BibleApp.Services.BibleService BibleService
+@inject BibleApp.Services.SearchIndexService SearchIndexService
+@inject BibleApp.Services.IndexedDbService IndexedDb
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+
+<MudText Typo="Typo.h6" Class="mb-0 font-weight-bold">@_livre?.NomLivre — Chapitre @Chapitre</MudText>
+
+@if (_chapitre == null)
+{
+    <div class="d-flex justify-center pa-8">
+        <MudProgressCircular Indeterminate />
+    </div>
+}
+else
+{
+    <div class="d-flex align-center my-2" style="gap:6px; flex-wrap:wrap;">
+        <MudIconButton Icon="@Icons.Material.Filled.PlayArrow" Size="Size.Small" Color="@(_isPlaying ? Color.Primary : Color.Default)" OnClick="@PlayOuPause" title="Lecture audio" />
+        <MudIconButton Icon="@Icons.Material.Filled.Stop" Size="Size.Small" OnClick="@Stop" title="Arrêter" />
+        @if (_isPlaying)
+        {
+            <MudText Typo="Typo.caption" Class="mud-text-secondary">v. @_versetCourantTts</MudText>
+        }
+        <MudText Typo="Typo.caption" Class="mud-text-secondary mx-2">
+            <a href="/livre-chapitres/@Slug" class="mud-text-secondary">&larr; Chapitres</a>
+        </MudText>
+        <MudSpacer />
+        <MudIconButton Icon="@Icons.Material.Filled.Fullscreen" Size="Size.Small" OnClick="@BasculerPleinEcran" title="Plein écran" />
+        <MudIconButton Icon="@Icons.Material.Filled.PictureAsPdf" Size="Size.Small" OnClick="@ExporterPdf" title="Exporter PDF" />
+    </div>
+
+    <MudPaper Class="pa-3 pa-sm-4 mb-16" Elevation="0">
+        @foreach (var verset in _chapitre.ContenuVersets)
+        {
+            var vNum = verset.Numero;
+            <div class="verset-ligne d-flex align-start mb-2 @(_isPlaying && _versetCourantTts == vNum ? "verset-en-cours" : "")" id="@($"v-{vNum}")" tabindex="-1">
+                <div class="flex-grow-1">
+                    <sup class="verset-num">@vNum</sup>
+                    @verset.TextePropre
+                </div>
+                <div class="verse-actions" style="white-space:nowrap;">
+                    <span @onclick="@(() => AjouterMarquePage(verset))" Style="cursor:pointer; padding:4px 6px; font-size:0.85em;" title="Marquer ce verset">🔖</span>
+                    <span @onclick="@(() => AjouterNote(verset))" Style="cursor:pointer; padding:4px 6px; font-size:0.85em;" title="Ajouter une note">📝</span>
+                    <span @onclick="@(() => PartagerVerset(verset))" Style="cursor:pointer; padding:4px 6px; font-size:0.85em;" title="Copier le verset">📋</span>
+                    <span @onclick="@(() => GenererImage(verset))" Style="cursor:pointer; padding:4px 6px; font-size:0.85em;" title="Image du verset">🖼️</span>
+                </div>
+            </div>
+        }
+    </MudPaper>
+
+    <div class="lecture-nav">
+        <MudGrid>
+            <MudItem xs="6">
+                @if (_chapitre.Numero > 1 || _slugIndex > 0)
+                {
+                    <MudButton Variant="Variant.Outlined" FullWidth="true" OnClick="@GoPrev" StartIcon="@Icons.Material.Filled.ChevronLeft">
+                        Précédent
+                    </MudButton>
+                }
+            </MudItem>
+            <MudItem xs="6" Class="text-right">
+                <MudButton Variant="Variant.Outlined" FullWidth="true" OnClick="@GoNext" EndIcon="@Icons.Material.Filled.ChevronRight">
+                    Suivant
+                </MudButton>
+            </MudItem>
+        </MudGrid>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public string Slug { get; set; } = string.Empty;
+
+    [Parameter]
+    public int Chapitre { get; set; } = 1;
+
+    [Parameter]
+    public int Verset { get; set; }
+
+    private Models.Livre? _livre;
+    private Models.Chapitre? _chapitre;
+    private int _slugIndex;
+    private bool _progressionSauvegardee;
+    private bool _isPlaying;
+    private int _versetCourantTts;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        _livre = await BibleService.GetLivreAsync(Slug);
+        _chapitre = await BibleService.GetChapitreAsync(Slug, Chapitre);
+
+        var index = await BibleService.GetIndexAsync();
+        _slugIndex = index.FindIndex(i => i.Slug == Slug);
+
+        if (!SearchIndexService.IsIndexed(Slug))
+            _ = SearchIndexService.IndexLivreAsync(Slug);
+
+        _ = PrechargerAdjacentsAsync();
+        await SauvegarderDernierePositionAsync();
+    }
+
+    private async Task PrechargerAdjacentsAsync()
+    {
+        await BibleService.GetAdjacentAsync(Slug, Chapitre, -1);
+        await BibleService.GetAdjacentAsync(Slug, Chapitre, 1);
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await JsRuntime.InvokeVoidAsync("bibleKeyboard.init", DotNetObjectReference.Create(this));
+        }
+
+        if (!_progressionSauvegardee && _chapitre != null)
+        {
+            _progressionSauvegardee = true;
+            _ = SauvegarderProgressionAsync();
+        }
+
+        if (Verset > 0)
+        {
+            await JsRuntime.InvokeVoidAsync("bibleUtils.scrollToElement", $"v-{Verset}");
+        }
+    }
+
+    [JSInvokable]
+    public async Task OnKeyDown(string direction)
+    {
+        if (direction == "prev") await GoPrev();
+        else if (direction == "next") await GoNext();
+    }
+
+    private async Task SauvegarderProgressionAsync()
+    {
+        try
+        {
+            await IndexedDb.InitializeAsync();
+            await IndexedDb.PutAsync("progress", $"{Slug}-{Chapitre}",
+                new { id = $"{Slug}-{Chapitre}", slug = Slug, chapitre = Chapitre, date = DateTime.UtcNow.ToString("yyyy-MM-dd") });
+        }
+        catch { }
+    }
+
+    private async Task SauvegarderDernierePositionAsync()
+    {
+        try
+        {
+            await JsRuntime.InvokeVoidAsync("bibleUtils.localStorageSet", $"lastPos-{Slug}", $"{Chapitre}");
+        }
+        catch { }
+    }
+
+    private async Task PartagerVerset(Models.Verset verset)
+    {
+        var texte = $"{_livre?.NomLivre} {Chapitre}:{verset.Numero} (LSG) — {verset.TextePropre}";
+        try
+        {
+            await JsRuntime.InvokeVoidAsync("bibleUtils.shareOrCopy", texte);
+        }
+        catch { }
+    }
+
+    private async Task AjouterMarquePage(Models.Verset verset)
+    {
+        try
+        {
+            await IndexedDb.InitializeAsync();
+            var id = $"{Slug}-{Chapitre}-{verset.Numero}";
+            var reference = $"{_livre?.NomLivre} {Chapitre}:{verset.Numero}";
+            await IndexedDb.PutAsync("bookmarks", id, new
+            {
+                id,
+                slug = Slug,
+                chapitre = Chapitre,
+                verset = verset.Numero,
+                reference,
+                label = verset.TextePropre.Length > 80 ? verset.TextePropre[..80] + "..." : verset.TextePropre
+            });
+            Snackbar.Add("✓ Verset ajouté aux marque-pages", Severity.Success);
+        }
+        catch { Snackbar.Add("Erreur lors de l'ajout", Severity.Error); }
+    }
+
+    private async Task AjouterNote(Models.Verset verset)
+    {
+        try
+        {
+            await IndexedDb.InitializeAsync();
+            var id = $"{Slug}-{Chapitre}-{verset.Numero}-{DateTime.UtcNow.Ticks}";
+            var reference = $"{_livre?.NomLivre} {Chapitre}:{verset.Numero}";
+            var parameters = new DialogParameters
+            {
+                ["Reference"] = reference,
+                ["Id"] = id,
+                ["Slug"] = Slug,
+                ["Chapitre"] = Chapitre,
+                ["VersetNumero"] = verset.Numero
+            };
+            await DialogService.ShowAsync<NoteDialog>("Ajouter une note", parameters);
+        }
+        catch { Snackbar.Add("Erreur lors de l'ouverture", Severity.Error); }
+    }
+
+    private async Task GenererImage(Models.Verset verset)
+    {
+        var texte = verset.TextePropre;
+        var reference = $"{_livre?.NomLivre} {Chapitre}:{verset.Numero}";
+        try
+        {
+            await JsRuntime.InvokeVoidAsync("bibleImage.generate", texte, reference);
+        }
+        catch { }
+    }
+
+    private async Task BasculerPleinEcran()
+    {
+        try
+        {
+            await JsRuntime.InvokeVoidAsync("bibleFullscreen.toggle");
+        }
+        catch { }
+    }
+
+    private async Task ExporterPdf()
+    {
+        try
+        {
+            await JsRuntime.InvokeVoidAsync("biblePrint.print");
+        }
+        catch { }
+    }
+
+    [JSInvokable]
+    public void OnVerseChanged(int verseNum)
+    {
+        _versetCourantTts = verseNum;
+        InvokeAsync(StateHasChanged);
+    }
+
+    private async Task PlayOuPause()
+    {
+        if (_isPlaying)
+        {
+            await JsRuntime.InvokeVoidAsync("bibleTts.pause");
+            _isPlaying = false;
+            return;
+        }
+
+        if (_chapitre == null) return;
+
+        if (await JsRuntime.InvokeAsync<bool>("bibleTts.isSpeaking"))
+        {
+            await JsRuntime.InvokeVoidAsync("bibleTts.resume");
+            _isPlaying = true;
+            return;
+        }
+
+        var textes = _chapitre.ContenuVersets.Select(v => v.TextePropre).ToArray();
+        _isPlaying = true;
+        _versetCourantTts = 0;
+        await JsRuntime.InvokeVoidAsync("bibleTts.speak", textes, "fr-FR", DotNetObjectReference.Create(this));
+    }
+
+    private async Task Stop()
+    {
+        await JsRuntime.InvokeVoidAsync("bibleTts.stop");
+        _isPlaying = false;
+        _versetCourantTts = 0;
+    }
+
+    private async Task GoPrev()
+    {
+        if (_chapitre != null && _chapitre.Numero > 1)
+        {
+            NavigationManager.NavigateTo($"/lecture/{Slug}/{_chapitre.Numero - 1}");
+            return;
+        }
+
+        var adj = await BibleService.GetAdjacentAsync(Slug, Chapitre, -1);
+        if (adj.HasValue)
+        {
+            var (livre, chap) = adj.Value;
+            NavigationManager.NavigateTo($"/lecture/{livre.Slug}/{chap.Numero}");
+        }
+    }
+
+    private async Task GoNext()
+    {
+        if (_chapitre != null && _livre != null &&
+            _chapitre.Numero < _livre.ContenuChapitre.Count)
+        {
+            NavigationManager.NavigateTo($"/lecture/{Slug}/{_chapitre.Numero + 1}");
+            return;
+        }
+
+        var adj = await BibleService.GetAdjacentAsync(Slug, Chapitre, 1);
+        if (adj.HasValue)
+        {
+            var (livre, chap) = adj.Value;
+            NavigationManager.NavigateTo($"/lecture/{livre.Slug}/{chap.Numero}");
+        }
+    }
+
+    [Inject]
+    private NavigationManager NavigationManager { get; set; } = null!;
+
+    [Inject]
+    private IJSRuntime JsRuntime { get; set; } = null!;
+
+    public void Dispose()
+    {
+        _ = JsRuntime.InvokeVoidAsync("bibleKeyboard.dispose");
+    }
+}

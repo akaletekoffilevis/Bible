@@ -1,0 +1,109 @@
+@page "/"
+@using BibleApp.Models
+@inject BibleApp.Services.BibleService BibleService
+
+<MudText Typo="Typo.h5" Class="mb-1 text-center font-weight-bold">Bible Louis Segond</MudText>
+<MudText Typo="Typo.body2" Class="mb-4 text-center mud-text-secondary">Sélectionne un livre pour commencer la lecture</MudText>
+
+@if (_versetDuJour != null)
+{
+    <MudPaper Class="mb-4 pa-4 text-center" Elevation="1" Style="border-left: 4px solid var(--mud-palette-primary); border-radius: 8px; background: linear-gradient(135deg, var(--mud-palette-surface) 0%, var(--mud-palette-table-hover) 100%);">
+        <MudText Typo="Typo.caption" Class="mud-text-secondary mb-2 d-flex align-center justify-center" Style="gap: 6px;">
+            <MudIcon Icon="@Icons.Material.Filled.AutoStories" Size="Size.Small" /> Verset du jour
+        </MudText>
+        <MudText Typo="Typo.body1" Class="mb-2" Style="font-style: italic; line-height: 1.8;">
+            "@_versetDuJour.Value.Verset.TextePropre"
+        </MudText>
+        <MudButton Variant="Variant.Text" Color="Color.Primary" Href="@($"/lecture/{_versetDuJour.Value.Livre.Slug}/{_versetDuJour.Value.Chapitre.Numero}/{_versetDuJour.Value.Verset.Numero}")">
+            @_versetDuJour.Value.Livre.NomLivre @_versetDuJour.Value.Chapitre.Numero:@_versetDuJour.Value.Verset.Numero →
+        </MudButton>
+    </MudPaper>
+}
+
+<MudTextField @bind-Value="_filter"
+              Label="Chercher un livre..."
+              Variant="Variant.Outlined"
+              Margin="Margin.Dense"
+              Immediate="true"
+              Class="mb-4"
+              Adornment="Adornment.End"
+              AdornmentIcon="@Icons.Material.Filled.Search" />
+
+<MudGrid>
+    <MudItem xs="12" md="6">
+        <MudText Typo="Typo.h6" Class="mb-2 d-flex align-center">
+            <MudIcon Icon="@Icons.Material.Filled.AutoStories" Size="Size.Small" Class="mr-1" />
+            Ancien Testament
+            <MudText Typo="Typo.caption" Class="ml-2 mud-text-secondary">@_atCount livres</MudText>
+        </MudText>
+        @foreach (var livre in _atLivres)
+        {
+            <MudPaper Class="mb-2 livre-item" Style="cursor:pointer; border-radius: 8px;" Elevation="0">
+                <div @onclick="@(() => NavigateTo(livre.Slug))" Class="pa-3 d-flex align-center justify-space-between">
+                    <div>
+                        <MudText Typo="Typo.body1" Class="font-weight-medium">@livre.NomLivre</MudText>
+                        <MudText Typo="Typo.caption" Class="mud-text-secondary">@livre.NombreChapitres chapitres</MudText>
+                    </div>
+                    <MudIcon Icon="@Icons.Material.Filled.ChevronRight" Size="Size.Small" Class="mud-text-secondary" />
+                </div>
+            </MudPaper>
+        }
+        @if (!_atLivres.Any() && !string.IsNullOrEmpty(_filter))
+        {
+            <MudText Typo="Typo.body2" Class="mud-text-secondary pa-4 text-center">Aucun livre trouvé</MudText>
+        }
+    </MudItem>
+
+    <MudItem xs="12" md="6">
+        <MudText Typo="Typo.h6" Class="mb-2 d-flex align-center">
+            <MudIcon Icon="@Icons.Material.Filled.AutoStories" Size="Size.Small" Class="mr-1" />
+            Nouveau Testament
+            <MudText Typo="Typo.caption" Class="ml-2 mud-text-secondary">@_ntCount livres</MudText>
+        </MudText>
+        @foreach (var livre in _ntLivres)
+        {
+            <MudPaper Class="mb-2 livre-item" Style="cursor:pointer; border-radius: 8px;" Elevation="0">
+                <div @onclick="@(() => NavigateTo(livre.Slug))" Class="pa-3 d-flex align-center justify-space-between">
+                    <div>
+                        <MudText Typo="Typo.body1" Class="font-weight-medium">@livre.NomLivre</MudText>
+                        <MudText Typo="Typo.caption" Class="mud-text-secondary">@livre.NombreChapitres chapitres</MudText>
+                    </div>
+                    <MudIcon Icon="@Icons.Material.Filled.ChevronRight" Size="Size.Small" Class="mud-text-secondary" />
+                </div>
+            </MudPaper>
+        }
+        @if (!_ntLivres.Any() && !string.IsNullOrEmpty(_filter))
+        {
+            <MudText Typo="Typo.body2" Class="mud-text-secondary pa-4 text-center">Aucun livre trouvé</MudText>
+        }
+    </MudItem>
+</MudGrid>
+
+@code {
+    private List<LivreIndex> _index = new();
+    private (Livre Livre, Chapitre Chapitre, Verset Verset)? _versetDuJour;
+    private string _filter = string.Empty;
+
+    private IEnumerable<LivreIndex> _atLivres =>
+        _index.Where(l => l.Testament.StartsWith("Ancien") && l.NomLivre.Contains(_filter, StringComparison.OrdinalIgnoreCase));
+
+    private IEnumerable<LivreIndex> _ntLivres =>
+        _index.Where(l => l.Testament.StartsWith("Nouveau") && l.NomLivre.Contains(_filter, StringComparison.OrdinalIgnoreCase));
+
+    private int _atCount => _index.Count(l => l.Testament.StartsWith("Ancien"));
+    private int _ntCount => _index.Count(l => l.Testament.StartsWith("Nouveau"));
+
+    protected override async Task OnInitializedAsync()
+    {
+        _index = await BibleService.GetIndexAsync();
+        _versetDuJour = await BibleService.GetVersetDuJourAsync();
+    }
+
+    private void NavigateTo(string slug)
+    {
+        NavigationManager.NavigateTo($"/livre-chapitres/{slug}");
+    }
+
+    [Inject]
+    private NavigationManager NavigationManager { get; set; } = null!;
+}

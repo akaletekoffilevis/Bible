@@ -1,0 +1,185 @@
+﻿@namespace BibleApp.Layout
+@using MudBlazor
+@using System.Globalization
+@inherits LayoutComponentBase
+@inject BibleApp.Services.ThemeService ThemeService
+@inject NavigationManager Navigation
+@inject IJSRuntime JsRuntime
+@inject ISnackbar Snackbar
+@implements IDisposable
+
+<MudThemeProvider Theme="_theme" IsDarkMode="ThemeService.IsDarkMode" />
+<MudDialogProvider />
+<MudSnackbarProvider />
+
+    <MudLayout>
+    <MudAppBar>
+        <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" OnClick="@((e) => DrawerToggle())" Size="Size.Medium" />
+        @if (_showBackButton)
+        {
+            <MudIconButton Icon="@Icons.Material.Filled.ArrowBack" Color="Color.Inherit" OnClick="@(() => Navigation.NavigateTo(_backUrl))" Class="mr-1" Size="Size.Medium" />
+        }
+        <MudText Typo="Typo.h6" Class="ml-2" Style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width: 50vw;">@_pageTitle</MudText>
+        <MudSpacer />
+        <MudIconButton Icon="@Icons.Material.Filled.Search" Color="Color.Inherit" href="/recherche" Size="Size.Medium" />
+        <MudIconButton Icon="@Icons.Material.Filled.Bookmark" Color="Color.Inherit" href="/favoris" Size="Size.Medium" />
+        <MudIconButton Icon="@Icons.Material.Filled.DarkMode" Color="Color.Inherit" OnClick="@(() => ThemeService.Toggle())" Size="Size.Medium" />
+        <MudIconButton Icon="@Icons.Material.Filled.Settings" Color="Color.Inherit" href="/parametres" Size="Size.Medium" />
+    </MudAppBar>
+
+    <MudDrawer Open="_drawerOpen" OpenChanged="OnDrawerOpenChanged" Variant="_drawerVariant" Width="400">
+        <div class="d-flex align-center pa-2" Style="justify-content:flex-end;">
+            <MudIconButton Icon="@Icons.Material.Filled.Close" Color="Color.Inherit" OnClick="@(() => CloseDrawer())" Size="Size.Medium" />
+        </div>
+        <NavMenu OnNavigated="CloseDrawer" />
+    </MudDrawer>
+
+    <MudMainContent>
+        <MudContainer MaxWidth="MaxWidth.Medium" Class="py-4 px-sm-4 px-2">
+            @Body
+        </MudContainer>
+    </MudMainContent>
+</MudLayout>
+
+@code {
+    private bool _drawerOpen;
+    private bool _showBackButton;
+    private string _backUrl = "/";
+    private string _pageTitle = "Bible Louis Segond";
+    private DrawerVariant _drawerVariant = DrawerVariant.Temporary;
+    private MudTheme _theme = new()
+    {
+        PaletteLight = new PaletteLight
+        {
+            Primary = "#1a237e",
+            Secondary = "#3949ab",
+            AppbarBackground = "#1a237e",
+            Surface = "#ffffff",
+            Background = "#f5f5f5"
+        },
+        PaletteDark = new PaletteDark
+        {
+            Primary = "#7986cb",
+            Secondary = "#9fa8da",
+            AppbarBackground = "#121212",
+            Surface = "#1e1e1e",
+            Background = "#121212",
+            Dark = "#2d2d2d",
+            DrawerBackground = "#1e1e1e"
+        }
+    };
+
+    protected override void OnInitialized()
+    {
+        ThemeService.OnChange += StateHasChanged;
+        Navigation.LocationChanged += OnLocationChanged;
+        UpdateBackButton(Navigation.Uri);
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            var width = await JsRuntime.InvokeAsync<double>("bibleUtils.getWindowWidth");
+            _drawerOpen = width > 960;
+            _drawerVariant = width > 960 ? DrawerVariant.Persistent : DrawerVariant.Temporary;
+            StateHasChanged();
+
+            _ = VerifierInstallationPwaAsync();
+        }
+    }
+
+    private async Task VerifierInstallationPwaAsync()
+    {
+        try
+        {
+            await Task.Delay(30_000);
+            var installable = await JsRuntime.InvokeAsync<bool>("bibleInstall.isInstallable");
+            if (installable)
+            {
+                Snackbar.Add("📲 Installer l'application Bible pour une expérience hors-ligne", Severity.Info, config =>
+                {
+                    config.Action = "Installer";
+                    config.ActionColor = Color.Primary;
+                    config.OnClick = async _ =>
+                    {
+                        await JsRuntime.InvokeVoidAsync("bibleInstall.promptInstall");
+                    };
+                    config.VisibleStateDuration = 10000;
+                    config.ShowCloseIcon = true;
+                });
+            }
+        }
+        catch { }
+    }
+
+    private void OnLocationChanged(object? sender, Microsoft.AspNetCore.Components.Routing.LocationChangedEventArgs e)
+    {
+        UpdateBackButton(e.Location);
+    }
+
+    private void UpdateBackButton(string location)
+    {
+        var uri = new Uri(location);
+        var path = uri.AbsolutePath.Trim('/');
+
+        if (string.IsNullOrEmpty(path) || path == "/" || path == "index.html")
+        {
+            _showBackButton = false;
+            _backUrl = "/";
+            _pageTitle = "Bible Louis Segond";
+        }
+        else if (path.StartsWith("lecture/"))
+        {
+            _showBackButton = true;
+            _backUrl = "/";
+            _pageTitle = "Lecture";
+        }
+        else if (path.StartsWith("livre-chapitres/"))
+        {
+            _showBackButton = true;
+            _backUrl = "/";
+            _pageTitle = "Chapitres";
+        }
+        else
+        {
+            _showBackButton = true;
+            _backUrl = "/";
+            _pageTitle = path switch
+            {
+                "recherche" => "Recherche",
+                "favoris" => "Favoris",
+                "progression" => "Progression",
+                "quiz" => "Quiz biblique",
+                "carte" => "Carte biblique",
+                "parametres" => "Paramètres",
+                _ => "Bible Louis Segond"
+            };
+        }
+    }
+
+    private void DrawerToggle()
+    {
+        _drawerOpen = !_drawerOpen;
+        StateHasChanged();
+    }
+
+    private void OnDrawerOpenChanged(bool value)
+    {
+        _drawerOpen = value;
+        StateHasChanged();
+    }
+
+    private void CloseDrawer()
+    {
+        _drawerOpen = false;
+        try { _ = JsRuntime.InvokeVoidAsync("bibleDrawer.close"); } catch { }
+        StateHasChanged();
+    }
+
+    public void Dispose()
+    {
+        ThemeService.OnChange -= StateHasChanged;
+        Navigation.LocationChanged -= OnLocationChanged;
+    }
+}

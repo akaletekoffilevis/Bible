@@ -1,0 +1,126 @@
+@page "/recherche"
+@using BibleApp.Services
+@inject BibleApp.Services.BibleService BibleService
+@inject SearchIndexService SearchService
+
+<MudTextField @ref="_searchRef"
+              @bind-Value="_query"
+              Label="Rechercher un mot ou une expression..."
+              Variant="Variant.Outlined"
+              Adornment="Adornment.End"
+              AdornmentIcon="@Icons.Material.Filled.Search"
+              Immediate="true"
+              Class="mb-3" />
+
+<MudGrid Class="mb-3">
+    <MudItem xs="6" sm="4">
+        <MudSelect T="string"
+                   Label="Testament"
+                   @bind-Value="_testament"
+                   Clearable="true"
+                   Variant="Variant.Outlined"
+                   Dense="true">
+            <MudSelectItem Value="@("AT")">Ancien Testament</MudSelectItem>
+            <MudSelectItem Value="@("NT")">Nouveau Testament</MudSelectItem>
+        </MudSelect>
+    </MudItem>
+    <MudItem xs="6" sm="4">
+        <MudSelect T="string"
+                   Label="Livre"
+                   @bind-Value="_livreSlug"
+                   Clearable="true"
+                   Variant="Variant.Outlined"
+                   Dense="true">
+            @foreach (var livre in _index)
+            {
+                <MudSelectItem Value="@livre.Slug">@livre.NomLivre</MudSelectItem>
+            }
+        </MudSelect>
+    </MudItem>
+</MudGrid>
+
+@if (string.IsNullOrEmpty(_query) || _query.Length < 2)
+{
+    <MudPaper Class="pa-8 text-center" Elevation="0">
+        <MudIcon Icon="@Icons.Material.Filled.Search" Size="Size.Large" Class="mud-text-secondary mb-4" />
+        <MudText Typo="Typo.body2" Class="mud-text-secondary">Saisis au moins 2 caractères pour chercher dans la Bible</MudText>
+        <MudText Typo="Typo.caption" Class="mud-text-secondary mt-2">Ex : "amour", "foi", "Dieu a tant aimé"</MudText>
+    </MudPaper>
+}
+else if (_resultats.Count > 0)
+{
+    <MudText Typo="Typo.body2" Class="mb-2 mud-text-secondary d-flex align-center" Style="gap:4px;">
+        <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Size="Size.Small" Color="Color.Success" />
+        @_resultats.Count résultat(s) pour "@_query"
+    </MudText>
+
+    @foreach (var resultat in _resultats)
+    {
+        <MudPaper Class="mb-2" Style="cursor:pointer; border-radius: 8px;" Elevation="0">
+            <div @onclick="@(() => NavigateTo(resultat))" Class="pa-3">
+                <MudText Typo="Typo.caption" Class="mud-text-secondary mb-1 d-flex align-center" Style="gap:4px;">
+                    <MudIcon Icon="@Icons.Material.Filled.AutoStories" Size="Size.Small" />
+                    @resultat.Reference
+                </MudText>
+                <MudText Typo="Typo.body1">
+                    @resultat.Texte
+                </MudText>
+            </div>
+        </MudPaper>
+    }
+}
+else
+{
+    <MudPaper Class="pa-8 text-center" Elevation="0">
+        <MudIcon Icon="@Icons.Material.Filled.SearchOff" Size="Size.Large" Class="mud-text-secondary mb-4" />
+        <MudText Typo="Typo.body2" Class="mud-text-secondary">Aucun résultat pour "@_query"</MudText>
+        <MudText Typo="Typo.caption" Class="mud-text-secondary mt-2">Vérifie l'orthographe ou essaye un autre mot</MudText>
+    </MudPaper>
+}
+
+@code {
+    private MudBlazor.MudTextField<string>? _searchRef;
+    private string _query = string.Empty;
+    private string? _testament;
+    private string? _livreSlug;
+    private List<SearchResult> _resultats = new();
+    private List<BibleApp.Models.LivreIndex> _index = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        _index = await BibleService.GetIndexAsync();
+        _ = Task.Run(async () => await SearchService.IndexAllLoadedAsync());
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && _searchRef != null)
+        {
+            await _searchRef.FocusAsync();
+        }
+    }
+
+    protected override void OnParametersSet()
+    {
+        Rechercher();
+    }
+
+    private void Rechercher()
+    {
+        if (string.IsNullOrWhiteSpace(_query) || _query.Length < 2)
+        {
+            _resultats = new List<SearchResult>();
+            return;
+        }
+
+        _resultats = SearchService.Rechercher(_query, _testament, _livreSlug);
+    }
+
+    private void NavigateTo(SearchResult result)
+    {
+        NavigationManager.NavigateTo($"/lecture/{result.Slug}/{result.Chapitre}/{result.Verset}");
+    }
+
+    [Inject]
+    private NavigationManager NavigationManager { get; set; } = null!;
+}

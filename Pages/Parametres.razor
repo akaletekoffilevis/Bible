@@ -1,0 +1,142 @@
+@page "/parametres"
+@using MudBlazor
+@inject IJSRuntime JsRuntime
+@inject BibleApp.Services.ThemeService ThemeService
+
+<MudText Typo="Typo.h6" Class="mb-4 font-weight-bold d-flex align-center">
+    <MudIcon Icon="@Icons.Material.Filled.Settings" Class="mr-2" /> Paramètres
+</MudText>
+
+<MudExpansionPanels>
+    <MudExpansionPanel Text="Affichage" Class="mb-2">
+        <div class="d-flex align-center justify-space-between mb-3">
+            <MudText Typo="Typo.body2">Mode nuit</MudText>
+            <MudSwitch @bind-Value="_isDark" Color="Color.Primary" />
+        </div>
+
+        <MudText Typo="Typo.body2" Class="mb-1">Taille de police</MudText>
+        <MudSlider @bind-Value="_fontSize" Min="14" Max="28" Step="2" Class="mb-1" />
+        <MudText Typo="Typo.caption" Class="mud-text-secondary mb-3 d-block">@_fontSize px</MudText>
+
+        <MudText Typo="Typo.body2" Class="mb-1">Famille de police</MudText>
+        <MudSelect T="string" @bind-Value="_fontFamily" Variant="Variant.Outlined" Dense="true" Immediate="true" Class="mb-3">
+            <MudSelectItem Value="@("serif")">Serif (défaut)</MudSelectItem>
+            <MudSelectItem Value="@("sans-serif")">Sans-serif</MudSelectItem>
+            <MudSelectItem Value="@("Georgia, serif")">Georgia</MudSelectItem>
+        </MudSelect>
+
+        <MudText Typo="Typo.body2" Class="mb-1">Interlignage</MudText>
+        <MudSlider @bind-Value="_lineHeight" Min="1.5" Max="2.8" Step="0.1" Class="mb-1" />
+        <MudText Typo="Typo.caption" Class="mud-text-secondary d-block">@_lineHeight.ToString("0.0")</MudText>
+    </MudExpansionPanel>
+
+    <MudExpansionPanel Text="Traduction" Class="mb-2">
+        <div class="d-flex align-center justify-space-between mb-2">
+            <div>
+                <MudText Typo="Typo.body2">Google Translate</MudText>
+                <MudText Typo="Typo.caption" Class="mud-text-secondary">Traduit l'interface en 11 langues</MudText>
+            </div>
+            <MudSwitch @bind-Value="_showTranslate" Color="Color.Secondary" />
+        </div>
+    </MudExpansionPanel>
+
+    <MudExpansionPanel Text="Espace de stockage" Class="mb-2">
+        <MudText Typo="Typo.body2" Class="mb-1">Données locales</MudText>
+        <MudText Typo="Typo.caption" Class="mud-text-secondary mb-3 d-block">
+            Les marque-pages, notes et la progression sont stockés dans le navigateur.
+        </MudText>
+        <MudButton Variant="Variant.Outlined" Color="Color.Error" OnClick="@EffacerDonnees" Size="Size.Small">
+            Effacer les données locales
+        </MudButton>
+    </MudExpansionPanel>
+</MudExpansionPanels>
+
+@code {
+    private int _fontSize = 18;
+    private string _fontFamily = "serif";
+    private double _lineHeight = 2.0;
+    private bool _showTranslate;
+    private bool _isDark;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var fs = await GetSettingAsync("fontSize");
+        if (int.TryParse(fs, out var parsed)) _fontSize = parsed;
+        _fontFamily = await GetSettingAsync("fontFamily") ?? "serif";
+        var lh = await GetSettingAsync("lineHeight");
+        if (double.TryParse(lh, out var parsedLh)) _lineHeight = parsedLh;
+        _showTranslate = await GetSettingAsync("showTranslate") == "true";
+        _isDark = await GetSettingAsync("darkMode") == "true";
+
+        if (_isDark != ThemeService.IsDarkMode)
+            ThemeService.SetDarkMode(_isDark);
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await ApplyStylesAsync();
+            if (_showTranslate)
+                await JsRuntime.InvokeVoidAsync("bibleUtils.toggleGoogleTranslate", true);
+        }
+    }
+
+    private async Task OnIsDarkChanged(bool value)
+    {
+        ThemeService.SetDarkMode(value);
+        await SetSettingAsync("darkMode", value.ToString().ToLower());
+    }
+
+    private async Task OnShowTranslateChanged(bool value)
+    {
+        _showTranslate = value;
+        await SetSettingAsync("showTranslate", value.ToString().ToLower());
+        await JsRuntime.InvokeVoidAsync("bibleUtils.toggleGoogleTranslate", value);
+    }
+
+    private async Task OnFontSizeChanged(int value)
+    {
+        _fontSize = value;
+        await ApplyStylesAsync();
+        await SetSettingAsync("fontSize", value.ToString());
+    }
+
+    private async Task OnFontFamilyChanged(string value)
+    {
+        _fontFamily = value;
+        await ApplyStylesAsync();
+        await SetSettingAsync("fontFamily", value);
+    }
+
+    private async Task OnLineHeightChanged(double value)
+    {
+        _lineHeight = value;
+        await ApplyStylesAsync();
+        await SetSettingAsync("lineHeight", value.ToString("0.0"));
+    }
+
+    private async Task ApplyStylesAsync()
+    {
+        await JsRuntime.InvokeVoidAsync("bibleUtils.setBodyStyles",
+            $"{_fontSize}px", _fontFamily, $"{_lineHeight}");
+    }
+
+    private async Task EffacerDonnees()
+    {
+        await JsRuntime.InvokeVoidAsync("bibleUtils.localStorageClear");
+        await JsRuntime.InvokeVoidAsync("bibleUtils.clearIndexedDB");
+    }
+
+    private async Task<string?> GetSettingAsync(string key)
+    {
+        try { return await JsRuntime.InvokeAsync<string?>("bibleUtils.localStorageGet", key); }
+        catch { return null; }
+    }
+
+    private async Task SetSettingAsync(string key, string value)
+    {
+        try { await JsRuntime.InvokeVoidAsync("bibleUtils.localStorageSet", key, value); }
+        catch { }
+    }
+}

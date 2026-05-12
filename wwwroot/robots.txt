@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Sitemap: https://bible.web.app/sitemap.xml
+
+# Note: Blazor WASM content is loaded dynamically via WebAssembly.
+# Google may not index individual verse content.
+# Consider using Firebase + Cloud Function + Puppeteer for dynamic rendering.
