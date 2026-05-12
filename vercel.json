@@ -1,5 +1,5 @@
 {
-  "buildCommand": "curl -sSL https://dot.net/v1/dotnet-install.sh | bash /dev/stdin --channel 9.0 --install-dir /opt/dotnet && export PATH=\"$PATH:/opt/dotnet\" && dotnet publish -c Release --nologo",
+  "buildCommand": "curl -sSL https://dot.net/v1/dotnet-install.sh | bash /dev/stdin --channel 9.0 --install-dir /opt/dotnet && /opt/dotnet/dotnet publish -c Release --nologo",
   "outputDirectory": "bin/Release/net9.0/publish/wwwroot",
   "installCommand": "",
   "rewrites": [

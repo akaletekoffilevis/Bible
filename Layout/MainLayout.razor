@@ -116,6 +116,8 @@
     private void OnLocationChanged(object? sender, Microsoft.AspNetCore.Components.Routing.LocationChangedEventArgs e)
     {
         UpdateBackButton(e.Location);
+        _drawerOpen = false;
+        try { _ = JsRuntime.InvokeVoidAsync("bibleDrawer.close"); } catch { }
     }
 
     private void UpdateBackButton(string location)
