@@ -85,7 +85,7 @@ BibleApp/
 
 ---
 
-## 🚀 Déploiement
+## Déploiement
 
 ### Prérequis
 
@@ -139,9 +139,15 @@ npx vercel --prod
 
 ---
 
-## 📄 Licence
+## Licence
 
-Ce projet est open source. Utilisation libre pour tout usage personnel ou communautaire.
+Distribué sous licence **MIT**. Voir le fichier [LICENSE](LICENSE) pour plus d'informations.
+
+---
+
+## Crédits
+
+**Koffi Levis** — [koffilevis21@gmail.com](mailto:koffilevis21@gmail.com)
 
 ---
 
