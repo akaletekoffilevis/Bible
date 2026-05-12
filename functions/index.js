@@ -115,7 +115,7 @@ exports.prerender = functions
 
     // Crawler: render with Puppeteer
     try {
-      const baseUrl = `https://${req.headers['x-forwarded-host'] || req.headers.host || 'bible.web.app'}`;
+      const baseUrl = `https://${req.headers['x-forwarded-host'] || req.headers.host || 'bibeli.vercel.app'}`;
       const fullUrl = `${baseUrl}${req.path}${req.url.includes('?') ? req.url.substring(req.url.indexOf('?')) : ''}`;
       const html = await renderPage(fullUrl);
       res.set('Content-Type', 'text/html; charset=utf-8');
