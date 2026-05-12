@@ -3,7 +3,7 @@
   "outputDirectory": "bin/Release/net9.0/publish/wwwroot",
   "installCommand": "",
   "rewrites": [
-    { "source": "/*", "destination": "/index.html" }
+    { "source": "/(.*)", "destination": "/index.html" }
   ],
   "headers": [
     {
