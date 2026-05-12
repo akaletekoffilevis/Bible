@@ -41,12 +41,26 @@
     </MudMainContent>
 </MudLayout>
 
+@if (_showConsent)
+{
+    <MudPaper Style="position:fixed; bottom:0; left:0; right:0; z-index:9999; border-radius:0;" Elevation="5" Class="pa-3">
+        <div class="d-flex align-center" style="gap:12px; flex-wrap:wrap;">
+            <MudText Typo="Typo.caption" Class="flex-grow-1" Style="line-height:1.5;">
+                Bibeli utilise uniquement des données locales. Google Translate (optionnel) charge depuis Google.
+                <MudLink Href="/parametres" Typo="Typo.caption">En savoir plus</MudLink>
+            </MudText>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small" OnClick="@AccepterConsent">OK</MudButton>
+        </div>
+    </MudPaper>
+}
+
 @code {
     private bool _drawerOpen = true;
     private bool _showBackButton;
     private string _backUrl = "/";
     private string _pageTitle = "Bible Louis Segond";
     private DrawerVariant _drawerVariant = DrawerVariant.Persistent;
+    private bool _showConsent;
     private MudTheme _theme = new()
     {
         PaletteLight = new PaletteLight
@@ -83,10 +97,19 @@
             var width = await JsRuntime.InvokeAsync<double>("bibleUtils.getWindowWidth");
             _drawerOpen = width > 960;
             _drawerVariant = width > 960 ? DrawerVariant.Persistent : DrawerVariant.Temporary;
+            var consent = await JsRuntime.InvokeAsync<string?>("bibleUtils.localStorageGet", "consent");
+            _showConsent = consent != "true";
             StateHasChanged();
 
             _ = VerifierInstallationPwaAsync();
         }
+    }
+
+    private async Task AccepterConsent()
+    {
+        _showConsent = false;
+        await JsRuntime.InvokeVoidAsync("bibleUtils.localStorageSet", "consent", "true");
+        StateHasChanged();
     }
 
     private async Task VerifierInstallationPwaAsync()

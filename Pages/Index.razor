@@ -5,7 +5,15 @@
 <MudText Typo="Typo.h5" Class="mb-1 text-center font-weight-bold">Bible Louis Segond</MudText>
 <MudText Typo="Typo.body2" Class="mb-4 text-center mud-text-secondary">Sélectionne un livre pour commencer la lecture</MudText>
 
-@if (_versetDuJour != null)
+@if (_chargementVerset)
+{
+    <MudPaper Class="mb-4 pa-4 text-center" Elevation="1" Style="border-radius: 8px;">
+        <div class="skeleton-line mb-3" style="width: 60%; height: 16px; margin: 0 auto;"></div>
+        <div class="skeleton-line mb-3" style="width: 90%; height: 20px; margin: 0 auto;"></div>
+        <div class="skeleton-line" style="width: 40%; height: 14px; margin: 0 auto;"></div>
+    </MudPaper>
+}
+else if (_versetDuJour != null)
 {
     <MudPaper Class="mb-4 pa-4 text-center" Elevation="1" Style="border-left: 4px solid var(--mud-palette-primary); border-radius: 8px; background: linear-gradient(135deg, var(--mud-palette-surface) 0%, var(--mud-palette-table-hover) 100%);">
         <MudText Typo="Typo.caption" Class="mud-text-secondary mb-2 d-flex align-center justify-center" Style="gap: 6px;">
@@ -83,6 +91,7 @@
     private List<LivreIndex> _index = new();
     private (Livre Livre, Chapitre Chapitre, Verset Verset)? _versetDuJour;
     private string _filter = string.Empty;
+    private bool _chargementVerset = true;
 
     private IEnumerable<LivreIndex> _atLivres =>
         _index.Where(l => l.Testament.StartsWith("Ancien") && l.NomLivre.Contains(_filter, StringComparison.OrdinalIgnoreCase));
@@ -103,6 +112,7 @@
         if (firstRender)
         {
             _versetDuJour = await BibleService.GetVersetDuJourAsync();
+            _chargementVerset = false;
             StateHasChanged();
         }
     }

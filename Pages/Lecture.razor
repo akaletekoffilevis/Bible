@@ -45,11 +45,11 @@ else
                     <sup class="verset-num">@vNum</sup>
                     @verset.TextePropre
                 </div>
-                <div class="verse-actions" style="white-space:nowrap;">
-                    <span @onclick="@(() => AjouterMarquePage(verset))" Style="cursor:pointer; padding:4px 6px; font-size:0.85em;" title="Marquer ce verset">🔖</span>
-                    <span @onclick="@(() => AjouterNote(verset))" Style="cursor:pointer; padding:4px 6px; font-size:0.85em;" title="Ajouter une note">📝</span>
-                    <span @onclick="@(() => PartagerVerset(verset))" Style="cursor:pointer; padding:4px 6px; font-size:0.85em;" title="Copier le verset">📋</span>
-                    <span @onclick="@(() => GenererImage(verset))" Style="cursor:pointer; padding:4px 6px; font-size:0.85em;" title="Image du verset">🖼️</span>
+                <div class="verse-actions" style="white-space:nowrap;" role="group" aria-label="Actions du verset">
+                    <span @onclick="@(() => AjouterMarquePage(verset))" Style="cursor:pointer; padding:4px 6px; font-size:0.85em;" title="Marquer ce verset" role="button" tabindex="0" aria-label="Marquer ce verset">🔖</span>
+                    <span @onclick="@(() => AjouterNote(verset))" Style="cursor:pointer; padding:4px 6px; font-size:0.85em;" title="Ajouter une note" role="button" tabindex="0" aria-label="Ajouter une note">📝</span>
+                    <span @onclick="@(() => PartagerVerset(verset))" Style="cursor:pointer; padding:4px 6px; font-size:0.85em;" title="Partager le verset" role="button" tabindex="0" aria-label="Partager ce verset">📋</span>
+                    <span @onclick="@(() => GenererImage(verset))" Style="cursor:pointer; padding:4px 6px; font-size:0.85em;" title="Image du verset" role="button" tabindex="0" aria-label="Générer une image">🖼️</span>
                 </div>
             </div>
         }
@@ -90,6 +90,8 @@ else
     private bool _progressionSauvegardee;
     private bool _isPlaying;
     private int _versetCourantTts;
+    private DotNetObjectReference<Lecture>? _keyboardRef;
+    private DotNetObjectReference<Lecture>? _ttsRef;
 
     protected override async Task OnParametersSetAsync()
     {
@@ -116,7 +118,8 @@ else
     {
         if (firstRender)
         {
-            await JsRuntime.InvokeVoidAsync("bibleKeyboard.init", DotNetObjectReference.Create(this));
+            _keyboardRef = DotNetObjectReference.Create(this);
+            await JsRuntime.InvokeVoidAsync("bibleKeyboard.init", _keyboardRef);
         }
 
         if (!_progressionSauvegardee && _chapitre != null)
@@ -271,7 +274,9 @@ else
         var textes = _chapitre.ContenuVersets.Select(v => v.TextePropre).ToArray();
         _isPlaying = true;
         _versetCourantTts = 0;
-        await JsRuntime.InvokeVoidAsync("bibleTts.speak", textes, "fr-FR", DotNetObjectReference.Create(this));
+        _ttsRef?.Dispose();
+        _ttsRef = DotNetObjectReference.Create(this);
+        await JsRuntime.InvokeVoidAsync("bibleTts.speak", textes, "fr-FR", _ttsRef);
     }
 
     private async Task Stop()
@@ -322,6 +327,8 @@ else
 
     public void Dispose()
     {
+        _keyboardRef?.Dispose();
+        _ttsRef?.Dispose();
         _ = JsRuntime.InvokeVoidAsync("bibleKeyboard.dispose");
     }
 }
