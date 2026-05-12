@@ -203,8 +203,8 @@ body {
         top: 0 !important;
         height: 100dvh !important;
         max-height: 100dvh !important;
-        width: 100% !important;
-        max-width: 100vw !important;
+        width: 90% !important;
+        max-width: 90vw !important;
     }
     .mud-drawer .mud-navmenu {
         padding-top: 0;
