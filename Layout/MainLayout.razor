@@ -118,6 +118,7 @@
     {
         _showConsent = false;
         await JsRuntime.InvokeVoidAsync("bibleUtils.localStorageSet", "consent", "true");
+        Snackbar.Add("Préférences enregistrées", Severity.Success);
         StateHasChanged();
     }
 

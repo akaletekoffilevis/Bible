@@ -127,6 +127,47 @@
             AKALETE Koffi Levis &mdash; <MudLink Href="https://wa.me/22791535220" Target="_blank" Typo="Typo.caption">+227 91 53 52 20</MudLink>
         </MudText>
     </MudExpansionPanel>
+
+    <MudExpansionPanel Text="Support & Contact" Class="mb-2" Expanded="true">
+        <MudText Typo="Typo.body2" Class="mb-2 font-weight-medium d-flex align-center" Style="gap:6px;">
+            <MudIcon Icon="@Icons.Material.Filled.BugReport" Size="Size.Small" Color="Color.Error" />
+            Signaler un problème
+        </MudText>
+        <MudText Typo="Typo.caption" Class="mud-text-secondary mb-3">
+            Tu as rencontré un bug, une erreur dans le texte, ou une suggestion d'amélioration ?
+            Contacte-moi directement :
+        </MudText>
+        <div class="d-flex flex-column" style="gap:8px;">
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" 
+                       Href="https://wa.me/22791535220?text=Bonjour%20Koffi%2C%20je%20signale%20un%20probl%C3%A8me%20sur%20Bibeli%20%3A" 
+                       Target="_blank" 
+                       StartIcon="@Icons.Material.Filled.Chat" FullWidth="true">
+                Signaler via WhatsApp
+            </MudButton>
+            <MudButton Variant="Variant.Outlined" Color="Color.Primary" 
+                       Href="mailto:koffilevis21@gmail.com?subject=Bibeli%20-%20Signalement%20de%20bug&body=Bonjour%20Koffi%2C%0A%0AJe%20signale%20un%20probl%C3%A8me%20sur%20Bibeli%20%3A" 
+                       Target="_blank" 
+                       StartIcon="@Icons.Material.Filled.Email" FullWidth="true">
+                Envoyer un email
+            </MudButton>
+        </div>
+
+        <MudDivider Class="my-3" />
+
+        <MudText Typo="Typo.body2" Class="mb-2 font-weight-medium d-flex align-center" Style="gap:6px;">
+            <MudIcon Icon="@Icons.Material.Filled.Lightbulb" Size="Size.Small" Color="Color.Warning" />
+            Suggestion
+        </MudText>
+        <MudText Typo="Typo.caption" Class="mud-text-secondary mb-3">
+            Une idée pour améliorer Bibeli ? Je suis tout ouïe !
+        </MudText>
+        <MudButton Variant="Variant.Text" Color="Color.Secondary" 
+                   Href="mailto:koffilevis21@gmail.com?subject=Bibeli%20-%20Suggestion&body=Bonjour%20Koffi%2C%0A%0AVoici%20ma%20suggestion%20pour%20Bibeli%20%3A" 
+                   Target="_blank" 
+                   StartIcon="@Icons.Material.Filled.Email">
+            koffilevis21@gmail.com
+        </MudButton>
+    </MudExpansionPanel>
 </MudExpansionPanels>
 
 @code {
