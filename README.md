@@ -1,33 +1,33 @@
-# 📖 Bible Louis Segond (LSG)
+# Bible Louis Segond (LSG)
 
 Application **Progressive Web App (PWA)** pour lire la Bible Louis Segond en ligne et hors-ligne. Développée en **Blazor WebAssembly .NET 9** avec **MudBlazor**.
 
-🔗 **Site :** [bibeli.vercel.app](https://bibeli.vercel.app)
+**Site :** [bibeli.vercel.app](https://bibeli.vercel.app)
 
 ---
 
-## ✨ Fonctionnalités
+## Fonctionnalités
 
-- 📖 **66 livres** — Ancien et Nouveau Testament chargés en lazy-loading
-- 🔍 **Recherche plein texte** — index inversé, filtre par testament/livre, intersection
-- 🔊 **Audio TTS** — lecture verset-par-verset avec voix française, pause/reprise
-- 🔖 **Marque-pages** — sauvegardés en IndexedDB
-- 📝 **Notes personnelles** — attacher une note à chaque verset
-- 🎨 **Surlignage** — mettre en évidence des versets
-- 📋 **Copie / Partage** — Web Share API + copie au clic
-- 🖼️ **Image de verset** — génération Canvas PNG téléchargeable
-- 📄 **Export PDF** — impression du chapitre en PDF
-- 🌙 **Mode nuit** — thème sombre/clair
-- ⌨️ **Navigation clavier** — flèches ← → entre chapitres
-- 🗺️ **Carte biblique** — 12 lieux avec Leaflet
-- ❓ **Quiz** — mot manquant, 10 questions par partie
-- 📊 **Progression** — suivi des chapitres lus
-- 📲 **PWA** — installation sur téléphone/desktop, fonctionnement hors-ligne
-- 🌐 **SEO** — sitemap, robots.txt, JSON-LD structuré
+- **66 livres** — Ancien et Nouveau Testament chargés en lazy-loading
+- **Recherche plein texte** — index inversé, filtre par testament/livre, intersection
+- **Audio TTS** — lecture verset-par-verset avec voix française, pause/reprise
+- **Marque-pages** — sauvegardés en IndexedDB
+- **Notes personnelles** — attacher une note à chaque verset
+- **Surlignage** — mettre en évidence des versets
+- **Copie / Partage** — Web Share API + copie au clic
+- **Image de verset** — génération Canvas PNG téléchargeable
+- **Export PDF** — impression du chapitre en PDF
+- **Mode nuit** — thème sombre/clair
+- **Navigation clavier** — flèches entre chapitres
+- **Carte biblique** — 12 lieux avec Leaflet
+- **Quiz** — mot manquant, 10 questions par partie
+- **Progression** — suivi des chapitres lus
+- **PWA** — installation sur téléphone/desktop, fonctionnement hors-ligne
+- **SEO** — sitemap, robots.txt, JSON-LD structuré
 
 ---
 
-## 🛠️ Stack technique
+## Stack technique
 
 | Technologie | Usage |
 |---|---|
@@ -42,7 +42,7 @@ Application **Progressive Web App (PWA)** pour lire la Bible Louis Segond en lig
 
 ---
 
-## 📁 Structure du projet
+## Structure du projet
 
 ```
 BibleApp/
@@ -63,23 +63,29 @@ BibleApp/
 │   ├── NoteDialog.razor       # Dialog de note
 │   └── VersetCard.razor       # Carte verset réutilisable
 ├── Services/
-│   ├── BibleService.cs        # Chargement livres JSON
+│   ├── BibleService.cs        # Chargement livres JSON + cache IndexedDB
 │   ├── SearchIndexService.cs  # Index recherche inversé
 │   ├── IndexedDbService.cs    # CRUD IndexedDB
 │   └── ThemeService.cs        # Thème clair/sombre
 ├── Models/
 │   └── Bible.cs               # Modèles de données
 ├── wwwroot/
-│   ├── css/app.css            # Styles personnalisés
-│   ├── js/app.js              # JS interop (TTS, IndexedDB, etc.)
+│   ├── css/app.css            # Styles personnalisés + responsive
+│   ├── js/app.js              # JS interop (TTS, IndexedDB, drawer, etc.)
 │   ├── data/books/*.json      # 66 fichiers livres
 │   ├── data/index.json        # Index des livres
-│   ├── index.html             # Point d'entrée
+│   ├── index.html             # Point d'entrée + SEO JSON-LD
+│   ├── favicon.svg            # Icône vectorielle personnalisée
+│   ├── favicon.png            # Favicon fallback
+│   ├── icon-192.png           # Icône PWA
+│   ├── icon-512.png           # Icône PWA haute résolution
 │   ├── manifest.webmanifest   # Manifeste PWA
 │   ├── service-worker.js      # Service worker
+│   ├── service-worker.published.js  # Service worker production
 │   ├── sitemap.xml            # SEO
 │   └── robots.txt             # SEO
 ├── vercel.json                # Configuration déploiement Vercel
+├── LICENSE                    # Licence MIT
 └── BibleApp.csproj            # Projet .NET
 ```
 
@@ -90,13 +96,11 @@ BibleApp/
 ### Prérequis
 
 - [.NET 9 SDK](https://dotnet.microsoft.com/download/dotnet/9.0)
-- Node.js (pour Vercel CLI)
 
 ### Développement local
 
 ```bash
 dotnet run
-# → http://localhost:5106
 ```
 
 ### Build
@@ -113,21 +117,15 @@ Le projet est connecté à GitHub + Vercel. Chaque push sur `main` déclenche au
 2. `dotnet publish -c Release`
 3. Déploiement sur **bibeli.vercel.app**
 
-### Déploiement manuel
-
-```bash
-npx vercel --prod
-```
-
 ---
 
-## 🔧 Configuration
+## Configuration
 
 ### vercel.json
 
 ```json
 {
-  "buildCommand": "curl -sSL https://dot.net/v1/dotnet-install.sh | bash /dev/stdin --channel 9.0 && dotnet publish -c Release --nologo",
+  "buildCommand": "curl -sSL https://dot.net/v1/dotnet-install.sh | bash /dev/stdin --channel 9.0 --install-dir /opt/dotnet && /opt/dotnet/dotnet publish -c Release --nologo",
   "outputDirectory": "bin/Release/net9.0/publish/wwwroot",
   "rewrites": [
     { "source": "/(.*)", "destination": "/index.html" }
@@ -135,13 +133,13 @@ npx vercel --prod
 }
 ```
 
-> La commande de build installe .NET 9 SDK avant de compiler, car Vercel ne l'inclut pas nativement.
+> Vercel n'inclut pas .NET SDK nativement. La commande de build l'installe avant de compiler.
 
 ---
 
 ## Licence
 
-Distribué sous licence **MIT**. Voir le fichier [LICENSE](LICENSE) pour plus d'informations.
+Distribué sous licence **MIT**. Voir le fichier [LICENSE](LICENSE).
 
 ---
 
