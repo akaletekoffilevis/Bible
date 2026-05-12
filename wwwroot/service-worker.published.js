@@ -27,12 +27,25 @@ async function onInstall(event) {
     const cache = await caches.open(cacheName);
     await cache.addAll(assetsRequests);
 
-    // Cache Bible index for offline; books are cached on-demand when accessed
+    // Cache all Bible data for full offline access
     try {
-        await cache.addAll(['/data/index.json']);
-        console.info('Service worker: Cached Bible index for offline');
+        const indexResponse = await fetch('/data/index.json');
+        const books = await indexResponse.json();
+        const dataUrls = ['/data/index.json'];
+        for (const book of books) {
+            dataUrls.push(`/data/books/${book.slug}.json`);
+        }
+        // Use a separate cache so main app cache isn't blocked on failure
+        const dataCache = await caches.open('bible-data-v1');
+        await dataCache.addAll(dataUrls);
+        console.info(`Service worker: Cached ${books.length} Bible books for offline`);
     } catch (err) {
-        console.warn('Service worker: Could not cache Bible index', err);
+        console.warn('Service worker: Could not cache all Bible books, will cache on-demand', err);
+        // Fallback: cache at least the index
+        try {
+            const dataCache = await caches.open('bible-data-v1');
+            await dataCache.addAll(['/data/index.json']);
+        } catch (e) {}
     }
 }
 
@@ -51,22 +64,21 @@ async function onFetch(event) {
     if (event.request.method === 'GET') {
         const url = new URL(event.request.url);
 
-        // Cache Bible data files on-demand for offline reading
+        // Bible data: check dedicated data cache first, fall back to network
         if (url.pathname.startsWith('/data/')) {
-            const cache = await caches.open(cacheName);
-            cachedResponse = await cache.match(event.request);
-            if (!cachedResponse) {
-                try {
-                    const response = await fetch(event.request);
-                    if (response.ok) {
-                        cache.put(event.request, response.clone());
-                    }
-                    return response;
-                } catch (err) {
-                    return new Response('', { status: 503 });
+            const dataCache = await caches.open('bible-data-v1');
+            cachedResponse = await dataCache.match(event.request);
+            if (cachedResponse) return cachedResponse;
+            try {
+                const response = await fetch(event.request);
+                if (response.ok) {
+                    const cache = await caches.open(cacheName);
+                    cache.put(event.request, response.clone());
                 }
+                return response;
+            } catch (err) {
+                return new Response('', { status: 503 });
             }
-            return cachedResponse;
         }
 
         // For all navigation requests, try to serve index.html from cache

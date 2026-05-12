@@ -1,71 +1,68 @@
 @namespace BibleApp.Shared
 @inject BibleApp.Services.BibleService BibleService
 
-<MudNavMenu Class="pb-16" Style="min-width: 260px;">
+<MudNavMenu Class="pb-16" Style="overflow-y:auto; max-height: calc(100vh - 64px);">
     <MudTextField @bind-Value="_filter"
                   Label="Filtrer les livres..."
                   Variant="Variant.Outlined"
                   Immediate="true"
-                  Class="ma-4"
+                  Class="ma-3"
+                  Margin="Margin.Dense"
                   Adornment="Adornment.End"
                   AdornmentIcon="@Icons.Material.Filled.Search" />
 
-    <MudNavLink Href="/" Match="NavLinkMatch.All" OnClick="NotifyNavigated" Class="py-2">
-        <MudIcon Icon="@Icons.Material.Filled.Home" Class="mr-3" Size="Size.Small" /> Accueil
-    </MudNavLink>
-    <MudNavLink Href="/recherche" OnClick="NotifyNavigated" Class="py-2">
-        <MudIcon Icon="@Icons.Material.Filled.Search" Class="mr-3" Size="Size.Small" /> Recherche
-    </MudNavLink>
-    <MudNavLink Href="/quiz" OnClick="NotifyNavigated" Class="py-2">
-        <MudIcon Icon="@Icons.Material.Filled.Quiz" Class="mr-3" Size="Size.Small" /> Quiz biblique
-    </MudNavLink>
-    <MudNavLink Href="/carte" OnClick="NotifyNavigated" Class="py-2">
-        <MudIcon Icon="@Icons.Material.Filled.Map" Class="mr-3" Size="Size.Small" /> Carte biblique
-    </MudNavLink>
+    <div class="d-flex flex-wrap px-3" style="gap:4px;">
+        <MudChip T="string" Size="Size.Small" Href="/" OnClick="NotifyNavigated" Icon="@Icons.Material.Filled.Home">Accueil</MudChip>
+        <MudChip T="string" Size="Size.Small" Href="/recherche" OnClick="NotifyNavigated" Icon="@Icons.Material.Filled.Search">Recherche</MudChip>
+        <MudChip T="string" Size="Size.Small" Href="/quiz" OnClick="NotifyNavigated" Icon="@Icons.Material.Filled.Quiz">Quiz</MudChip>
+        <MudChip T="string" Size="Size.Small" Href="/carte" OnClick="NotifyNavigated" Icon="@Icons.Material.Filled.Map">Carte</MudChip>
+    </div>
 
     <MudDivider Class="my-2" />
 
-    <MudText Typo="Typo.subtitle2" Class="px-4 py-3 d-flex align-center" Style="cursor:pointer" @onclick="@(() => _atExpanded = !_atExpanded)">
-        <MudIcon Icon="@(_atExpanded ? Icons.Material.Filled.ExpandLess : Icons.Material.Filled.ExpandMore)" Size="Size.Small" Class="mr-2" />
-        Ancien Testament (@_livresAt.Count())
+    <MudText Typo="Typo.subtitle2" Class="px-3 py-2 d-flex align-center" Style="cursor:pointer;user-select:none;" @onclick="@(() => _atExpanded = !_atExpanded)">
+        <MudIcon Icon="@(_atExpanded ? Icons.Material.Filled.ExpandLess : Icons.Material.Filled.ExpandMore)" Size="Size.Small" Class="mr-1" />
+        <span class="flex-grow-1">Ancien Testament</span>
+        <MudText Typo="Typo.caption" Class="mud-text-secondary">@_atCount</MudText>
     </MudText>
     @if (_atExpanded || !string.IsNullOrEmpty(_filter))
     {
+        <div class="px-2" style="column-count:2; column-gap:4px;">
         @foreach (var livre in _livresAt)
         {
-            <MudNavLink Href="@($"/lecture/{livre.Slug}/1")" Match="NavLinkMatch.Prefix" OnClick="NotifyNavigated" Class="py-2">
-                @livre.NomLivre
+            <MudNavLink Href="@($"/lecture/{livre.Slug}/1")" Match="NavLinkMatch.Prefix" OnClick="NotifyNavigated" Class="py-1" Style="font-size:0.85rem;break-inside:avoid;">
+                <span class="mud-text-secondary" style="font-size:0.75rem;width:32px;display:inline-block;">@Abréviation(livre.NomLivre)</span> @livre.NomLivre
             </MudNavLink>
         }
+        </div>
     }
 
     <MudDivider Class="my-2" />
 
-    <MudText Typo="Typo.subtitle2" Class="px-4 py-3 d-flex align-center" Style="cursor:pointer" @onclick="@(() => _ntExpanded = !_ntExpanded)">
-        <MudIcon Icon="@(_ntExpanded ? Icons.Material.Filled.ExpandLess : Icons.Material.Filled.ExpandMore)" Size="Size.Small" Class="mr-2" />
-        Nouveau Testament (@_livresNt.Count())
+    <MudText Typo="Typo.subtitle2" Class="px-3 py-2 d-flex align-center" Style="cursor:pointer;user-select:none;" @onclick="@(() => _ntExpanded = !_ntExpanded)">
+        <MudIcon Icon="@(_ntExpanded ? Icons.Material.Filled.ExpandLess : Icons.Material.Filled.ExpandMore)" Size="Size.Small" Class="mr-1" />
+        <span class="flex-grow-1">Nouveau Testament</span>
+        <MudText Typo="Typo.caption" Class="mud-text-secondary">@_ntCount</MudText>
     </MudText>
     @if (_ntExpanded || !string.IsNullOrEmpty(_filter))
     {
+        <div class="px-2" style="column-count:2; column-gap:4px;">
         @foreach (var livre in _livresNt)
         {
-            <MudNavLink Href="@($"/lecture/{livre.Slug}/1")" Match="NavLinkMatch.Prefix" OnClick="NotifyNavigated" Class="py-2">
-                @livre.NomLivre
+            <MudNavLink Href="@($"/lecture/{livre.Slug}/1")" Match="NavLinkMatch.Prefix" OnClick="NotifyNavigated" Class="py-1" Style="font-size:0.85rem;break-inside:avoid;">
+                <span class="mud-text-secondary" style="font-size:0.75rem;width:32px;display:inline-block;">@Abréviation(livre.NomLivre)</span> @livre.NomLivre
             </MudNavLink>
         }
+        </div>
     }
 
     <MudDivider Class="my-2" />
 
-    <MudNavLink Href="/favoris" OnClick="NotifyNavigated" Class="py-2">
-        <MudIcon Icon="@Icons.Material.Filled.Bookmark" Class="mr-3" Size="Size.Small" /> Favoris
-    </MudNavLink>
-    <MudNavLink Href="/progression" OnClick="NotifyNavigated" Class="py-2">
-        <MudIcon Icon="@Icons.Material.Filled.TrendingUp" Class="mr-3" Size="Size.Small" /> Progression
-    </MudNavLink>
-    <MudNavLink Href="/parametres" OnClick="NotifyNavigated" Class="py-2">
-        <MudIcon Icon="@Icons.Material.Filled.Settings" Class="mr-3" Size="Size.Small" /> Paramètres
-    </MudNavLink>
+    <div class="d-flex flex-wrap px-3" style="gap:4px;">
+        <MudChip T="string" Size="Size.Small" Href="/favoris" OnClick="NotifyNavigated" Icon="@Icons.Material.Filled.Bookmark">Favoris</MudChip>
+        <MudChip T="string" Size="Size.Small" Href="/progression" OnClick="NotifyNavigated" Icon="@Icons.Material.Filled.TrendingUp">Progression</MudChip>
+        <MudChip T="string" Size="Size.Small" Href="/parametres" OnClick="NotifyNavigated" Icon="@Icons.Material.Filled.Settings">Paramètres</MudChip>
+    </div>
 </MudNavMenu>
 
 @code {
@@ -83,6 +80,9 @@
     private IEnumerable<BibleApp.Models.LivreIndex> _livresNt =>
         _index.Where(l => l.Testament.StartsWith("Nouveau") && l.NomLivre.Contains(_filter, StringComparison.OrdinalIgnoreCase));
 
+    private int _atCount => _index.Count(l => l.Testament.StartsWith("Ancien"));
+    private int _ntCount => _index.Count(l => l.Testament.StartsWith("Nouveau"));
+
     protected override async Task OnInitializedAsync()
     {
         _index = await BibleService.GetIndexAsync();
@@ -91,5 +91,32 @@
     private void NotifyNavigated()
     {
         OnNavigated.InvokeAsync();
+    }
+
+    private static string Abréviation(string nom)
+    {
+        return nom switch
+        {
+            "Genèse" => "Gn", "Exode" => "Ex", "Lévitique" => "Lv", "Nombres" => "Nb",
+            "Deutéronome" => "Dt", "Josué" => "Js", "Juges" => "Jg", "Ruth" => "Rt",
+            "1 Samuel" => "1S", "2 Samuel" => "2S", "1 Rois" => "1R", "2 Rois" => "2R",
+            "1 Chroniques" => "1Ch", "2 Chroniques" => "2Ch", "Esdras" => "Esd",
+            "Néhémie" => "Né", "Esther" => "Est", "Job" => "Jb", "Psaumes" => "Ps",
+            "Proverbes" => "Pr", "Ecclésiaste" => "Ec", "Cantique des cantiques" => "Ct",
+            "Esaïe" => "Es", "Jérémie" => "Jr", "Lamentations de Jérémie" => "Lm",
+            "Ezéchiel" => "Ez", "Daniel" => "Dn", "Osée" => "Os", "Joël" => "Jl",
+            "Amos" => "Am", "Abdias" => "Ab", "Jonas" => "Jon", "Michée" => "Mi",
+            "Nahum" => "Na", "Habacuc" => "Ha", "Sophonie" => "So", "Aggée" => "Ag",
+            "Zacharie" => "Za", "Malachie" => "Ml",
+            "Matthieu" => "Mt", "Marc" => "Mc", "Luc" => "Lc", "Jean" => "Jn",
+            "Actes des Apôtres" => "Ac", "Romains" => "Rm", "1 Corinthiens" => "1Co",
+            "2 Corinthiens" => "2Co", "Galates" => "Ga", "Ephésiens" => "Ep",
+            "Philippiens" => "Ph", "Colossiens" => "Col", "1 Thessaloniciens" => "1Th",
+            "2 Thessaloniciens" => "2Th", "1 Timothée" => "1Tm", "2 Timothée" => "2Tm",
+            "Tite" => "Tt", "Philémon" => "Phm", "Hébreux" => "Hé", "Jacques" => "Jc",
+            "1 Pierre" => "1Pi", "2 Pierre" => "2Pi", "1 Jean" => "1Jn", "2 Jean" => "2Jn",
+            "3 Jean" => "3Jn", "Jude" => "Jude", "Apocalypse" => "Ap",
+            _ => nom[..3]
+        };
     }
 }

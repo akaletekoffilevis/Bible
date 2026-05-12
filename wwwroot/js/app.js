@@ -464,35 +464,63 @@ window.bibleFullscreen = {
     }
 };
 
-// Verset image generation
+// Verset image generation — backgrounds variés + texte toujours lisible
 window.bibleImage = {
-    generate: function (texte, reference) {
+    _palettes: [
+        { bg: ['#1a237e', '#3949ab'], text: '#ffffff', accent: '#ffd54f' },
+        { bg: ['#004d40', '#00796b'], text: '#ffffff', accent: '#ffab00' },
+        { bg: ['#4a148c', '#7b1fa2'], text: '#ffffff', accent: '#69f0ae' },
+        { bg: ['#b71c1c', '#d32f2f'], text: '#ffffff', accent: '#ffeb3b' },
+        { bg: ['#e65100', '#ff6d00'], text: '#ffffff', accent: '#b2ff59' },
+        { bg: ['#1a237e', '#283593'], text: '#e8eaf6', accent: '#ffd54f' },
+        { bg: ['#fff8e1', '#ffecb3'], text: '#3e2723', accent: '#bf360c' },
+        { bg: ['#e8f5e9', '#c8e6c9'], text: '#1b5e20', accent: '#00695c' },
+        { bg: ['#e3f2fd', '#bbdefb'], text: '#0d47a1', accent: '#e65100' },
+        { bg: ['#fce4ec', '#f8bbd0'], text: '#880e4f', accent: '#1a237e' },
+        { bg: ['#263238', '#37474f'], text: '#eceff1', accent: '#ffab00' },
+        { bg: ['#3e2723', '#4e342e'], text: '#efebe9', accent: '#ffcc02' },
+    ],
+
+    _pick: function (ref) {
+        var h = 0;
+        for (var i = 0; i < ref.length; i++) h = ((h << 5) - h) + ref.charCodeAt(i);
+        return this._palettes[Math.abs(h) % this._palettes.length];
+    },
+
+    _draw: function (texte, reference) {
         var canvas = document.createElement('canvas');
         canvas.width = 600;
         canvas.height = 400;
         var ctx = canvas.getContext('2d');
+        var palette = this._pick(reference);
 
-        var gradient = ctx.createLinearGradient(0, 0, 600, 400);
-        gradient.addColorStop(0, '#1a237e');
-        gradient.addColorStop(1, '#3949ab');
-        ctx.fillStyle = gradient;
+        // Background gradient
+        var grad = ctx.createLinearGradient(0, 0, 600, 400);
+        grad.addColorStop(0, palette.bg[0]);
+        grad.addColorStop(1, palette.bg[1]);
+        ctx.fillStyle = grad;
         ctx.fillRect(0, 0, 600, 400);
 
-        ctx.fillStyle = 'rgba(255,255,255,0.1)';
-        ctx.fillRect(20, 20, 560, 360);
+        // Inner border decoration
+        ctx.fillStyle = palette.text + '15';
+        ctx.fillRect(16, 16, 568, 368);
 
         ctx.textAlign = 'center';
-        ctx.fillStyle = '#ffffff';
-        ctx.font = 'bold 22px serif';
-        ctx.fillText('«', 300, 80);
 
+        // Opening quote
+        ctx.fillStyle = palette.text + '40';
+        ctx.font = 'bold 36px serif';
+        ctx.fillText('"', 300, 70);
+
+        // Word wrap text
         ctx.font = '18px serif';
         var words = texte.split(' ');
         var lines = [];
         var line = '';
+        var maxWidth = 500;
         for (var i = 0; i < words.length; i++) {
             var test = line + words[i] + ' ';
-            if (ctx.measureText(test).width > 500) {
+            if (ctx.measureText(test).width > maxWidth) {
                 lines.push(line.trim());
                 line = words[i] + ' ';
             } else {
@@ -501,26 +529,75 @@ window.bibleImage = {
         }
         lines.push(line.trim());
 
-        var startY = 120;
-        var lineHeight = 30;
+        var lineHeight = 32;
         var totalHeight = lines.length * lineHeight;
         var yPos = (400 - totalHeight) / 2;
 
+        // Draw text with shadow for readability
+        ctx.shadowColor = 'rgba(0,0,0,0.3)';
+        ctx.shadowBlur = 4;
+        ctx.shadowOffsetY = 2;
         lines.forEach(function (l) {
-            ctx.fillStyle = '#ffffff';
+            ctx.fillStyle = palette.text;
             ctx.font = '18px serif';
             ctx.fillText(l, 300, yPos);
             yPos += lineHeight;
         });
 
-        ctx.font = 'bold 14px serif';
-        ctx.fillStyle = '#ffd54f';
-        ctx.fillText('— ' + reference + ' —', 300, yPos + 20);
+        // Reset shadow for reference
+        ctx.shadowColor = 'transparent';
+        ctx.shadowBlur = 0;
+        ctx.shadowOffsetY = 0;
 
+        // Reference line
+        ctx.font = 'bold 14px serif';
+        ctx.fillStyle = palette.accent;
+        ctx.fillText('— ' + reference + ' —', 300, yPos + 16);
+
+        // Bottom decorative line
+        ctx.fillStyle = palette.accent + '50';
+        ctx.fillRect(200, yPos + 28, 200, 2);
+
+        return canvas;
+    },
+
+    generate: function (texte, reference) {
+        var canvas = this._draw(texte, reference);
         var link = document.createElement('a');
         link.download = 'verset-' + reference.replace(/[^a-zA-Z0-9]/g, '-') + '.png';
         link.href = canvas.toDataURL();
         link.click();
+    },
+
+    generateBlob: function (texte, reference) {
+        var canvas = this._draw(texte, reference);
+        return new Promise(function (resolve) {
+            canvas.toBlob(function (blob) { resolve(blob); }, 'image/png');
+        });
+    },
+
+    share: function (texte, reference) {
+        var self = this;
+        var canvas = this._draw(texte, reference);
+        canvas.toBlob(function (blob) {
+            var file = new File([blob], 'verset.png', { type: 'image/png' });
+            if (navigator.share && navigator.canShare({ files: [file] })) {
+                navigator.share({
+                    title: reference + ' — LSG',
+                    text: '"' + texte + '" — ' + reference,
+                    files: [file]
+                }).catch(function () {});
+            } else {
+                // Fallback: download + copy text
+                var link = document.createElement('a');
+                link.download = 'verset-' + reference.replace(/[^a-zA-Z0-9]/g, '-') + '.png';
+                link.href = canvas.toDataURL();
+                link.click();
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText('"' + texte + '" — ' + reference + ' (LSG)');
+                }
+            }
+        }, 'image/png');
     }
 };
 

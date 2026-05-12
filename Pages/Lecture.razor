@@ -160,12 +160,17 @@ else
 
     private async Task PartagerVerset(Models.Verset verset)
     {
-        var texte = $"{_livre?.NomLivre} {Chapitre}:{verset.Numero} (LSG) — {verset.TextePropre}";
+        var texte = verset.TextePropre;
+        var reference = $"{_livre?.NomLivre} {Chapitre}:{verset.Numero}";
         try
         {
-            await JsRuntime.InvokeVoidAsync("bibleUtils.shareOrCopy", texte);
+            await JsRuntime.InvokeVoidAsync("bibleImage.share", texte, reference);
         }
-        catch { }
+        catch
+        {
+            try { await JsRuntime.InvokeVoidAsync("bibleUtils.shareOrCopy", $"{reference} (LSG) — {texte}"); }
+            catch { }
+        }
     }
 
     private async Task AjouterMarquePage(Models.Verset verset)
