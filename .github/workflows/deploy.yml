@@ -16,7 +16,8 @@ jobs:
           dotnet-version: '9.0.x'
 
       - name: Publish
-        run: dotnet publish -c Release --nologo
+        # On publie le projet et on place le résultat dans un dossier "release"
+        run: dotnet publish -c Release -o release --nologo
 
       - name: Deploy to Vercel
         uses: amondnet/vercel-action@v25
@@ -25,4 +26,5 @@ jobs:
           vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
           vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
           vercel-args: '--prod'
-          working-directory: .
+          # Le dossier de travail cible le contenu statique (wwwroot) du build
+          working-directory: release/wwwroot
