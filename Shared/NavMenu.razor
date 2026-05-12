@@ -1,5 +1,6 @@
 @namespace BibleApp.Shared
 @inject BibleApp.Services.BibleService BibleService
+@inject NavigationManager Nav
 
 <MudNavMenu Class="pb-16" Style="overflow-y:auto; max-height: calc(100vh - 64px);">
     <MudTextField @bind-Value="_filter"
@@ -12,10 +13,10 @@
                   AdornmentIcon="@Icons.Material.Filled.Search" />
 
     <div class="d-flex flex-wrap px-3" style="gap:4px;">
-        <MudChip T="string" Size="Size.Small" Href="/" OnClick="NotifyNavigated" Icon="@Icons.Material.Filled.Home">Accueil</MudChip>
-        <MudChip T="string" Size="Size.Small" Href="/recherche" OnClick="NotifyNavigated" Icon="@Icons.Material.Filled.Search">Recherche</MudChip>
-        <MudChip T="string" Size="Size.Small" Href="/quiz" OnClick="NotifyNavigated" Icon="@Icons.Material.Filled.Quiz">Quiz</MudChip>
-        <MudChip T="string" Size="Size.Small" Href="/carte" OnClick="NotifyNavigated" Icon="@Icons.Material.Filled.Map">Carte</MudChip>
+        <MudChip T="string" Size="Size.Small" OnClick="@(() => { Nav.NavigateTo("/"); NotifyNavigated(); })" Icon="@Icons.Material.Filled.Home">Accueil</MudChip>
+        <MudChip T="string" Size="Size.Small" OnClick="@(() => { Nav.NavigateTo("/recherche"); NotifyNavigated(); })" Icon="@Icons.Material.Filled.Search">Recherche</MudChip>
+        <MudChip T="string" Size="Size.Small" OnClick="@(() => { Nav.NavigateTo("/quiz"); NotifyNavigated(); })" Icon="@Icons.Material.Filled.Quiz">Quiz</MudChip>
+        <MudChip T="string" Size="Size.Small" OnClick="@(() => { Nav.NavigateTo("/carte"); NotifyNavigated(); })" Icon="@Icons.Material.Filled.Map">Carte</MudChip>
     </div>
 
     <MudDivider Class="my-2" />
@@ -59,9 +60,9 @@
     <MudDivider Class="my-2" />
 
     <div class="d-flex flex-wrap px-3" style="gap:4px;">
-        <MudChip T="string" Size="Size.Small" Href="/favoris" OnClick="NotifyNavigated" Icon="@Icons.Material.Filled.Bookmark">Favoris</MudChip>
-        <MudChip T="string" Size="Size.Small" Href="/progression" OnClick="NotifyNavigated" Icon="@Icons.Material.Filled.TrendingUp">Progression</MudChip>
-        <MudChip T="string" Size="Size.Small" Href="/parametres" OnClick="NotifyNavigated" Icon="@Icons.Material.Filled.Settings">Paramètres</MudChip>
+        <MudChip T="string" Size="Size.Small" OnClick="@(() => { Nav.NavigateTo("/favoris"); NotifyNavigated(); })" Icon="@Icons.Material.Filled.Bookmark">Favoris</MudChip>
+        <MudChip T="string" Size="Size.Small" OnClick="@(() => { Nav.NavigateTo("/progression"); NotifyNavigated(); })" Icon="@Icons.Material.Filled.TrendingUp">Progression</MudChip>
+        <MudChip T="string" Size="Size.Small" OnClick="@(() => { Nav.NavigateTo("/parametres"); NotifyNavigated(); })" Icon="@Icons.Material.Filled.Settings">Paramètres</MudChip>
     </div>
 </MudNavMenu>
 

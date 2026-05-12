@@ -14,7 +14,18 @@
     new() { Label = $"Chapitre {Chapitre}" }
 })" />
 
-<MudText Typo="Typo.h6" Class="mb-0 font-weight-bold">@_livre?.NomLivre — Chapitre @Chapitre</MudText>
+<MudPaper Class="pa-4 mb-3" Elevation="0" Style="border-radius:12px; background: linear-gradient(135deg, var(--mud-palette-primary) 0%, var(--mud-palette-secondary) 100%); color:white;">
+    <div class="d-flex align-center justify-space-between">
+        <div>
+            <MudText Typo="Typo.h5" Class="font-weight-bold mb-1">@_livre?.NomLivre</MudText>
+            <MudText Typo="Typo.body2" Style="opacity:0.9;">
+                <MudIcon Icon="@Icons.Material.Filled.AutoStories" Size="Size.Small" Class="mr-1" />
+                Chapitre @Chapitre sur @(_livre?.ContenuChapitre.Count ?? 0)
+            </MudText>
+        </div>
+        <MudIcon Icon="@Icons.Material.Filled.MenuBook" Size="Size.Large" Style="opacity:0.3; font-size:3rem;" />
+    </div>
+</MudPaper>
 
 @if (_chapitre == null)
 {
@@ -27,15 +38,15 @@
 }
 else
 {
-    <div class="d-flex align-center my-2" style="gap:6px; flex-wrap:wrap;">
+    <div class="d-flex align-center mb-3 lecture-toolbar" style="gap:4px; flex-wrap:wrap;">
         <MudIconButton Icon="@Icons.Material.Filled.PlayArrow" Size="Size.Small" Color="@(_isPlaying ? Color.Primary : Color.Default)" OnClick="@PlayOuPause" title="Lecture audio" />
         <MudIconButton Icon="@Icons.Material.Filled.Stop" Size="Size.Small" OnClick="@Stop" title="Arrêter" />
         @if (_isPlaying)
         {
-            <MudText Typo="Typo.caption" Class="mud-text-secondary">v. @_versetCourantTts</MudText>
+            <MudChip T="string" Size="Size.Small" Color="Color.Primary">Verset @_versetCourantTts</MudChip>
         }
-        <MudText Typo="Typo.caption" Class="mud-text-secondary mx-2">
-            <a href="/livre-chapitres/@Slug" class="mud-text-secondary">&larr; Chapitres</a>
+        <MudText Typo="Typo.caption" Class="mud-text-secondary mx-1">
+            <a href="/livre-chapitres/@Slug" class="mud-text-secondary">&larr; Tous les chapitres</a>
         </MudText>
         <MudSpacer />
         <MudIconButton Icon="@Icons.Material.Filled.Fullscreen" Size="Size.Small" OnClick="@BasculerPleinEcran" title="Plein écran" />
@@ -43,40 +54,44 @@ else
     </div>
 
     <MudPaper Class="pa-3 pa-sm-4 mb-16 chapitre-paper" Elevation="0">
-        @foreach (var verset in _chapitre.ContenuVersets)
-        {
-            var vNum = verset.Numero;
-            <div class="verset-ligne d-flex align-start mb-2 @(_isPlaying && _versetCourantTts == vNum ? "verset-en-cours" : "")" id="@($"v-{vNum}")" tabindex="-1">
-                <div class="flex-grow-1">
-                    <sup class="verset-num">@vNum</sup>
-                    @verset.TextePropre
+        <div class="versets-container">
+            @foreach (var verset in _chapitre.ContenuVersets)
+            {
+                var vNum = verset.Numero;
+                <div class="verset-card @(_isPlaying && _versetCourantTts == vNum ? "verset-en-cours" : "")" id="@($"v-{vNum}")" tabindex="-1">
+                    <div class="verset-card-body">
+                        <span class="verset-num">@vNum</span>
+                        <span class="verset-texte">@verset.TextePropre</span>
+                    </div>
+                    <div class="verse-actions" role="group" aria-label="Actions du verset">
+                        <span @onclick="@(() => AjouterMarquePage(verset))" title="Marquer" role="button" tabindex="0" aria-label="Marquer ce verset">🔖</span>
+                        <span @onclick="@(() => AjouterNote(verset))" title="Note" role="button" tabindex="0" aria-label="Ajouter une note">📝</span>
+                        <span @onclick="@(() => PartagerVerset(verset))" title="Partager" role="button" tabindex="0" aria-label="Partager ce verset">📋</span>
+                        <span @onclick="@(() => GenererImage(verset))" title="Image" role="button" tabindex="0" aria-label="Générer une image">🖼️</span>
+                    </div>
                 </div>
-                <div class="verse-actions" style="white-space:nowrap;" role="group" aria-label="Actions du verset">
-                    <span @onclick="@(() => AjouterMarquePage(verset))" Style="cursor:pointer; padding:4px 6px; font-size:0.85em;" title="Marquer ce verset" role="button" tabindex="0" aria-label="Marquer ce verset">🔖</span>
-                    <span @onclick="@(() => AjouterNote(verset))" Style="cursor:pointer; padding:4px 6px; font-size:0.85em;" title="Ajouter une note" role="button" tabindex="0" aria-label="Ajouter une note">📝</span>
-                    <span @onclick="@(() => PartagerVerset(verset))" Style="cursor:pointer; padding:4px 6px; font-size:0.85em;" title="Partager le verset" role="button" tabindex="0" aria-label="Partager ce verset">📋</span>
-                    <span @onclick="@(() => GenererImage(verset))" Style="cursor:pointer; padding:4px 6px; font-size:0.85em;" title="Image du verset" role="button" tabindex="0" aria-label="Générer une image">🖼️</span>
-                </div>
-            </div>
-        }
+            }
+        </div>
     </MudPaper>
 
     <div class="lecture-nav">
-        <MudGrid>
-            <MudItem xs="6">
-                @if (_chapitre.Numero > 1 || _slugIndex > 0)
-                {
-                    <MudButton Variant="Variant.Outlined" FullWidth="true" OnClick="@GoPrev" StartIcon="@Icons.Material.Filled.ChevronLeft">
-                        Précédent
+        <MudPaper Class="pa-2" Elevation="0" Style="border-radius:10px;">
+            <MudGrid>
+                <MudItem xs="6">
+                    @if (_chapitre.Numero > 1 || _slugIndex > 0)
+                    {
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" FullWidth="true" OnClick="@GoPrev" StartIcon="@Icons.Material.Filled.ChevronLeft" Class="nav-btn">
+                            Précédent
+                        </MudButton>
+                    }
+                </MudItem>
+                <MudItem xs="6" Class="text-right">
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" FullWidth="true" OnClick="@GoNext" EndIcon="@Icons.Material.Filled.ChevronRight" Class="nav-btn">
+                        Suivant
                     </MudButton>
-                }
-            </MudItem>
-            <MudItem xs="6" Class="text-right">
-                <MudButton Variant="Variant.Outlined" FullWidth="true" OnClick="@GoNext" EndIcon="@Icons.Material.Filled.ChevronRight">
-                    Suivant
-                </MudButton>
-            </MudItem>
-        </MudGrid>
+                </MudItem>
+            </MudGrid>
+        </MudPaper>
     </div>
 }
 

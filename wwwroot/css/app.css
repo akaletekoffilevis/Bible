@@ -69,58 +69,168 @@ body {
 
 /* ---- Verse display ---- */
 .verset-num {
-    font-size: 0.7em;
-    font-weight: 600;
-    vertical-align: super;
-    line-height: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 24px;
+    height: 24px;
+    font-size: 0.7rem;
+    font-weight: 700;
     color: var(--mud-palette-primary, #1a237e);
-    margin-right: 0.3em;
+    background: var(--mud-palette-primary, #1a237e)15;
+    border-radius: 50%;
+    margin-right: 0.5em;
     user-select: none;
+    flex-shrink: 0;
 }
 
-.verset-ligne {
-    line-height: 2;
-    padding: 0.4em 0.6em;
-    margin: 2px -0.6em;
-    transition: background-color 0.2s, border-color 0.2s, box-shadow 0.2s;
-    border-left: 3px solid transparent;
-    border-radius: 6px;
+.versets-container {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
 }
 
-.verset-ligne:hover {
-    background-color: var(--mud-palette-table-hover, rgba(0,0,0,0.04));
-    border-left-color: var(--mud-palette-primary, #1a237e);
-    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+.verset-card {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    transition: background-color 0.2s, box-shadow 0.2s;
+    border: 1px solid transparent;
 }
 
-.verset-ligne:hover .verse-actions { opacity: 1; }
+.verset-card:hover {
+    background-color: var(--mud-palette-table-hover, rgba(0,0,0,0.03));
+    border-color: var(--mud-palette-primary, #1a237e)20;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+
+.verset-card-body {
+    flex: 1;
+    display: flex;
+    align-items: baseline;
+    gap: 2px;
+    line-height: 1.9;
+}
+
+.verset-texte {
+    flex: 1;
+}
 
 .verse-actions {
     display: flex;
     gap: 2px;
-    opacity: 0.3;
+    opacity: 0;
     transition: opacity 0.2s;
+    flex-shrink: 0;
+}
+
+.verset-card:hover .verse-actions,
+.verset-card:focus-within .verse-actions {
+    opacity: 0.7;
+}
+
+.verse-actions span {
+    cursor: pointer;
+    padding: 4px 6px;
+    border-radius: 6px;
+    font-size: 0.85em;
+    transition: background 0.15s, transform 0.15s;
+}
+
+.verse-actions span:hover {
+    background: var(--mud-palette-table-hover, rgba(0,0,0,0.06));
+    transform: scale(1.15);
 }
 
 .verset-en-cours {
-    background-color: rgba(25, 118, 210, 0.12) !important;
-    border-radius: 6px;
+    background-color: rgba(25, 118, 210, 0.1) !important;
+    border-color: var(--mud-palette-primary, #1a237e) !important;
+    box-shadow: 0 0 0 2px var(--mud-palette-primary, #1a237e)20 !important;
 }
 
 .chapitre-paper {
-    border-radius: 12px !important;
-    box-shadow: 0 1px 4px rgba(0,0,0,0.06) !important;
+    border-radius: 14px !important;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06) !important;
+}
+
+.lecture-toolbar {
+    background: var(--mud-palette-table-hover, rgba(0,0,0,0.02));
+    border-radius: 10px;
+    padding: 6px 8px;
 }
 
 .lecture-nav {
     position: sticky;
     bottom: 0;
     z-index: 10;
-    padding: 0.75rem 0;
+    padding: 0.5rem 0;
     background: linear-gradient(transparent, var(--mud-palette-background) 40%);
     pointer-events: none;
 }
 .lecture-nav > * { pointer-events: auto; }
+
+.nav-btn {
+    border-radius: 10px !important;
+    padding: 10px 16px !important;
+}
+
+/* ---- Chapter grid ---- */
+.chapitre-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(56px, 1fr));
+    gap: 8px;
+}
+
+.chapitre-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    padding: 12px 4px;
+    border-radius: 10px;
+    cursor: pointer;
+    background: var(--mud-palette-surface, #fff);
+    border: 1px solid var(--mud-palette-lines-inputs, #e0e0e0);
+    transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s;
+    user-select: none;
+}
+
+.chapitre-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    border-color: var(--mud-palette-primary, #1a237e);
+}
+
+.chapitre-card:active {
+    transform: translateY(0);
+}
+
+.chapitre-card--active {
+    background: var(--mud-palette-primary, #1a237e);
+    border-color: var(--mud-palette-primary, #1a237e);
+    color: #fff;
+}
+
+.chapitre-card--active .chapitre-num {
+    color: #fff;
+}
+
+.chapitre-num {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--mud-palette-text-primary, #111);
+}
+
+.chapitre-badge {
+    font-size: 0.6rem;
+    background: rgba(255,255,255,0.25);
+    padding: 1px 6px;
+    border-radius: 8px;
+    color: rgba(255,255,255,0.9);
+}
 
 /* ---- Book list (Index) ---- */
 .livre-item {
@@ -161,7 +271,7 @@ body {
 }
 
 @media (min-width: 961px) {
-    .mud-drawer {
+    .mud-drawer.mud-drawer--persistent.mud-drawer--open {
         width: 380px !important;
         min-width: 380px !important;
         flex: 0 0 380px !important;
@@ -197,35 +307,37 @@ body {
         pointer-events: none;
         transition: opacity 0.15s;
     }
-    .verset-ligne:focus-within .verse-actions,
-    .verset-ligne:active .verse-actions {
+    .verset-card:focus-within .verse-actions,
+    .verset-card:active .verse-actions {
         opacity: 0.9;
         pointer-events: auto;
     }
     .verse-actions span {
-        padding: 6px 8px !important;
-        font-size: 0.9em !important;
+        padding: 8px 10px !important;
+        font-size: 0.95em !important;
     }
-    .verset-ligne { padding: 0.4em 0; }
 }
 
 @media (max-width: 600px) {
     :root { --bible-font-size: 17px; }
-    .verset-ligne { line-height: 1.8; flex-wrap: wrap; }
+    .verset-card { padding: 8px 10px; gap: 6px; }
+    .verset-texte { line-height: 1.7; }
     .verse-actions {
         opacity: 0.6;
         flex-shrink: 0;
-        margin-left: auto;
+        flex-direction: column;
+        gap: 1px;
     }
     .verse-actions span {
-        padding: 4px 6px !important;
-        font-size: 0.85em !important;
+        padding: 4px 5px !important;
+        font-size: 0.8em !important;
     }
     .lecture-nav .mud-button-root { padding: 12px 16px; }
-    .verset-ligne .flex-grow-1 {
-        max-width: 100%;
-        overflow-wrap: break-word;
+    .chapitre-grid {
+        grid-template-columns: repeat(auto-fill, minmax(48px, 1fr));
+        gap: 6px;
     }
+    .chapitre-card { padding: 10px 2px; }
 }
 
 @media (min-width: 601px) and (max-width: 960px) {
@@ -234,10 +346,11 @@ body {
 
 /* ---- Print ---- */
 @media print {
-    .mud-appbar, .mud-drawer, .mud-icon-button, .verse-actions, [class*="MudIconButton"], .breadcrumb-nav {
+    .mud-appbar, .mud-drawer, .mud-icon-button, .verse-actions, [class*="MudIconButton"], .breadcrumb-nav, .lecture-toolbar {
         display: none !important;
     }
     body { font-size: 12pt !important; color: #000 !important; background: #fff !important; }
-    .verset-ligne { page-break-inside: avoid; line-height: 1.6 !important; }
+    .verset-card { page-break-inside: avoid; border: none !important; padding: 4px 0 !important; }
+    .verset-card:hover { background: none !important; box-shadow: none !important; }
     .mud-paper { box-shadow: none !important; border: none !important; }
 }
