@@ -27,7 +27,7 @@
         <MudIconButton Icon="@Icons.Material.Filled.Settings" Color="Color.Inherit" href="/parametres" Size="Size.Medium" />
     </MudAppBar>
 
-    <MudDrawer Open="_drawerOpen" OpenChanged="OnDrawerOpenChanged" Variant="_drawerVariant" Width="300px" ClipMode="@(_drawerVariant == DrawerVariant.Temporary ? DrawerClipMode.Never : DrawerClipMode.Always)">
+    <MudDrawer Open="_drawerOpen" OpenChanged="OnDrawerOpenChanged" Variant="_drawerVariant" Width="360px" ClipMode="@(_drawerVariant == DrawerVariant.Temporary ? DrawerClipMode.Never : DrawerClipMode.Always)">
         <div class="d-flex align-center drawer-close-bar" Style="justify-content:flex-end;">
             <MudIconButton Icon="@Icons.Material.Filled.Close" Color="Color.Inherit" OnClick="@(() => CloseDrawer())" Size="Size.Small" />
         </div>

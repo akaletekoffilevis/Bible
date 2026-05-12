@@ -36,7 +36,7 @@ else
         <MudIconButton Icon="@Icons.Material.Filled.PictureAsPdf" Size="Size.Small" OnClick="@ExporterPdf" title="Exporter PDF" />
     </div>
 
-    <MudPaper Class="pa-3 pa-sm-4 mb-16" Elevation="0">
+    <MudPaper Class="pa-3 pa-sm-4 mb-16 chapitre-paper" Elevation="0">
         @foreach (var verset in _chapitre.ContenuVersets)
         {
             var vNum = verset.Numero;
