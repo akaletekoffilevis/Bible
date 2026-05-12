@@ -1,7 +1,41 @@
+# robots.txt — Bible Louis Segond (bibeli.vercel.app)
+# https://developers.google.com/search/docs/crawling-indexing/robots/intro
+
+# Tous les crawlers
 User-agent: *
 Allow: /
+Allow: /recherche
+Allow: /quiz
+Allow: /carte
+Allow: /livre-chapitres/
+Allow: /lecture/
+Disallow: /parametres
+Disallow: /favoris
+Disallow: /progression
+Disallow: /_framework/
+Disallow: /_content/
+Disallow: /service-worker.js
+Disallow: /service-worker.published.js
+
+Crawl-delay: 10
 Sitemap: https://bibeli.vercel.app/sitemap.xml
 
-# Note: Blazor WASM content is loaded dynamically via WebAssembly.
-# Google may not index individual verse content.
-# Consider using Firebase + Cloud Function + Puppeteer for dynamic rendering.
+# Google Image Search — les images de versets sont générées dynamiquement (Canvas),
+# mais les données JSON des livres sont utiles
+User-agent: Googlebot-Image
+Allow: /
+Disallow: /_framework/
+Disallow: /_content/
+
+# Bing
+User-agent: Bingbot
+Allow: /
+Disallow: /parametres
+Disallow: /favoris
+Disallow: /progression
+Crawl-delay: 5
+
+# Note: Bibeli est une PWA Blazor WebAssembly. Le contenu est chargé dynamiquement
+# via WebAssembly. Google indexe le contenu JavaScript depuis 2019, donc les pages
+# de lecture devraient être indexées normalement.
+# Pour une meilleure indexation, un rendu SSR (prerendering) pourrait être ajouté.
