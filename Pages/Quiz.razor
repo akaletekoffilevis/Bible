@@ -52,10 +52,13 @@ else
     @if (_current != null)
     {
         <MudPaper Class="pa-4 mb-4" Elevation="1" Style="border-radius: 8px;">
-            <MudText Typo="Typo.caption" Class="mud-text-secondary mb-1 d-flex align-center" Style="gap:4px;">
-                <MudIcon Icon="@Icons.Material.Filled.Help" Size="Size.Small" />
-                Question @(_index + 1) / @_questions.Count
-            </MudText>
+            <div class="d-flex align-center mb-1" style="gap:4px;">
+                <MudIcon Icon="@Icons.Material.Filled.Help" Size="Size.Small" Class="mud-text-secondary" />
+                <MudText Typo="Typo.caption" Class="mud-text-secondary flex-grow-1">
+                    Question @(_index + 1) / @_questions.Count
+                </MudText>
+                <MudIconButton Icon="@Icons.Material.Filled.Close" Size="Size.Small" Color="Color.Error" OnClick="@Quitter" title="Abandonner le quiz" />
+            </div>
             <div class="mb-3">
                 <MudProgressLinear Value="@((double)(_index + 1) / _questions.Count * 100)" Color="Color.Primary" Size="Size.Small" />
             </div>
@@ -185,7 +188,7 @@ else
         _selectionnee = null;
     }
 
-    private void Recommencer()
+    private void Quitter()
     {
         _index = 0;
         _score = 0;
@@ -195,6 +198,11 @@ else
         _selectionnee = null;
         _current = null;
         _questions = new List<Question>();
+    }
+
+    private void Recommencer()
+    {
+        Quitter();
     }
 
     public class Question
