@@ -234,11 +234,29 @@
                     }
                 });
                 observer.observe(target, { childList: true, subtree: true });
-                // Fallback: si Blazor ne charge pas en 30s, on cache quand même le loader
+                // Fallback: si Blazor ne charge pas en 45s, afficher une erreur
                 setTimeout(function() {
                     observer.disconnect();
-                    window.hideLoader();
-                }, 30000);
+                    if (!window._loaderDone) {
+                        window._loaderDone = true;
+                        var el = document.getElementById('bible-loader');
+                        if (el) {
+                            el.innerHTML =
+                                '<div class="loader-container">' +
+                                '<div style="font-size:3rem;margin-bottom:1rem;">⚠️</div>' +
+                                '<div class="loader-title" style="margin-bottom:0.5rem;">Problème de chargement</div>' +
+                                '<div class="loader-subtitle" style="margin-bottom:1.5rem;line-height:1.6;">' +
+                                'L\'application n\'a pas pu se charger complètement.<br/>' +
+                                'Vérifie ta connexion internet ou réessaie.' +
+                                '</div>' +
+                                '<button onclick="location.reload()" style="background:#ffd54f;color:#1a237e;border:none;padding:12px 32px;border-radius:8px;font-size:1rem;font-weight:700;cursor:pointer;">Réessayer</button>' +
+                                '<div style="margin-top:1rem;font-size:0.8rem;opacity:0.6;">' +
+                                'Si le problème persiste, contacte-nous sur WhatsApp +227 91 53 52 20' +
+                                '</div>' +
+                                '</div>';
+                        }
+                    }
+                }, 45000);
             }
         })();
     </script>
