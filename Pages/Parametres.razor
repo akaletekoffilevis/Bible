@@ -19,31 +19,24 @@
         </MudText>
 
         <MudExpansionPanels MultiExpansion="true">
-            <ErrorBoundary>
-                <ChildContent>
-                    <MudExpansionPanel Text="Affichage" Class="mb-2">
-                        <div class="d-flex align-center justify-space-between mb-3">
-                            <MudText Typo="Typo.body2">Mode nuit</MudText>
-                            <MudSwitch @bind-Value="_isDark" Color="Color.Primary" />
-                        </div>
-                        <MudText Typo="Typo.body2" Class="mb-1">Taille de police</MudText>
-                        <MudSlider @bind-Value="_fontSize" Min="14" Max="28" Step="2" Class="mb-1" />
-                        <MudText Typo="Typo.caption" Class="mud-text-secondary mb-3 d-block">@_fontSize px</MudText>
-                        <MudText Typo="Typo.body2" Class="mb-1">Famille de police</MudText>
-                        <MudSelect @bind-Value="_fontFamily" Variant="Variant.Outlined" Dense="true" Class="mb-3">
-                            <MudSelectItem Value="@("serif")">Serif (défaut)</MudSelectItem>
-                            <MudSelectItem Value="@("sans-serif")">Sans-serif</MudSelectItem>
-                            <MudSelectItem Value="@("Georgia, serif")">Georgia</MudSelectItem>
-                        </MudSelect>
-                        <MudText Typo="Typo.body2" Class="mb-1">Interlignage</MudText>
-                        <MudSlider @bind-Value="_lineHeight" Min="1.5" Max="2.8" Step="0.1" Class="mb-1" />
-                        <MudText Typo="Typo.caption" Class="mud-text-secondary d-block">@_lineHeight.ToString("0.0")</MudText>
-                    </MudExpansionPanel>
-                </ChildContent>
-                <ErrorContent>
-                    <MudText Typo="Typo.caption" Class="mud-text-secondary pa-4 text-center">Section Affichage indisponible</MudText>
-                </ErrorContent>
-            </ErrorBoundary>
+            <MudExpansionPanel Text="Affichage" Class="mb-2">
+                <div class="d-flex align-center justify-space-between mb-3">
+                    <MudText Typo="Typo.body2">Mode nuit</MudText>
+                    <MudSwitch @bind-Value="_isDark" Color="Color.Primary" />
+                </div>
+                <MudText Typo="Typo.body2" Class="mb-1">Taille de police</MudText>
+                <MudSlider @bind-Value="_fontSize" Min="14" Max="28" Step="2" Class="mb-1" />
+                <MudText Typo="Typo.caption" Class="mud-text-secondary mb-3 d-block">@_fontSize px</MudText>
+                <MudText Typo="Typo.body2" Class="mb-1">Famille de police</MudText>
+                <MudSelect @bind-Value="_fontFamily" Variant="Variant.Outlined" Dense="true" Class="mb-3">
+                    <MudSelectItem Value="@("serif")">Serif (défaut)</MudSelectItem>
+                    <MudSelectItem Value="@("sans-serif")">Sans-serif</MudSelectItem>
+                    <MudSelectItem Value="@("Georgia, serif")">Georgia</MudSelectItem>
+                </MudSelect>
+                <MudText Typo="Typo.body2" Class="mb-1">Interlignage</MudText>
+                <MudSlider @bind-Value="_lineHeight" Min="1.5" Max="2.8" Step="0.1" Class="mb-1" />
+                <MudText Typo="Typo.caption" Class="mud-text-secondary d-block">@_lineHeight.ToString("0.0")</MudText>
+            </MudExpansionPanel>
 
             <ErrorBoundary>
                 <ChildContent>
