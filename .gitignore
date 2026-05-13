@@ -36,3 +36,12 @@ packages/
 # Firebase functions
 functions/node_modules/
 functions/hosting/
+
+# Duplicate project files at root (project lives in BibleApp/)
+/Program.cs
+/_Imports.razor
+/Layout/
+/Models/
+/Pages/
+/Services/
+/Shared/
