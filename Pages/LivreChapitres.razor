@@ -2,6 +2,7 @@
 @using BibleApp.Models
 @inject BibleApp.Services.BibleService BibleService
 @inject IJSRuntime JsRuntime
+@implements IDisposable
 
 <Breadcrumb Nodes="@(new List<BreadcrumbNode> {
     new() { Label = "Accueil", Href = "/", Icon = Icons.Material.Filled.Home },
@@ -74,14 +75,26 @@ else
     protected override async Task OnInitializedAsync()
     {
         _livre = await BibleService.GetLivreAsync(Slug);
-        try
-        {
-            var pos = await JsRuntime.InvokeAsync<string>("bibleUtils.localStorageGet", $"lastPos-{Slug}");
-            if (int.TryParse(pos, out var chap) && chap > 0)
-                _dernierChapitre = chap;
-        }
-        catch (Exception ex) { Console.Error.WriteLine($"[LivreChapitres] Échec lecture position: {ex.Message}"); }
     }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            try
+            {
+                var pos = await JsRuntime.InvokeAsync<string>("bibleUtils.localStorageGet", $"lastPos-{Slug}");
+                if (int.TryParse(pos, out var chap) && chap > 0)
+                {
+                    _dernierChapitre = chap;
+                    StateHasChanged();
+                }
+            }
+            catch (Exception ex) { Console.Error.WriteLine($"[LivreChapitres] Échec lecture position: {ex.Message}"); }
+        }
+    }
+
+    public void Dispose() { }
 
     private void NavigateTo(int chapitre)
     {

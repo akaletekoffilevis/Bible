@@ -118,7 +118,8 @@
     private async Task AccepterConsent()
     {
         _showConsent = false;
-        await JsRuntime.InvokeVoidAsync("bibleUtils.localStorageSet", "consent", "true");
+        try { await JsRuntime.InvokeVoidAsync("bibleUtils.localStorageSet", "consent", "true"); }
+        catch (Exception ex) { Console.Error.WriteLine($"[Layout] Échec sauvegarde consent: {ex.Message}"); }
         Snackbar.Add("Préférences enregistrées", Severity.Success);
         StateHasChanged();
     }

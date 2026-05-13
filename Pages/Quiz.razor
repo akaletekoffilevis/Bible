@@ -113,7 +113,8 @@ else
     private async Task Commencer()
     {
         _generating = true;
-        _questions = await GenererQuestionsAsync();
+        try { _questions = await GenererQuestionsAsync(); }
+        catch (Exception ex) { Console.Error.WriteLine($"[Quiz] Échec génération: {ex.Message}"); }
         _generating = false;
         _current = _questions.FirstOrDefault();
     }

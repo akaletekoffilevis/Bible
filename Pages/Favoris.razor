@@ -78,16 +78,24 @@
 
     private async Task SupprimerBookmark(BookmarkItem bm)
     {
-        await IndexedDb.DeleteAsync("bookmarks", bm.id);
-        _bookmarks.Remove(bm);
-        _snackbar.Add("Marque-page supprimé", Severity.Success);
+        try
+        {
+            await IndexedDb.DeleteAsync("bookmarks", bm.id);
+            _bookmarks.Remove(bm);
+            _snackbar.Add("Marque-page supprimé", Severity.Success);
+        }
+        catch (Exception ex) { Console.Error.WriteLine($"[Favoris] Échec suppression marque-page: {ex.Message}"); }
     }
 
     private async Task SupprimerNote(NoteItem note)
     {
-        await IndexedDb.DeleteAsync("notes", note.id);
-        _notes.Remove(note);
-        _snackbar.Add("Note supprimée", Severity.Success);
+        try
+        {
+            await IndexedDb.DeleteAsync("notes", note.id);
+            _notes.Remove(note);
+            _snackbar.Add("Note supprimée", Severity.Success);
+        }
+        catch (Exception ex) { Console.Error.WriteLine($"[Favoris] Échec suppression note: {ex.Message}"); }
     }
 
     private void NavigateTo(BookmarkItem bm)

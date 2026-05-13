@@ -295,8 +295,12 @@
             cancelText: "Annuler");
         if (confirm != true) return;
 
-        await JsRuntime.InvokeVoidAsync("bibleUtils.localStorageClear");
-        await JsRuntime.InvokeVoidAsync("bibleUtils.clearIndexedDB");
+        try
+        {
+            await JsRuntime.InvokeVoidAsync("bibleUtils.localStorageClear");
+            await JsRuntime.InvokeVoidAsync("bibleUtils.clearIndexedDB");
+        }
+        catch (Exception ex) { Console.Error.WriteLine($"[Paramètres] Échec effacement données: {ex.Message}"); }
         _isDark = false;
         _fontSize = 18;
         _fontFamily = "serif";

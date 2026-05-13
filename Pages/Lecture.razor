@@ -370,35 +370,43 @@ else
 
     private async Task PlayOuPause()
     {
-        if (_isPlaying)
+        try
         {
-            await JsRuntime.InvokeVoidAsync("bibleTts.pause");
-            _isPlaying = false;
-            return;
-        }
+            if (_isPlaying)
+            {
+                await JsRuntime.InvokeVoidAsync("bibleTts.pause");
+                _isPlaying = false;
+                return;
+            }
 
-        if (_chapitre == null) return;
+            if (_chapitre == null) return;
 
-        if (await JsRuntime.InvokeAsync<bool>("bibleTts.isSpeaking"))
-        {
-            await JsRuntime.InvokeVoidAsync("bibleTts.resume");
+            if (await JsRuntime.InvokeAsync<bool>("bibleTts.isSpeaking"))
+            {
+                await JsRuntime.InvokeVoidAsync("bibleTts.resume");
+                _isPlaying = true;
+                return;
+            }
+
+            var textes = _chapitre.ContenuVersets.Select(v => v.TextePropre).ToArray();
             _isPlaying = true;
-            return;
+            _versetCourantTts = 0;
+            _ttsRef?.Dispose();
+            _ttsRef = DotNetObjectReference.Create(this);
+            await JsRuntime.InvokeVoidAsync("bibleTts.speak", textes, "fr-FR", _ttsRef);
         }
-
-        var textes = _chapitre.ContenuVersets.Select(v => v.TextePropre).ToArray();
-        _isPlaying = true;
-        _versetCourantTts = 0;
-        _ttsRef?.Dispose();
-        _ttsRef = DotNetObjectReference.Create(this);
-        await JsRuntime.InvokeVoidAsync("bibleTts.speak", textes, "fr-FR", _ttsRef);
+        catch (Exception ex) { Console.Error.WriteLine($"[Lecture] Échec TTS: {ex.Message}"); }
     }
 
     private async Task Stop()
     {
-        await JsRuntime.InvokeVoidAsync("bibleTts.stop");
-        _isPlaying = false;
-        _versetCourantTts = 0;
+        try
+        {
+            await JsRuntime.InvokeVoidAsync("bibleTts.stop");
+            _isPlaying = false;
+            _versetCourantTts = 0;
+        }
+        catch (Exception ex) { Console.Error.WriteLine($"[Lecture] Échec arrêt TTS: {ex.Message}"); }
     }
 
     private async Task GoPrev()
