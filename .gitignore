@@ -38,10 +38,17 @@ functions/node_modules/
 functions/hosting/
 
 # Duplicate project files at root (project lives in BibleApp/)
+/App.razor
+/BibleApp.csproj
+/CONTRIBUTING.md
+/LICENSE
 /Program.cs
+/Properties/
+/README.md
+/Shared/
 /_Imports.razor
 /Layout/
 /Models/
 /Pages/
 /Services/
-/Shared/
+/wwwroot/
