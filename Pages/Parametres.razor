@@ -200,15 +200,6 @@
 
     protected override async Task OnInitializedAsync()
     {
-        _prevFontSize = _fontSize = int.TryParse(await GetSettingAsync("fontSize"), out var fs) ? fs : 18;
-        _prevFontFamily = _fontFamily = await GetSettingAsync("fontFamily") ?? "serif";
-        _prevLineHeight = _lineHeight = double.TryParse(await GetSettingAsync("lineHeight"), out var lh) ? lh : 2.0;
-        _prevShowTranslate = _showTranslate = await GetSettingAsync("showTranslate") == "true";
-        _prevIsDark = _isDark = await GetSettingAsync("darkMode") == "true";
-
-        if (_isDark != ThemeService.IsDarkMode)
-            ThemeService.SetDarkMode(_isDark);
-
         try { _version = await Http.GetFromJsonAsync<Dictionary<string, string>>("version.json"); }
         catch (Exception ex) { _versionError = ex.Message; Console.Error.WriteLine($"[Paramètres] Échec chargement version: {ex.Message}"); }
     }
@@ -217,6 +208,15 @@
     {
         if (firstRender)
         {
+            _prevFontSize = _fontSize = int.TryParse(await GetSettingAsync("fontSize"), out var fs) ? fs : 18;
+            _prevFontFamily = _fontFamily = await GetSettingAsync("fontFamily") ?? "serif";
+            _prevLineHeight = _lineHeight = double.TryParse(await GetSettingAsync("lineHeight"), out var lh) ? lh : 2.0;
+            _prevShowTranslate = _showTranslate = await GetSettingAsync("showTranslate") == "true";
+            _prevIsDark = _isDark = await GetSettingAsync("darkMode") == "true";
+
+            if (_isDark != ThemeService.IsDarkMode)
+                ThemeService.SetDarkMode(_isDark);
+
             await ApplyStylesAsync();
             if (_showTranslate)
                 await JsRuntime.InvokeVoidAsync("bibleUtils.toggleGoogleTranslate", true);
@@ -224,9 +224,9 @@
             {
                 _pwaInstallable = await JsRuntime.InvokeAsync<bool>("bibleInstall.isInstallable");
                 _pwaInstalled = await JsRuntime.InvokeAsync<bool>("bibleInstall.isInstalled");
-                StateHasChanged();
             }
             catch (Exception ex) { Console.Error.WriteLine($"[Paramètres] Échec statut PWA: {ex.Message}"); }
+            StateHasChanged();
             return;
         }
 
