@@ -22,9 +22,14 @@ else if (_versetDuJour != null)
         <MudText Typo="Typo.body1" Class="mb-2" Style="font-style: italic; line-height: 1.8;">
             "@_versetDuJour.Value.Verset.TextePropre"
         </MudText>
-        <MudButton Variant="Variant.Text" Color="Color.Primary" Href="@($"/lecture/{_versetDuJour.Value.Livre.Slug}/{_versetDuJour.Value.Chapitre.Numero}/{_versetDuJour.Value.Verset.Numero}")">
-            @_versetDuJour.Value.Livre.NomLivre @_versetDuJour.Value.Chapitre.Numero:@_versetDuJour.Value.Verset.Numero →
-        </MudButton>
+        <div class="d-flex align-center justify-center" style="gap: 8px; flex-wrap: wrap;">
+            <MudButton Variant="Variant.Text" Color="Color.Primary" Href="@($"/lecture/{_versetDuJour.Value.Livre.Slug}/{_versetDuJour.Value.Chapitre.Numero}/{_versetDuJour.Value.Verset.Numero}")">
+                @_versetDuJour.Value.Livre.NomLivre @_versetDuJour.Value.Chapitre.Numero:@_versetDuJour.Value.Verset.Numero →
+            </MudButton>
+            <MudButton Variant="Variant.Filled" Color="Color.Secondary" Size="Size.Small" OnClick="@PartagerVersetDuJour" StartIcon="@Icons.Material.Filled.Share">
+                Partager
+            </MudButton>
+        </div>
     </MudPaper>
 }
 
@@ -117,6 +122,15 @@ else if (_versetDuJour != null)
         }
     }
 
+    private async Task PartagerVersetDuJour()
+    {
+        if (_versetDuJour == null) return;
+        var v = _versetDuJour.Value;
+        var refStr = $"{v.Livre.NomLivre} {v.Chapitre.Numero}:{v.Verset.Numero}";
+        var siteUrl = "https://bibeli.vercel.app";
+        await Js.InvokeVoidAsync("bibleImage.shareVersetDuJour", v.Verset.TextePropre, refStr, siteUrl);
+    }
+
     private void NavigateTo(string slug)
     {
         NavigationManager.NavigateTo($"/livre-chapitres/{slug}");
@@ -124,4 +138,7 @@ else if (_versetDuJour != null)
 
     [Inject]
     private NavigationManager NavigationManager { get; set; } = null!;
+
+    [Inject]
+    private IJSRuntime Js { get; set; } = null!;
 }
