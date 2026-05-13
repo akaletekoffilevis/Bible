@@ -1,0 +1,7 @@
+{
+  "version": "2.1.0",
+  "framework": ".NET 9",
+  "ui": "MudBlazor 8.x",
+  "type": "PWA WASM",
+  "buildDate": "2026-05-13"
+}

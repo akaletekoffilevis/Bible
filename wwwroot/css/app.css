@@ -58,7 +58,7 @@ body {
     line-height: var(--bible-line-height);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    background-attachment: local;
+    background-attachment: fixed;
     background-color: var(--mud-palette-background, #f5f5f5);
 }
 
