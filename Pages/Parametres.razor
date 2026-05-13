@@ -5,7 +5,6 @@
 @inject BibleApp.Services.ThemeService ThemeService
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
-@inject HttpClient Http
 
 <Breadcrumb Nodes="@(new List<BreadcrumbNode> {
     new() { Label = "Accueil", Href = "/", Icon = Icons.Material.Filled.Home },
@@ -97,14 +96,7 @@
             <MudIcon Icon="@Icons.Material.Filled.Chat" Size="Size.Small" Class="mr-1" /> +227 91 53 52 20
         </MudLink>
         <MudText Typo="Typo.caption" Class="mud-text-secondary">
-            @if (_version != null)
-            {
-                <span>v@(_version["version"]) — @(_version["framework"]) &bull; @(_version["ui"]) &bull; @(_version["type"])</span>
-            }
-            else if (!string.IsNullOrEmpty(_versionError))
-            {
-                <span>v2.1 — .NET 9 &bull; MudBlazor &bull; PWA</span>
-            }
+            <span>v2.1 — .NET 9 &bull; MudBlazor &bull; PWA</span>
         </MudText>
     </MudExpansionPanel>
 
@@ -195,13 +187,10 @@
     private double _prevLineHeight;
     private bool _prevShowTranslate;
     private bool _prevIsDark;
-    private Dictionary<string, string>? _version;
-    private string _versionError = "";
 
-    protected override async Task OnInitializedAsync()
+
+    protected override void OnInitialized()
     {
-        try { _version = await Http.GetFromJsonAsync<Dictionary<string, string>>("version.json"); }
-        catch (Exception ex) { _versionError = ex.Message; Console.Error.WriteLine($"[Paramètres] Échec chargement version: {ex.Message}"); }
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
