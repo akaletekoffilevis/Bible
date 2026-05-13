@@ -1,106 +1,122 @@
 @page "/recherche"
 @using BibleApp.Models
 @using BibleApp.Services
-@inject BibleApp.Services.BibleService BibleService
+@inject BibleService BibleService
 @inject SearchIndexService SearchService
+@inject NavigationManager NavigationManager
 
-<Breadcrumb Nodes="@(new List<BreadcrumbNode> {
-    new() { Label = "Accueil", Href = "/", Icon = Icons.Material.Filled.Home },
-    new() { Label = "Recherche" }
-})" />
+<ErrorBoundary>
+    <ChildContent>
+        <Breadcrumb Nodes="@(new List<BreadcrumbNode> {
+            new() { Label = "Accueil", Href = "/", Icon = Icons.Material.Filled.Home },
+            new() { Label = "Recherche" }
+        })" />
 
-<MudTextField @ref="_searchRef"
-              @bind-Value="_query"
-              @bind-Value:after="Rechercher"
-              Label="Rechercher un mot ou une expression..."
-              Variant="Variant.Outlined"
-              Adornment="Adornment.End"
-              AdornmentIcon="@Icons.Material.Filled.Search"
-              Immediate="true"
-              Class="mb-3" />
+        @if (!string.IsNullOrEmpty(_errorMessage))
+        {
+            <MudAlert Severity="Severity.Error" Class="mb-3">@_errorMessage</MudAlert>
+        }
 
-<MudGrid Class="mb-3">
-    <MudItem xs="6" sm="3">
-        <MudSelect T="string"
-                   Label="Testament"
-                   @bind-Value="_testament"
-                   Clearable="true"
-                   Variant="Variant.Outlined"
-                   Dense="true">
-            <MudSelectItem Value="@("AT")">Ancien Testament</MudSelectItem>
-            <MudSelectItem Value="@("NT")">Nouveau Testament</MudSelectItem>
-        </MudSelect>
-    </MudItem>
-    <MudItem xs="6" sm="3">
-        <MudSelect T="string"
-                   Label="Livre"
-                   @bind-Value="_livreSlug"
-                   Clearable="true"
-                   Variant="Variant.Outlined"
-                   Dense="true">
-            @foreach (var livre in _index)
+        <MudTextField @ref="_searchRef"
+                      @bind-Value="_query"
+                      @bind-Value:after="Rechercher"
+                      Label="Rechercher un mot ou une expression..."
+                      Variant="Variant.Outlined"
+                      Adornment="Adornment.End"
+                      AdornmentIcon="@Icons.Material.Filled.Search"
+                      Immediate="true"
+                      Class="mb-3" />
+
+        <MudGrid Class="mb-3">
+            <MudItem xs="6" sm="3">
+                <MudSelect T="string"
+                           Label="Testament"
+                           @bind-Value="_testament"
+                           Clearable="true"
+                           Variant="Variant.Outlined"
+                           Dense="true">
+                    <MudSelectItem Value="@("AT")">Ancien Testament</MudSelectItem>
+                    <MudSelectItem Value="@("NT")">Nouveau Testament</MudSelectItem>
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="6" sm="3">
+                <MudSelect T="string"
+                           Label="Livre"
+                           @bind-Value="_livreSlug"
+                           Clearable="true"
+                           Variant="Variant.Outlined"
+                           Dense="true">
+                    @foreach (var livre in _index)
+                    {
+                        <MudSelectItem Value="@livre.Slug">@livre.NomLivre</MudSelectItem>
+                    }
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="12" sm="6" Class="d-flex align-center justify-end search-mode-toggle">
+                <MudText Typo="Typo.caption" Class="mud-text-secondary mr-2">Mode :</MudText>
+                <MudChip T="string" Size="Size.Small" Color="@(!_modeOu ? Color.Primary : Color.Default)" Class="mr-1" OnClick="@(() => BasculerMode(false))">
+                    <MudIcon Icon="@Icons.Material.Filled.JoinInner" Size="Size.Small" Class="mr-1" /> ET (tous)
+                </MudChip>
+                <MudChip T="string" Size="Size.Small" Color="@(_modeOu ? Color.Secondary : Color.Default)" OnClick="@(() => BasculerMode(true))">
+                    <MudIcon Icon="@Icons.Material.Filled.JoinFull" Size="Size.Small" Class="mr-1" /> OU (un)
+                </MudChip>
+            </MudItem>
+        </MudGrid>
+
+        @if (_indexationEnCours && _resultats.Count == 0)
+        {
+            <MudPaper Class="pa-8 text-center" Elevation="0">
+                <div class="skeleton-line mb-3" style="width: 60%; height: 16px; margin: 0 auto;"></div>
+                <div class="skeleton-line mb-3" style="width: 80%; height: 14px; margin: 0 auto;"></div>
+                <MudText Typo="Typo.caption" Class="mud-text-secondary mt-4">Indexation des textes en cours…</MudText>
+            </MudPaper>
+        }
+        else if (string.IsNullOrEmpty(_query) || _query.Length < 2)
+        {
+            <MudPaper Class="pa-8 text-center" Elevation="0">
+                <MudIcon Icon="@Icons.Material.Filled.Search" Size="Size.Large" Class="mud-text-secondary mb-4" />
+                <MudText Typo="Typo.body2" Class="mud-text-secondary">Saisis au moins 2 caractères pour chercher dans la Bible</MudText>
+                <MudText Typo="Typo.caption" Class="mud-text-secondary mt-2">Ex : "amour foi" (ET tous) ou "amour OU foi" (un seul) &bull; "Dieu a tant aimé" (exact)</MudText>
+            </MudPaper>
+        }
+        else if (_resultats.Count > 0)
+        {
+            <MudText Typo="Typo.body2" Class="mb-2 mud-text-secondary d-flex align-center" Style="gap:4px;">
+                <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Size="Size.Small" Color="Color.Success" />
+                @_resultats.Count résultat(s) pour "@_query"
+            </MudText>
+
+            @foreach (var resultat in _resultats)
             {
-                <MudSelectItem Value="@livre.Slug">@livre.NomLivre</MudSelectItem>
+                <MudPaper Class="mb-2" Style="cursor:pointer; border-radius: 8px;" Elevation="0">
+                    <div @onclick="@(() => NavigateTo(resultat))" Class="pa-3">
+                        <MudText Typo="Typo.caption" Class="mud-text-secondary mb-1 d-flex align-center" Style="gap:4px;">
+                            <MudIcon Icon="@Icons.Material.Filled.AutoStories" Size="Size.Small" />
+                            @resultat.Reference
+                        </MudText>
+                        <MudText Typo="Typo.body1">
+                            @resultat.Texte
+                        </MudText>
+                    </div>
+                </MudPaper>
             }
-        </MudSelect>
-    </MudItem>
-    <MudItem xs="12" sm="6" Class="d-flex align-center justify-end search-mode-toggle">
-        <MudText Typo="Typo.caption" Class="mud-text-secondary mr-2">Mode :</MudText>
-        <MudChip T="string" Size="Size.Small" Color="@(!_modeOu ? Color.Primary : Color.Default)" Class="mr-1" OnClick="@(() => BasculerMode(false))">
-            <MudIcon Icon="@Icons.Material.Filled.JoinInner" Size="Size.Small" Class="mr-1" /> ET (tous)
-        </MudChip>
-        <MudChip T="string" Size="Size.Small" Color="@(_modeOu ? Color.Secondary : Color.Default)" OnClick="@(() => BasculerMode(true))">
-            <MudIcon Icon="@Icons.Material.Filled.JoinFull" Size="Size.Small" Class="mr-1" /> OU (un)
-        </MudChip>
-    </MudItem>
-</MudGrid>
-
-@if (_indexationEnCours && _resultats.Count == 0)
-{
-    <MudPaper Class="pa-8 text-center" Elevation="0">
-        <div class="skeleton-line mb-3" style="width: 60%; height: 16px; margin: 0 auto;"></div>
-        <div class="skeleton-line mb-3" style="width: 80%; height: 14px; margin: 0 auto;"></div>
-        <MudText Typo="Typo.caption" Class="mud-text-secondary mt-4">Indexation des textes en cours…</MudText>
-    </MudPaper>
-}
-else if (string.IsNullOrEmpty(_query) || _query.Length < 2)
-{
-    <MudPaper Class="pa-8 text-center" Elevation="0">
-        <MudIcon Icon="@Icons.Material.Filled.Search" Size="Size.Large" Class="mud-text-secondary mb-4" />
-        <MudText Typo="Typo.body2" Class="mud-text-secondary">Saisis au moins 2 caractères pour chercher dans la Bible</MudText>
-        <MudText Typo="Typo.caption" Class="mud-text-secondary mt-2">Ex : "amour foi" (ET tous) ou "amour OU foi" (un seul) &bull; "Dieu a tant aimé" (exact)</MudText>
-    </MudPaper>
-}
-else if (_resultats.Count > 0)
-{
-    <MudText Typo="Typo.body2" Class="mb-2 mud-text-secondary d-flex align-center" Style="gap:4px;">
-        <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Size="Size.Small" Color="Color.Success" />
-        @_resultats.Count résultat(s) pour "@_query"
-    </MudText>
-
-    @foreach (var resultat in _resultats)
-    {
-        <MudPaper Class="mb-2" Style="cursor:pointer; border-radius: 8px;" Elevation="0">
-            <div @onclick="@(() => NavigateTo(resultat))" Class="pa-3">
-                <MudText Typo="Typo.caption" Class="mud-text-secondary mb-1 d-flex align-center" Style="gap:4px;">
-                    <MudIcon Icon="@Icons.Material.Filled.AutoStories" Size="Size.Small" />
-                    @resultat.Reference
-                </MudText>
-                <MudText Typo="Typo.body1">
-                    @resultat.Texte
-                </MudText>
-            </div>
-        </MudPaper>
-    }
-}
-else
-{
-    <MudPaper Class="pa-8 text-center" Elevation="0">
-        <MudIcon Icon="@Icons.Material.Filled.SearchOff" Size="Size.Large" Class="mud-text-secondary mb-4" />
-        <MudText Typo="Typo.body2" Class="mud-text-secondary">Aucun résultat pour "@_query"</MudText>
-        <MudText Typo="Typo.caption" Class="mud-text-secondary mt-2">Vérifie l'orthographe, essaye le mode OU, ou une phrase exacte "entre guillemets"</MudText>
-    </MudPaper>
-}
+        }
+        else
+        {
+            <MudPaper Class="pa-8 text-center" Elevation="0">
+                <MudIcon Icon="@Icons.Material.Filled.SearchOff" Size="Size.Large" Class="mud-text-secondary mb-4" />
+                <MudText Typo="Typo.body2" Class="mud-text-secondary">Aucun résultat pour "@_query"</MudText>
+                <MudText Typo="Typo.caption" Class="mud-text-secondary mt-2">Vérifie l'orthographe, essaye le mode OU, ou une phrase exacte "entre guillemets"</MudText>
+            </MudPaper>
+        }
+    </ChildContent>
+    <ErrorContent>
+        <div class="pa-4">
+            <MudAlert Severity="Severity.Error" Class="mb-3">Erreur lors du chargement de la recherche</MudAlert>
+            <MudText Typo="Typo.body2" Class="mud-text-secondary">Un problème est survenu. Essaie d'actualiser la page.</MudText>
+        </div>
+    </ErrorContent>
+</ErrorBoundary>
 
 @code {
     private MudBlazor.MudTextField<string>? _searchRef;
@@ -111,43 +127,69 @@ else
     private List<BibleApp.Models.LivreIndex> _index = new();
     private bool _indexationEnCours;
     private bool _modeOu;
+    private string? _errorMessage;
 
     protected override async Task OnInitializedAsync()
     {
-        _index = await BibleService.GetIndexAsync();
-        _indexationEnCours = true;
-        _ = IndexerAsync();
+        try
+        {
+            _index = await BibleService.GetIndexAsync();
+            _indexationEnCours = true;
+            _ = IndexerAsync();
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = $"Erreur d'initialisation : {ex.Message}";
+            Console.Error.WriteLine($"[Recherche] {_errorMessage}");
+        }
     }
 
     private async Task IndexerAsync()
     {
-        try { await SearchService.IndexAllLoadedAsync(); }
+        try
+        {
+            await SearchService.IndexAllLoadedAsync();
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = $"Erreur d'indexation : {ex.Message}";
+            Console.Error.WriteLine($"[Recherche] {_errorMessage}");
+        }
         finally
         {
             _indexationEnCours = false;
             if (!string.IsNullOrWhiteSpace(_query) && _query.Length >= 2)
                 Rechercher();
-            StateHasChanged();
+            await InvokeAsync(StateHasChanged);
         }
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (firstRender && _searchRef != null)
+        try
         {
-            await _searchRef.FocusAsync();
+            if (firstRender && _searchRef != null)
+                await _searchRef.FocusAsync();
         }
+        catch (Exception ex) { Console.Error.WriteLine($"[Recherche] Focus error: {ex.Message}"); }
     }
 
     private void Rechercher()
     {
-        if (string.IsNullOrWhiteSpace(_query) || _query.Length < 2)
+        try
         {
-            _resultats = new List<SearchResult>();
-            return;
+            if (string.IsNullOrWhiteSpace(_query) || _query.Length < 2)
+            {
+                _resultats = new List<SearchResult>();
+                return;
+            }
+            _resultats = SearchService.Rechercher(_query, _testament, _livreSlug, !_modeOu);
         }
-
-        _resultats = SearchService.Rechercher(_query, _testament, _livreSlug, !_modeOu);
+        catch (Exception ex)
+        {
+            _errorMessage = $"Erreur de recherche : {ex.Message}";
+            Console.Error.WriteLine($"[Recherche] {_errorMessage}");
+        }
     }
 
     private void BasculerMode(bool ou)
@@ -161,7 +203,4 @@ else
     {
         NavigationManager.NavigateTo($"/lecture/{result.Slug}/{result.Chapitre}/{result.Verset}");
     }
-
-    [Inject]
-    private NavigationManager NavigationManager { get; set; } = null!;
 }
