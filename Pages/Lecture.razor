@@ -75,16 +75,20 @@ else
                             </span>
                             <span @onclick="@(() => _showHighlightPicker = -1)" title="Fermer" role="button" tabindex="0">✕</span>
                         }
+                        else if (_openActionsVerset == vNum)
+                        {
+                            <span class="verse-actions-popup">
+                                <button @onclick="@(async () => { await AjouterMarquePage(verset); _openActionsVerset = -1; })" title="Marquer">🔖</button>
+                                <button @onclick="@(async () => { await AjouterNote(verset); _openActionsVerset = -1; })" title="Note">📝</button>
+                                <button @onclick="@(() => { BasculerHighlight(verset); _openActionsVerset = -1; })" title="Surligner">🖍️</button>
+                                <button @onclick="@(async () => { await PartagerVerset(verset); _openActionsVerset = -1; })" title="Partager">📋</button>
+                                <button @onclick="@(async () => { await GenererImage(verset); _openActionsVerset = -1; })" title="Image">🖼️</button>
+                                <button @onclick="@(() => _openActionsVerset = -1)" title="Fermer">✕</button>
+                            </span>
+                        }
                         else
                         {
-                            <select class="verse-actions-select" @onchange="@(async e => { var v = e.Value?.ToString() ?? ""; if (!string.IsNullOrEmpty(v)) { _actionKey++; await OnVersetAction(verset, v); } })" @key="@_actionKey">
-                                <option value="">☰ Actions</option>
-                                <option value="bookmark">🔖 Marquer</option>
-                                <option value="note">📝 Note</option>
-                                <option value="highlight">🖍️ Surligner</option>
-                                <option value="share">📋 Partager</option>
-                                <option value="image">🖼️ Image</option>
-                            </select>
+                            <button class="verse-actions-btn" @onclick="@(() => _openActionsVerset = vNum)" title="Actions" aria-label="Actions du verset">☰</button>
                         }
                     </div>
                 </div>
@@ -133,7 +137,7 @@ else
     private DotNetObjectReference<Lecture>? _ttsRef;
     private Dictionary<string, Highlight> _highlights = new();
     private int _showHighlightPicker = -1;
-    private int _actionKey;
+    private int _openActionsVerset = -1;
 
     protected override async Task OnParametersSetAsync()
     {
