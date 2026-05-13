@@ -21,7 +21,7 @@ window.bibleDb = {
                 };
                 request.onupgradeneeded = function(event) {
                     var db = event.target.result;
-                    ['bookmarks', 'notes', 'highlights', 'history', 'progress'].forEach(function(store) {
+                    ['bookmarks', 'notes', 'highlights', 'history', 'progress', 'planProgress'].forEach(function(store) {
                         if (!db.objectStoreNames.contains(store)) {
                             db.createObjectStore(store, { keyPath: 'id' });
                         }
@@ -202,6 +202,20 @@ window.bibleUtils = {
             document.body.removeChild(ta);
             resolve(true);
         });
+    },
+
+    getHighlights: function () {
+        if (!window.bibleDb.db) return Promise.resolve([]);
+        try {
+            return window.bibleDb.getAll('highlights');
+        } catch(e) { return Promise.resolve([]); }
+    },
+
+    getHighlight: function (verseId) {
+        if (!window.bibleDb.db) return Promise.resolve(null);
+        try {
+            return window.bibleDb.getById('highlights', verseId);
+        } catch(e) { return Promise.resolve(null); }
     },
 
     shareOrCopy: function (text) {
@@ -503,7 +517,11 @@ window.bibleImage = {
         "'Perpetua', 'Rockwell Extra Bold', serif",
     ],
 
-    _pick: function (ref) {
+    _pick: function (ref, random) {
+        if (random) {
+            var idx = Math.floor(Math.random() * this._palettes.length);
+            return this._palettes[idx];
+        }
         var h = 0;
         for (var i = 0; i < ref.length; i++) h = ((h << 5) - h) + ref.charCodeAt(i);
         return this._palettes[Math.abs(h) % this._palettes.length];
@@ -514,62 +532,56 @@ window.bibleImage = {
         return this._titleFonts[idx];
     },
 
-    // If title is provided, canvas is taller (500px) and title is drawn at top
-    _draw: function (texte, reference, versetUrl, title) {
+    // Normalized canvas for WhatsApp (600x400 max, compact layout)
+    _draw: function (texte, reference, versetUrl, title, randomPalette) {
         var hasTitle = title && title.length > 0;
         var canvasW = 600;
-        var canvasH = hasTitle ? 520 : 440;
+        var canvasH = hasTitle ? 400 : 360;
         var canvas = document.createElement('canvas');
         canvas.width = canvasW;
         canvas.height = canvasH;
         var ctx = canvas.getContext('2d');
-        var palette = this._pick(reference);
+        var palette = this._pick(reference, randomPalette);
         var siteUrl = versetUrl || 'bibeli.vercel.app';
 
-        // Background gradient
-        var grad = ctx.createLinearGradient(0, 0, canvasW, canvasH);
-        grad.addColorStop(0, palette.bg[0]);
-        grad.addColorStop(1, palette.bg[1]);
-        ctx.fillStyle = grad;
+        var bgGrad = ctx.createLinearGradient(0, 0, canvasW, canvasH);
+        bgGrad.addColorStop(0, palette.bg[0]);
+        bgGrad.addColorStop(1, palette.bg[1]);
+        ctx.fillStyle = bgGrad;
         ctx.fillRect(0, 0, canvasW, canvasH);
 
-        // Inner border decoration
         ctx.fillStyle = palette.text + '15';
-        ctx.fillRect(16, 16, canvasW - 32, canvasH - 32);
+        ctx.fillRect(12, 12, canvasW - 24, canvasH - 24);
 
         ctx.textAlign = 'center';
 
-        var startY = 60;
+        var startY = 44;
+        var titleBottom = startY;
 
-        // Draw title if present
         if (hasTitle) {
             var titleFont = this._pickTitleFont();
-            ctx.shadowColor = 'rgba(0,0,0,0.25)';
-            ctx.shadowBlur = 3;
+            ctx.shadowColor = 'rgba(0,0,0,0.2)';
+            ctx.shadowBlur = 2;
             ctx.shadowOffsetY = 1;
-            ctx.font = 'bold 22px ' + titleFont;
+            ctx.font = 'bold 20px ' + titleFont;
             ctx.fillStyle = palette.accent;
             ctx.fillText('✨ ' + title + ' ✨', 300, startY);
-            // Decorative line under title
             ctx.shadowColor = 'transparent';
             ctx.shadowBlur = 0;
-            ctx.shadowOffsetY = 0;
             ctx.fillStyle = palette.accent + '40';
-            ctx.fillRect(180, startY + 10, 240, 1.5);
-            startY += 40;
+            ctx.fillRect(180, startY + 8, 240, 1.5);
+            titleBottom = startY + 16;
         }
 
-        // Opening quote
-        ctx.fillStyle = palette.text + '40';
-        ctx.font = 'bold 36px serif';
-        ctx.fillText('"', 300, hasTitle ? startY + 10 : 70);
+        ctx.fillStyle = palette.text + '30';
+        ctx.font = 'bold 28px serif';
+        ctx.fillText('"', 300, hasTitle ? titleBottom + 18 : 50);
 
-        // Word wrap text
-        ctx.font = '18px serif';
+        ctx.font = '16px serif';
         var words = texte.split(' ');
         var lines = [];
         var line = '';
-        var maxWidth = 500;
+        var maxWidth = 520;
         for (var i = 0; i < words.length; i++) {
             var test = line + words[i] + ' ';
             if (ctx.measureText(test).width > maxWidth) {
@@ -581,48 +593,43 @@ window.bibleImage = {
         }
         lines.push(line.trim());
 
-        var lineHeight = 32;
+        var lineHeight = 28;
         var totalHeight = lines.length * lineHeight;
-        var availableSpace = canvasH - (hasTitle ? 140 : 100);
+        var verseAreaH = canvasH - (hasTitle ? 90 : 72);
         var yPos = hasTitle
-            ? startY + 20 + (availableSpace - totalHeight) / 2
-            : (canvasH - totalHeight - 60) / 2;
+            ? Math.max(titleBottom + 24, titleBottom + 12 + (verseAreaH - totalHeight) / 2)
+            : (canvasH - totalHeight - 48) / 2 + 8;
 
-        // Draw text with shadow for readability
-        ctx.shadowColor = 'rgba(0,0,0,0.3)';
-        ctx.shadowBlur = 4;
-        ctx.shadowOffsetY = 2;
+        ctx.shadowColor = 'rgba(0,0,0,0.25)';
+        ctx.shadowBlur = 3;
+        ctx.shadowOffsetY = 1;
         lines.forEach(function (l) {
             ctx.fillStyle = palette.text;
-            ctx.font = '18px serif';
+            ctx.font = '16px serif';
             ctx.fillText(l, 300, yPos);
             yPos += lineHeight;
         });
 
-        // Reset shadow for reference
         ctx.shadowColor = 'transparent';
         ctx.shadowBlur = 0;
         ctx.shadowOffsetY = 0;
 
-        // Reference line
-        ctx.font = 'bold 14px serif';
+        ctx.font = 'bold 13px serif';
         ctx.fillStyle = palette.accent;
-        ctx.fillText('— ' + reference + ' —', 300, yPos + 16);
+        ctx.fillText('— ' + reference + ' —', 300, yPos + 10);
 
-        // Bottom decorative line
         ctx.fillStyle = palette.accent + '50';
-        ctx.fillRect(200, yPos + 28, 200, 2);
+        ctx.fillRect(200, yPos + 18, 200, 2);
 
-        // Site URL branding
-        ctx.font = '12px sans-serif';
-        ctx.fillStyle = palette.text + '80';
-        ctx.fillText('📖 ' + siteUrl, 300, canvasH - 28);
+        ctx.font = '11px sans-serif';
+        ctx.fillStyle = palette.text + '70';
+        ctx.fillText('📖 ' + siteUrl, 300, canvasH - 16);
 
         return canvas;
     },
 
     generate: function (texte, reference, url) {
-        var canvas = this._draw(texte, reference, url);
+        var canvas = this._draw(texte, reference, url, null, true);
         var link = document.createElement('a');
         link.download = 'verset-' + reference.replace(/[^a-zA-Z0-9]/g, '-') + '.png';
         link.href = canvas.toDataURL();
@@ -630,7 +637,7 @@ window.bibleImage = {
     },
 
     generateBlob: function (texte, reference, url) {
-        var canvas = this._draw(texte, reference, url);
+        var canvas = this._draw(texte, reference, url, null, true);
         return new Promise(function (resolve) {
             canvas.toBlob(function (blob) { resolve(blob); }, 'image/png');
         });
@@ -640,7 +647,7 @@ window.bibleImage = {
         var self = this;
         var siteUrl = url || 'https://bibeli.vercel.app';
         var shareText = '"' + texte + '" — ' + reference + ' (LSG)\n\n📖 ' + siteUrl;
-        var canvas = this._draw(texte, reference, siteUrl.replace('https://', ''));
+        var canvas = this._draw(texte, reference, siteUrl.replace('https://', ''), null, true);
         canvas.toBlob(function (blob) {
             var file = new File([blob], 'verset.png', { type: 'image/png' });
             if (navigator.share && navigator.canShare({ files: [file] })) {
@@ -666,7 +673,7 @@ window.bibleImage = {
         var self = this;
         var siteUrl = url || 'https://bibeli.vercel.app';
         var shareText = '✨ Verset Du Jour ✨\n\n"' + texte + '" — ' + reference + ' (LSG)\n\n📖 ' + siteUrl;
-        var canvas = this._draw(texte, reference, siteUrl.replace('https://', ''), 'Verset Du Jour');
+        var canvas = this._draw(texte, reference, siteUrl.replace('https://', ''), 'Verset Du Jour', true);
         canvas.toBlob(function (blob) {
             var file = new File([blob], 'verset-du-jour.png', { type: 'image/png' });
             if (navigator.share && navigator.canShare({ files: [file] })) {

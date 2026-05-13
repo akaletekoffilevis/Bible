@@ -6,7 +6,7 @@ public class IndexedDbService
 {
     private readonly IJSRuntime _js;
     private const string DbName = "BibleAppDB";
-    private const int DbVersion = 1;
+    private const int DbVersion = 2;
     private bool _initialized;
 
     public IndexedDbService(IJSRuntime js)
@@ -34,5 +34,30 @@ public class IndexedDbService
     public async Task DeleteAsync(string storeName, string id)
     {
         await _js.InvokeVoidAsync("bibleDb.delete", storeName, id);
+    }
+
+    public async Task<List<Models.Highlight>> GetHighlightsAsync()
+    {
+        try { return await GetAllAsync<Models.Highlight>("highlights"); }
+        catch { return new List<Models.Highlight>(); }
+    }
+
+    public async Task<Models.Highlight?> GetHighlightAsync(string verseId)
+    {
+        try
+        {
+            return await _js.InvokeAsync<Models.Highlight?>("bibleUtils.getHighlight", verseId);
+        }
+        catch { return null; }
+    }
+
+    public async Task SaveHighlightAsync(Models.Highlight highlight)
+    {
+        await PutAsync("highlights", highlight.Id, highlight);
+    }
+
+    public async Task DeleteHighlightAsync(string verseId)
+    {
+        await DeleteAsync("highlights", verseId);
     }
 }

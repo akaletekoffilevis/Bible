@@ -13,6 +13,7 @@ builder.Services.AddScoped<BibleService>();
 builder.Services.AddSingleton<SearchIndexService>();
 builder.Services.AddScoped<IndexedDbService>();
 builder.Services.AddSingleton<ThemeService>();
+builder.Services.AddScoped<ReadingPlanService>();
 builder.Services.AddMudServices();
 
 await builder.Build().RunAsync();

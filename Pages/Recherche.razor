@@ -20,10 +20,11 @@
               Class="mb-3" />
 
 <MudGrid Class="mb-3">
-    <MudItem xs="6" sm="4">
+    <MudItem xs="6" sm="3">
         <MudSelect T="string"
                    Label="Testament"
                    @bind-Value="_testament"
+                   @bind-Value:after="Rechercher"
                    Clearable="true"
                    Variant="Variant.Outlined"
                    Dense="true">
@@ -31,10 +32,11 @@
             <MudSelectItem Value="@("NT")">Nouveau Testament</MudSelectItem>
         </MudSelect>
     </MudItem>
-    <MudItem xs="6" sm="4">
+    <MudItem xs="6" sm="3">
         <MudSelect T="string"
                    Label="Livre"
                    @bind-Value="_livreSlug"
+                   @bind-Value:after="Rechercher"
                    Clearable="true"
                    Variant="Variant.Outlined"
                    Dense="true">
@@ -43,6 +45,15 @@
                 <MudSelectItem Value="@livre.Slug">@livre.NomLivre</MudSelectItem>
             }
         </MudSelect>
+    </MudItem>
+    <MudItem xs="12" sm="6" Class="d-flex align-center justify-end search-mode-toggle">
+        <MudText Typo="Typo.caption" Class="mud-text-secondary mr-2">Mode :</MudText>
+        <MudChip T="string" Size="Size.Small" Color="@(!_modeOu ? Color.Primary : Color.Default)" Class="mr-1" OnClick="@(() => BasculerMode(false))">
+            <MudIcon Icon="@Icons.Material.Filled.JoinInner" Size="Size.Small" Class="mr-1" /> ET (tous)
+        </MudChip>
+        <MudChip T="string" Size="Size.Small" Color="@(_modeOu ? Color.Secondary : Color.Default)" OnClick="@(() => BasculerMode(true))">
+            <MudIcon Icon="@Icons.Material.Filled.JoinFull" Size="Size.Small" Class="mr-1" /> OU (un)
+        </MudChip>
     </MudItem>
 </MudGrid>
 
@@ -59,7 +70,7 @@ else if (string.IsNullOrEmpty(_query) || _query.Length < 2)
     <MudPaper Class="pa-8 text-center" Elevation="0">
         <MudIcon Icon="@Icons.Material.Filled.Search" Size="Size.Large" Class="mud-text-secondary mb-4" />
         <MudText Typo="Typo.body2" Class="mud-text-secondary">Saisis au moins 2 caractères pour chercher dans la Bible</MudText>
-        <MudText Typo="Typo.caption" Class="mud-text-secondary mt-2">Ex : "amour", "foi", "Dieu a tant aimé"</MudText>
+        <MudText Typo="Typo.caption" Class="mud-text-secondary mt-2">Ex : "amour foi" (ET tous) ou "amour OU foi" (un seul) &bull; "Dieu a tant aimé" (exact)</MudText>
     </MudPaper>
 }
 else if (_resultats.Count > 0)
@@ -89,7 +100,7 @@ else
     <MudPaper Class="pa-8 text-center" Elevation="0">
         <MudIcon Icon="@Icons.Material.Filled.SearchOff" Size="Size.Large" Class="mud-text-secondary mb-4" />
         <MudText Typo="Typo.body2" Class="mud-text-secondary">Aucun résultat pour "@_query"</MudText>
-        <MudText Typo="Typo.caption" Class="mud-text-secondary mt-2">Vérifie l'orthographe ou essaye un autre mot</MudText>
+        <MudText Typo="Typo.caption" Class="mud-text-secondary mt-2">Vérifie l'orthographe, essaye le mode OU, ou une phrase exacte "entre guillemets"</MudText>
     </MudPaper>
 }
 
@@ -101,6 +112,7 @@ else
     private List<SearchResult> _resultats = new();
     private List<BibleApp.Models.LivreIndex> _index = new();
     private bool _indexationEnCours;
+    private bool _modeOu;
 
     protected override async Task OnInitializedAsync()
     {
@@ -131,7 +143,14 @@ else
             return;
         }
 
-        _resultats = SearchService.Rechercher(_query, _testament, _livreSlug);
+        _resultats = SearchService.Rechercher(_query, _testament, _livreSlug, !_modeOu);
+    }
+
+    private void BasculerMode(bool ou)
+    {
+        if (_modeOu == ou) return;
+        _modeOu = ou;
+        Rechercher();
     }
 
     private void NavigateTo(SearchResult result)

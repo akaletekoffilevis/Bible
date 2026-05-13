@@ -21,6 +21,7 @@
         }
         <MudText Typo="Typo.h6" Class="ml-2" Style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width: 50vw;">@_pageTitle</MudText>
         <MudSpacer />
+        <MudIconButton Icon="@Icons.Material.Filled.NearMe" Color="Color.Inherit" href="/reference" Size="Size.Medium" title="Navigation rapide" />
         <MudIconButton Icon="@Icons.Material.Filled.Search" Color="Color.Inherit" href="/recherche" Size="Size.Medium" />
         <MudIconButton Icon="@Icons.Material.Filled.Bookmark" Color="Color.Inherit" href="/favoris" Size="Size.Medium" />
         <MudIconButton Icon="@Icons.Material.Filled.DarkMode" Color="Color.Inherit" OnClick="@(() => ThemeService.Toggle())" Size="Size.Medium" />
@@ -83,11 +84,21 @@
         }
     };
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
         ThemeService.OnChange += StateHasChanged;
         Navigation.LocationChanged += OnLocationChanged;
         UpdateBackButton(Navigation.Uri);
+
+        try
+        {
+            var dm = await JsRuntime.InvokeAsync<string?>("bibleUtils.localStorageGet", "darkMode");
+            if (dm == "true" && !ThemeService.IsDarkMode)
+                ThemeService.SetDarkMode(true);
+            else if (dm != "true" && ThemeService.IsDarkMode)
+                ThemeService.SetDarkMode(false);
+        }
+        catch { }
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -104,8 +115,6 @@
             var fs = await JsRuntime.InvokeAsync<string?>("bibleUtils.localStorageGet", "fontSize");
             var ff = await JsRuntime.InvokeAsync<string?>("bibleUtils.localStorageGet", "fontFamily");
             var lh = await JsRuntime.InvokeAsync<string?>("bibleUtils.localStorageGet", "lineHeight");
-            var dm = await JsRuntime.InvokeAsync<string?>("bibleUtils.localStorageGet", "darkMode");
-            if (dm == "true" != ThemeService.IsDarkMode) ThemeService.SetDarkMode(dm == "true");
             await JsRuntime.InvokeVoidAsync("bibleUtils.setBodyStyles",
                 (fs ?? "18") + "px", ff ?? "serif", lh ?? "2");
 
@@ -188,8 +197,10 @@
             _pageTitle = path switch
             {
                 "recherche" => "Recherche",
+                "reference" => "Navigation rapide",
                 "favoris" => "Favoris",
                 "progression" => "Progression",
+                "plan-lecture" => "Plan de lecture",
                 "quiz" => "Quiz biblique",
                 "carte" => "Carte biblique",
                 "parametres" => "Paramètres",

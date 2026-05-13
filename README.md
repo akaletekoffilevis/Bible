@@ -9,15 +9,18 @@ Application **Progressive Web App (PWA)** pour lire la Bible Louis Segond en lig
 ## Fonctionnalités
 
 - **66 livres** — Ancien et Nouveau Testament chargés en lazy-loading
-- **Recherche plein texte** — index inversé, filtre par testament/livre, intersection
+- **Recherche plein texte** — index inversé, filtres testament/livre, modes ET/OU, recherche exacte `"entre guillemets"`
 - **Audio TTS** — lecture verset-par-verset avec voix française, pause/reprise, `prime()` silencieux pour débloquer mobile
 - **Marque-pages** — sauvegardés en IndexedDB
 - **Notes personnelles** — attacher une note à chaque verset
+- **Surlignage 5 couleurs** — jaune, vert, bleu, rose, orange, sauvegardé en IndexedDB
 - **Copie / Partage** — Web Share API avec image PNG + copie au clic
-- **Image de verset** — génération Canvas PNG, 12 palettes, dégradé, lien `bibeli.vercel.app` + URL directe du verset
-- **Image Verset du Jour** — partage avec titre "✨ Verset Du Jour ✨", police aléatoire (Georgia, Palatino, Garamond...)
+- **Image de verset** — génération Canvas PNG, 12 palettes aléatoires, dégradé, 600×400px optimisé WhatsApp
+- **Image Verset du Jour** — partage avec titre "✨ Verset Du Jour ✨", police aléatoire, fond aléatoire
 - **Export PDF** — impression du chapitre en PDF
-- **Mode nuit** — thème sombre/clair
+- **Navigation par référence** — taper "Genèse 1:1", "Jn 3:16", "Ps 23" → accès direct
+- **Plan de lecture 1 an** — 365 jours, AT + NT + Psaumes, progression, streak jours consécutifs
+- **Mode nuit** — thème sombre/clair avec transitions CSS fluides
 - **Navigation clavier** — flèches ← → entre chapitres
 - **Fil d'Ariane (breadcrumb)** — navigation contextuelle sur toutes les pages
 - **Carte biblique** — 12 lieux avec Leaflet (lazy-load via unpkg)
@@ -51,6 +54,15 @@ Application **Progressive Web App (PWA)** pour lire la Bible Louis Segond en lig
 
 ## Nouveautés
 
+### v2.2 (mai 2026)
+- **Surlignage versets** — sélection de 5 couleurs (jaune/vert/bleu/rose/orange), sauvegarde IndexedDB, picker inline, CSS dark mode
+- **Navigation par référence** — page `/reference` avec input prédictif, support "Genèse 1:1", "Jn 3:16", "Ps 23", abréviations + fuzzy
+- **Recherche avancée** — modes ET (tous les mots) / OU (un seul mot), phrase exacte `"entre guillemets"`, filtres testament/livre
+- **Plan de lecture** — 365 jours (AT+NT+Psaumes répartis), barre progression, streak jours consécutifs, marquage IndexedDB
+- **Thème nuit fiable** — lecture darkMode avant le 1er render, transitions CSS fluides, variables adaptées (scrollbar, skeleton, ombres)
+- **Image verset normalisée** — canvas 600×400px optimisé WhatsApp, fonds aléatoires, mise en page compacte
+- **Build 0 err 0 warn** — tous projets vérifiés
+
 ### v2.1 (mai 2026)
 - **Partage image Verset du Jour** — titre "✨ Verset Du Jour ✨" avec police aléatoire (6 polices système), canvas 600×520px
 - **ErrorBoundary global** — capture les erreurs de rendu Blazor avec fallback UI + bouton Réessayer
@@ -82,8 +94,10 @@ BibleApp/
 ├── Pages/
 │   ├── Index.razor            # Accueil (verset du jour + skeleton + partage image)
 │   ├── LivreChapitres.razor   # Sélection de chapitre (grille cards + breadcrumb)
-│   ├── Lecture.razor          # Lecture chapitre (cartes versets + TTS + actions + breadcrumb)
-│   ├── Recherche.razor        # Recherche plein texte + indexation + breadcrumb
+│   ├── Lecture.razor          # Lecture chapitre (cartes versets + TTS + actions + surlignage + breadcrumb)
+│   ├── Recherche.razor        # Recherche plein texte + modes ET/OU + exacte + filtres + breadcrumb
+│   ├── Reference.razor        # Navigation rapide par référence biblique
+│   ├── PlanLecture.razor      # Plan de lecture 1 an + progression + streak
 │   ├── Favoris.razor          # Marque-pages et notes + breadcrumb
 │   ├── Progression.razor      # Suivi de lecture AT/NT + breadcrumb
 │   ├── Quiz.razor             # Quiz biblique (Random.Shared) + breadcrumb
@@ -95,12 +109,15 @@ BibleApp/
 │   ├── VersetCard.razor       # Carte verset réutilisable
 │   └── Breadcrumb.razor       # Fil d'Ariane contextuel réutilisable
 ├── Services/
-│   ├── BibleService.cs        # Chargement livres JSON + cache IndexedDB
-│   ├── SearchIndexService.cs  # Index recherche inversé (Singleton)
-│   ├── IndexedDbService.cs    # CRUD IndexedDB (flag _initialized)
+│   ├── BibleService.cs        # Chargement livres JSON + cache IndexedDB + résolution référence
+│   ├── SearchIndexService.cs  # Index recherche inversé (Singleton) + ET/OU + exacte
+│   ├── IndexedDbService.cs    # CRUD IndexedDB + highlights + planProgress (flag _initialized)
+│   ├── ReadingPlanService.cs  # Plan de lecture 365 jours (génération AT+NT+Psaumes)
 │   └── ThemeService.cs        # Thème clair/sombre
 ├── Models/
-│   ├── Bible.cs               # Modèles de données (Livre, Chapitre, Verset)
+│   ├── Bible.cs               # Modèles de données (Livre, Chapitre, Verset, abréviations)
+│   ├── Highlight.cs           # Modèle surlignage (5 couleurs)
+│   ├── PlanJour.cs            # Modèle progression plan lecture
 │   └── BreadcrumbNode.cs      # Modèle pour le fil d'Ariane
 ├── wwwroot/
 │   ├── css/app.css            # Styles personnalisés + responsive + transitions + print + error-boundary

@@ -19,22 +19,22 @@
     <MudExpansionPanel Text="Affichage" Class="mb-2">
         <div class="d-flex align-center justify-space-between mb-3">
             <MudText Typo="Typo.body2">Mode nuit</MudText>
-            <MudSwitch @bind-Value="_isDark" @bind-Value:after="OnIsDarkChanged" Color="Color.Primary" />
+            <MudSwitch @bind-Value="_isDark" Color="Color.Primary" />
         </div>
 
         <MudText Typo="Typo.body2" Class="mb-1">Taille de police</MudText>
-        <MudSlider @bind-Value="_fontSize" @bind-Value:after="OnFontSizeChanged" Min="14" Max="28" Step="2" Class="mb-1" />
+        <MudSlider @bind-Value="_fontSize" Min="14" Max="28" Step="2" Class="mb-1" />
         <MudText Typo="Typo.caption" Class="mud-text-secondary mb-3 d-block">@_fontSize px</MudText>
 
         <MudText Typo="Typo.body2" Class="mb-1">Famille de police</MudText>
-        <MudSelect T="string" @bind-Value="_fontFamily" @bind-Value:after="OnFontFamilyChanged" Variant="Variant.Outlined" Dense="true" Immediate="true" Class="mb-3">
+        <MudSelect T="string" @bind-Value="_fontFamily" Variant="Variant.Outlined" Dense="true" Immediate="true" Class="mb-3">
             <MudSelectItem Value="@("serif")">Serif (défaut)</MudSelectItem>
             <MudSelectItem Value="@("sans-serif")">Sans-serif</MudSelectItem>
             <MudSelectItem Value="@("Georgia, serif")">Georgia</MudSelectItem>
         </MudSelect>
 
         <MudText Typo="Typo.body2" Class="mb-1">Interlignage</MudText>
-        <MudSlider @bind-Value="_lineHeight" @bind-Value:after="OnLineHeightChanged" Min="1.5" Max="2.8" Step="0.1" Class="mb-1" />
+        <MudSlider @bind-Value="_lineHeight" Min="1.5" Max="2.8" Step="0.1" Class="mb-1" />
         <MudText Typo="Typo.caption" Class="mud-text-secondary d-block">@_lineHeight.ToString("0.0")</MudText>
     </MudExpansionPanel>
 
@@ -44,7 +44,7 @@
                 <MudText Typo="Typo.body2">Google Translate</MudText>
                 <MudText Typo="Typo.caption" Class="mud-text-secondary">Traduit l'interface en 11 langues</MudText>
             </div>
-            <MudSwitch @bind-Value="_showTranslate" @bind-Value:after="OnShowTranslateChanged" Color="Color.Secondary" />
+            <MudSwitch @bind-Value="_showTranslate" Color="Color.Secondary" />
         </div>
     </MudExpansionPanel>
 
@@ -58,73 +58,54 @@
         </MudButton>
     </MudExpansionPanel>
 
-    <MudExpansionPanel Text="À propos de Bibeli" Class="mb-2" Expanded="true">
+    <MudExpansionPanel Text="À propos" Class="mb-2" Expanded="true">
         <MudText Typo="Typo.body2" Class="mb-1">Bibeli — Bible Louis Segond (LSG)</MudText>
         <MudText Typo="Typo.caption" Class="mud-text-secondary mb-2 d-block" Style="line-height:1.6;">
-            Bibeli est une application PWA gratuite et hors-ligne pour lire, étudier et partager la Bible Louis Segond en français.
-            Elle offre la lecture chapitre par chapitre, la recherche plein texte dans les 66 livres, un quiz biblique pour tester vos connaissances,
-            une carte des lieux bibliques, des marque-pages, des notes personnelles, la génération d'images de versets,
-            et la lecture audio (TTS). Toutes les données sont stockées localement dans votre navigateur.
-            Aucune donnée personnelle n'est collectée ni transmise à un serveur tiers.
+            Bibeli est une application PWA gratuite et hors-ligne pour lire, étudier et partager la Bible Louis Segond.
+            Développée avec <strong>Blazor WASM .NET 9</strong> et <strong>MudBlazor</strong>.
+            Code source ouvert sous licence MIT.
         </MudText>
-        <MudText Typo="Typo.caption" Class="mb-1">
-            Créé par <strong>AKALETE Koffi Levis</strong>
-        </MudText>
+        <MudLink Href="https://github.com/akaletekoffilevis/Bible" Target="_blank" Typo="Typo.caption" Class="d-block mb-1">
+            <MudIcon Icon="@Icons.Material.Filled.Code" Size="Size.Small" Class="mr-1" /> GitHub — akaletekoffilevis/Bible
+        </MudLink>
         <MudLink Href="mailto:koffilevis21@gmail.com" Typo="Typo.caption" Class="d-block mb-1">
             <MudIcon Icon="@Icons.Material.Filled.Email" Size="Size.Small" Class="mr-1" /> koffilevis21@gmail.com
         </MudLink>
         <MudLink Href="https://wa.me/22791535220" Target="_blank" Typo="Typo.caption" Class="d-block mb-1">
-            <MudIcon Icon="@Icons.Material.Filled.Chat" Size="Size.Small" Class="mr-1" /> +227 91 53 52 20 (WhatsApp)
+            <MudIcon Icon="@Icons.Material.Filled.Chat" Size="Size.Small" Class="mr-1" /> +227 91 53 52 20
         </MudLink>
-        <MudText Typo="Typo.caption" Class="mud-text-secondary">
-            Version 2.0 — .NET 9 &bull; MudBlazor &bull; PWA
-        </MudText>
+        <MudText Typo="Typo.caption" Class="mud-text-secondary">v2.1 — .NET 9 &bull; MudBlazor &bull; PWA</MudText>
     </MudExpansionPanel>
 
     <MudExpansionPanel Text="Confidentialité" Class="mb-2" Expanded="true">
         <MudText Typo="Typo.caption" Class="mud-text-secondary" Style="line-height:1.6;">
             <strong>Bibeli</strong> respecte votre vie privée. Aucune donnée personnelle n'est collectée, stockée ou transmise à un serveur tiers.
             <br /><br />
-            <strong>Données locales :</strong> Les marque-pages, notes, progression de lecture et préférences (thème, taille de police) sont stockés
-            exclusivement dans votre navigateur via IndexedDB et localStorage. Ces données ne quittent jamais votre appareil.
+            <strong>Données locales :</strong> Marque-pages, notes, progression et préférences sont stockés exclusivement dans votre navigateur via IndexedDB et localStorage.
             <br /><br />
-            <strong>Données de la Bible :</strong> Les textes bibliques (Louis Segond) sont chargés depuis le serveur d'hébergement (Vercel)
-            et mis en cache par le service worker pour une utilisation hors-ligne. Aucune lecture individuelle n'est suivie.
+            <strong>Textes bibliques :</strong> La Bible Louis Segond est chargée depuis le serveur et mise en cache par le service worker. Aucune lecture individuelle n'est suivie.
             <br /><br />
-            <strong>Traduction Google :</strong> Si vous activez Google Translate dans les paramètres, le script de Google est chargé
-            depuis leurs serveurs et est soumis à leur politique de confidentialité.
+            <strong>Google Translate :</strong> Si activé, le script de Google est chargé depuis leurs serveurs et soumis à leur politique de confidentialité.
             <br /><br />
             <strong>Aucun cookie</strong> tiers n'est utilisé à des fins de traçage ou de publicité.
             <br /><br />
-            Pour toute question, contactez-nous :
-            <MudLink Href="mailto:koffilevis21@gmail.com" Typo="Typo.caption">koffilevis21@gmail.com</MudLink>
-            ou <MudLink Href="https://wa.me/22791535220" Target="_blank" Typo="Typo.caption">WhatsApp</MudLink>.
+            Pour toute question : <MudLink Href="mailto:koffilevis21@gmail.com" Typo="Typo.caption">koffilevis21@gmail.com</MudLink>
         </MudText>
     </MudExpansionPanel>
 
     <MudExpansionPanel Text="Conditions d'utilisation" Class="mb-2" Expanded="true">
         <MudText Typo="Typo.caption" Class="mud-text-secondary" Style="line-height:1.6;">
-            <strong>1. Acceptation</strong><br />
-            En utilisant Bibeli, vous acceptez les présentes conditions.
+            <strong>1. Acceptation</strong> — En utilisant Bibeli, vous acceptez les présentes conditions.
             <br /><br />
-            <strong>2. Licence</strong><br />
-            La Bible Louis Segond (LSG) est une traduction du domaine public. L'application Bibeli est fournie gratuitement,
-            sans garantie d'aucune sorte.
+            <strong>2. Licence</strong> — La Bible Louis Segond est du domaine public. L'application est fournie gratuitement sous licence MIT.
             <br /><br />
-            <strong>3. Utilisation</strong><br />
-            Vous êtes autorisé à lire, copier et partager les textes bibliques à des fins personnelles et non commerciales.
-            L'application est conçue pour un usage personnel et éducatif.
+            <strong>3. Utilisation</strong> — Les textes bibliques peuvent être lus, copiés et partagés à des fins personnelles et non commerciales.
             <br /><br />
-            <strong>4. Disponibilité</strong><br />
-            Nous faisons de notre mieux pour maintenir l'application accessible, mais nous ne garantissons pas
-            une disponibilité ininterrompue ou sans erreur.
+            <strong>4. Disponibilité</strong> — L'application est maintenue au mieux mais sans garantie de disponibilité ininterrompue.
             <br /><br />
-            <strong>5. Responsabilité</strong><br />
-            Bibeli est fournie "telle quelle". Le créateur ne peut être tenu responsable des dommages directs ou indirects
-            résultant de l'utilisation de l'application.
+            <strong>5. Responsabilité</strong> — Bibeli est fournie "telle quelle". Le créateur ne peut être tenu responsable des dommages liés à son utilisation.
             <br /><br />
-            <strong>6. Contact</strong><br />
-            AKALETE Koffi Levis &mdash; <MudLink Href="https://wa.me/22791535220" Target="_blank" Typo="Typo.caption">+227 91 53 52 20</MudLink>
+            <strong>6. Contact</strong> — <MudLink Href="https://wa.me/22791535220" Target="_blank" Typo="Typo.caption">WhatsApp +227 91 53 52 20</MudLink>
         </MudText>
     </MudExpansionPanel>
 
@@ -134,21 +115,20 @@
             Signaler un problème
         </MudText>
         <MudText Typo="Typo.caption" Class="mud-text-secondary mb-3">
-            Tu as rencontré un bug, une erreur dans le texte, ou une suggestion d'amélioration ?
-            Contacte-moi directement :
+            Un bug, une erreur dans le texte, une suggestion ? Contacte-moi directement :
         </MudText>
         <div class="d-flex flex-column" style="gap:8px;">
             <MudButton Variant="Variant.Filled" Color="Color.Primary" 
                        Href="https://wa.me/22791535220?text=Bonjour%20Koffi%2C%20je%20signale%20un%20probl%C3%A8me%20sur%20Bibeli%20%3A" 
                        Target="_blank" 
                        StartIcon="@Icons.Material.Filled.Chat" FullWidth="true">
-                Signaler via WhatsApp
+                WhatsApp +227 91 53 52 20
             </MudButton>
             <MudButton Variant="Variant.Outlined" Color="Color.Primary" 
                        Href="mailto:koffilevis21@gmail.com?subject=Bibeli%20-%20Signalement%20de%20bug&body=Bonjour%20Koffi%2C%0A%0AJe%20signale%20un%20probl%C3%A8me%20sur%20Bibeli%20%3A" 
                        Target="_blank" 
                        StartIcon="@Icons.Material.Filled.Email" FullWidth="true">
-                Envoyer un email
+                koffilevis21@gmail.com
             </MudButton>
         </div>
 
@@ -177,15 +157,19 @@
     private bool _showTranslate;
     private bool _isDark;
 
+    private int _prevFontSize;
+    private string _prevFontFamily = "";
+    private double _prevLineHeight;
+    private bool _prevShowTranslate;
+    private bool _prevIsDark;
+
     protected override async Task OnInitializedAsync()
     {
-        var fs = await GetSettingAsync("fontSize");
-        if (int.TryParse(fs, out var parsed)) _fontSize = parsed;
-        _fontFamily = await GetSettingAsync("fontFamily") ?? "serif";
-        var lh = await GetSettingAsync("lineHeight");
-        if (double.TryParse(lh, out var parsedLh)) _lineHeight = parsedLh;
-        _showTranslate = await GetSettingAsync("showTranslate") == "true";
-        _isDark = await GetSettingAsync("darkMode") == "true";
+        _prevFontSize = _fontSize = int.TryParse(await GetSettingAsync("fontSize"), out var fs) ? fs : 18;
+        _prevFontFamily = _fontFamily = await GetSettingAsync("fontFamily") ?? "serif";
+        _prevLineHeight = _lineHeight = double.TryParse(await GetSettingAsync("lineHeight"), out var lh) ? lh : 2.0;
+        _prevShowTranslate = _showTranslate = await GetSettingAsync("showTranslate") == "true";
+        _prevIsDark = _isDark = await GetSettingAsync("darkMode") == "true";
 
         if (_isDark != ThemeService.IsDarkMode)
             ThemeService.SetDarkMode(_isDark);
@@ -198,37 +182,34 @@
             await ApplyStylesAsync();
             if (_showTranslate)
                 await JsRuntime.InvokeVoidAsync("bibleUtils.toggleGoogleTranslate", true);
+            return;
         }
+
+        if (_fontSize != _prevFontSize) { _prevFontSize = _fontSize; await PersistFontAsync(); }
+        if (_fontFamily != _prevFontFamily) { _prevFontFamily = _fontFamily; await PersistFontAsync(); }
+        if (Math.Abs(_lineHeight - _prevLineHeight) > 0.001) { _prevLineHeight = _lineHeight; await PersistFontAsync(); }
+        if (_showTranslate != _prevShowTranslate) { _prevShowTranslate = _showTranslate; await PersistTranslateAsync(); }
+        if (_isDark != _prevIsDark) { _prevIsDark = _isDark; await PersistDarkModeAsync(); }
     }
 
-    private async Task OnIsDarkChanged()
+    private async Task PersistFontAsync()
     {
-        ThemeService.SetDarkMode(_isDark);
-        await SetSettingAsync("darkMode", _isDark.ToString().ToLower());
+        await ApplyStylesAsync();
+        await SetSettingAsync("fontSize", _fontSize.ToString());
+        await SetSettingAsync("fontFamily", _fontFamily);
+        await SetSettingAsync("lineHeight", _lineHeight.ToString("0.0"));
     }
 
-    private async Task OnShowTranslateChanged()
+    private async Task PersistTranslateAsync()
     {
         await SetSettingAsync("showTranslate", _showTranslate.ToString().ToLower());
         await JsRuntime.InvokeVoidAsync("bibleUtils.toggleGoogleTranslate", _showTranslate);
     }
 
-    private async Task OnFontSizeChanged()
+    private async Task PersistDarkModeAsync()
     {
-        await ApplyStylesAsync();
-        await SetSettingAsync("fontSize", _fontSize.ToString());
-    }
-
-    private async Task OnFontFamilyChanged()
-    {
-        await ApplyStylesAsync();
-        await SetSettingAsync("fontFamily", _fontFamily);
-    }
-
-    private async Task OnLineHeightChanged()
-    {
-        await ApplyStylesAsync();
-        await SetSettingAsync("lineHeight", _lineHeight.ToString("0.0"));
+        ThemeService.SetDarkMode(_isDark);
+        await SetSettingAsync("darkMode", _isDark.ToString().ToLower());
     }
 
     private async Task ApplyStylesAsync()
@@ -241,7 +222,7 @@
     {
         var confirm = await DialogService.ShowMessageBox(
             "Effacer les données ?",
-            "Toutes les données locales (marque-pages, notes, progression, préférences) seront supprimées. Cette action est irréversible.",
+            "Marque-pages, notes, progression et préférences seront supprimés. Cette action est irréversible.",
             yesText: "Oui, effacer",
             cancelText: "Annuler");
         if (confirm != true) return;

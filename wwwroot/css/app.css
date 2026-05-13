@@ -39,6 +39,17 @@ code { color: #c02d76; }
     --bible-font-size: 18px;
     --bible-font-family: serif;
     --bible-line-height: 2;
+    --skeleton-color: rgba(0,0,0,0.06);
+    --scrollbar-thumb: rgba(0,0,0,0.15);
+    --verse-shadow: rgba(0,0,0,0.04);
+    --verse-hover-bg: var(--mud-palette-table-hover, rgba(0,0,0,0.03));
+}
+
+.mud-theme-dark {
+    --skeleton-color: rgba(255,255,255,0.08);
+    --scrollbar-thumb: rgba(255,255,255,0.2);
+    --verse-shadow: rgba(0,0,0,0.2);
+    --verse-hover-bg: rgba(255,255,255,0.05);
 }
 
 body {
@@ -140,9 +151,9 @@ body {
 }
 
 .verset-card:hover {
-    background-color: var(--mud-palette-table-hover, rgba(0,0,0,0.03));
+    background-color: var(--verse-hover-bg);
     border-color: var(--mud-palette-primary, #1a237e)20;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    box-shadow: 0 2px 8px var(--verse-shadow);
 }
 
 .verset-card-body {
@@ -191,7 +202,7 @@ body {
 
 .chapitre-paper {
     border-radius: 14px !important;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.06) !important;
+    box-shadow: 0 2px 8px var(--verse-shadow) !important;
 }
 
 .lecture-toolbar {
@@ -284,7 +295,7 @@ body {
 
 /* ---- Skeleton loading ---- */
 .skeleton-line {
-    background: linear-gradient(90deg, transparent 0%, rgba(0,0,0,0.06) 50%, transparent 100%);
+    background: linear-gradient(90deg, transparent 0%, var(--skeleton-color) 50%, transparent 100%);
     background-size: 200% 100%;
     animation: shimmer 1.5s infinite;
     border-radius: 6px;
@@ -297,8 +308,8 @@ body {
 /* ---- Scrollbar subtile ---- */
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.15); border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,0.25); }
+::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--scrollbar-thumb); opacity: 0.8; }
 
 /* ---- Nav chips ---- */
 .nav-chip {
@@ -448,4 +459,155 @@ body {
     .verset-card { page-break-inside: avoid; border: none !important; padding: 4px 0 !important; }
     .verset-card:hover { background: none !important; box-shadow: none !important; }
     .mud-paper { box-shadow: none !important; border: none !important; }
+}
+
+/* ---- Verse Highlighting ---- */
+.verset-highlight-btn {
+    cursor: pointer;
+    padding: 2px 4px;
+    border-radius: 4px;
+    font-size: 0.8em;
+    transition: transform 0.15s, box-shadow 0.15s;
+    border: 2px solid transparent;
+}
+.verset-highlight-btn:hover {
+    transform: scale(1.2);
+}
+.verset-highlight-btn.active {
+    border-color: var(--mud-palette-primary, #1a237e);
+}
+
+.verset-card.highlight-yellow {
+    background-color: rgba(255, 235, 59, 0.2) !important;
+    border-left: 4px solid #fdd835;
+}
+.mud-theme-dark .verset-card.highlight-yellow {
+    background-color: rgba(255, 235, 59, 0.12) !important;
+}
+
+.verset-card.highlight-green {
+    background-color: rgba(76, 175, 80, 0.2) !important;
+    border-left: 4px solid #4caf50;
+}
+.mud-theme-dark .verset-card.highlight-green {
+    background-color: rgba(76, 175, 80, 0.12) !important;
+}
+
+.verset-card.highlight-blue {
+    background-color: rgba(33, 150, 243, 0.2) !important;
+    border-left: 4px solid #2196f3;
+}
+.mud-theme-dark .verset-card.highlight-blue {
+    background-color: rgba(33, 150, 243, 0.12) !important;
+}
+
+.verset-card.highlight-pink {
+    background-color: rgba(233, 30, 99, 0.2) !important;
+    border-left: 4px solid #e91e63;
+}
+.mud-theme-dark .verset-card.highlight-pink {
+    background-color: rgba(233, 30, 99, 0.12) !important;
+}
+
+.verset-card.highlight-orange {
+    background-color: rgba(255, 152, 0, 0.2) !important;
+    border-left: 4px solid #ff9800;
+}
+.mud-theme-dark .verset-card.highlight-orange {
+    background-color: rgba(255, 152, 0, 0.12) !important;
+}
+
+/* ---- Reference navigation ---- */
+.ref-input {
+    font-size: 1.2rem;
+}
+.ref-examples {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+}
+.ref-example-chip {
+    cursor: pointer;
+    transition: transform 0.15s;
+}
+.ref-example-chip:hover {
+    transform: translateY(-2px);
+}
+
+/* ---- Reading Plan ---- */
+.plan-day-card {
+    border-radius: 10px;
+    transition: transform 0.15s, box-shadow 0.15s;
+}
+.plan-day-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px var(--verse-shadow);
+}
+.plan-day-card.done {
+    opacity: 0.7;
+}
+.plan-day-card.today {
+    border: 2px solid var(--mud-palette-primary, #1a237e);
+}
+.plan-progress-ring {
+    transition: stroke-dashoffset 0.5s ease;
+}
+.plan-streak {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-weight: 600;
+}
+
+/* ---- Verse enum circle hover fix ---- */
+.verse-actions .highlight-color-picker {
+    display: flex;
+    gap: 2px;
+    align-items: center;
+}
+.verse-actions .highlight-dot {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    cursor: pointer;
+    border: 2px solid transparent;
+    transition: transform 0.15s, border-color 0.15s;
+}
+.verse-actions .highlight-dot:hover {
+    transform: scale(1.3);
+    border-color: var(--mud-palette-primary, #1a237e);
+}
+.verse-actions .highlight-dot.active {
+    border-color: #333;
+    transform: scale(1.15);
+}
+
+/* ---- Search mode toggle ---- */
+.search-mode-toggle {
+    display: flex;
+    gap: 4px;
+}
+.search-mode-toggle .mud-chip {
+    cursor: pointer;
+    transition: transform 0.15s;
+}
+.search-mode-toggle .mud-chip:hover {
+    transform: translateY(-1px);
+}
+
+/* ---- Dark mode transitions ---- */
+.mud-theme-provider {
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+.mud-appbar {
+    transition: background-color 0.3s ease !important;
+}
+.mud-paper {
+    transition: background-color 0.3s ease, box-shadow 0.3s ease;
+}
+.verset-card {
+    transition: background-color 0.3s ease, box-shadow 0.2s, border-color 0.2s;
 }

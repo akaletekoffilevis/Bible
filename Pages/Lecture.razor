@@ -58,7 +58,7 @@ else
             @foreach (var verset in _chapitre.ContenuVersets)
             {
                 var vNum = verset.Numero;
-                <div class="verset-card @(_isPlaying && _versetCourantTts == vNum ? "verset-en-cours" : "")" id="@($"v-{vNum}")" tabindex="-1">
+                <div class="verset-card @GetHighlightClass(vNum) @(_isPlaying && _versetCourantTts == vNum ? "verset-en-cours" : "")" id="@($"v-{vNum}")" tabindex="-1">
                     <div class="verset-card-body">
                         <span class="verset-num">@vNum</span>
                         <span class="verset-texte">@verset.TextePropre</span>
@@ -66,6 +66,17 @@ else
                     <div class="verse-actions" role="group" aria-label="Actions du verset">
                         <span @onclick="@(() => AjouterMarquePage(verset))" title="Marquer" role="button" tabindex="0" aria-label="Marquer ce verset">🔖</span>
                         <span @onclick="@(() => AjouterNote(verset))" title="Note" role="button" tabindex="0" aria-label="Ajouter une note">📝</span>
+                        <span @onclick="@(() => BasculerHighlight(verset))" title="Surligner" role="button" tabindex="0" aria-label="Surligner ce verset" style="@(GetHighlightIconStyle(vNum))">🖍️</span>
+                        @if (_showHighlightPicker == vNum)
+                        {
+                            <span class="highlight-color-picker">
+                                @foreach (var (couleur, _) in Highlight.Couleurs)
+                                {
+                                    var cls = _highlights.TryGetValue($"{Slug}-{Chapitre}-{vNum}", out var h) && h.Couleur == couleur ? "highlight-dot active" : "highlight-dot";
+                                    <span class="@cls" style="background:@couleur;" @onclick="@(() => ChoisirCouleur(verset, couleur))" title="@couleur" role="button" tabindex="0"></span>
+                                }
+                            </span>
+                        }
                         <span @onclick="@(() => PartagerVerset(verset))" title="Partager" role="button" tabindex="0" aria-label="Partager ce verset">📋</span>
                         <span @onclick="@(() => GenererImage(verset))" title="Image" role="button" tabindex="0" aria-label="Générer une image">🖼️</span>
                     </div>
@@ -113,6 +124,8 @@ else
     private int _versetCourantTts;
     private DotNetObjectReference<Lecture>? _keyboardRef;
     private DotNetObjectReference<Lecture>? _ttsRef;
+    private Dictionary<string, Highlight> _highlights = new();
+    private int _showHighlightPicker = -1;
 
     protected override async Task OnParametersSetAsync()
     {
@@ -127,6 +140,7 @@ else
 
         _ = PrechargerAdjacentsAsync();
         await SauvegarderDernierePositionAsync();
+        await ChargerHighlightsAsync();
     }
 
     private async Task PrechargerAdjacentsAsync()
@@ -160,6 +174,83 @@ else
     {
         if (direction == "prev") await GoPrev();
         else if (direction == "next") await GoNext();
+    }
+
+    private async Task ChargerHighlightsAsync()
+    {
+        try
+        {
+            await IndexedDb.InitializeAsync();
+            var all = await IndexedDb.GetHighlightsAsync();
+            _highlights = all
+                .Where(h => h.Slug == Slug && h.Chapitre == Chapitre)
+                .ToDictionary(h => h.Id);
+        }
+        catch { }
+    }
+
+    private string GetHighlightClass(int versetNum)
+    {
+        var key = $"{Slug}-{Chapitre}-{versetNum}";
+        return _highlights.TryGetValue(key, out var h) ? $"highlight-{h.Couleur}" : "";
+    }
+
+    private string GetHighlightIconStyle(int versetNum)
+    {
+        var key = $"{Slug}-{Chapitre}-{versetNum}";
+        if (!_highlights.TryGetValue(key, out var h)) return "";
+        var hex = Highlight.Couleurs.GetValueOrDefault(h.Couleur, "#fdd835");
+        return $"color:{hex};";
+    }
+
+    private void BasculerHighlight(Models.Verset verset)
+    {
+        var key = $"{Slug}-{Chapitre}-{verset.Numero}";
+        if (_showHighlightPicker == verset.Numero)
+        {
+            _showHighlightPicker = -1;
+            return;
+        }
+        if (_highlights.ContainsKey(key))
+        {
+            _ = RetirerHighlightAsync(key, verset.Numero);
+            return;
+        }
+        _showHighlightPicker = verset.Numero;
+    }
+
+    private async Task ChoisirCouleur(Models.Verset verset, string couleur)
+    {
+        var key = $"{Slug}-{Chapitre}-{verset.Numero}";
+        try
+        {
+            await IndexedDb.InitializeAsync();
+            var highlight = new Highlight
+            {
+                Id = key,
+                Slug = Slug,
+                Chapitre = Chapitre,
+                Verset = verset.Numero,
+                Couleur = couleur
+            };
+            await IndexedDb.SaveHighlightAsync(highlight);
+            _highlights[key] = highlight;
+            _showHighlightPicker = -1;
+            Snackbar.Add($"✓ Verset surligné en {couleur}", Severity.Success);
+        }
+        catch { Snackbar.Add("Erreur de sauvegarde", Severity.Error); }
+    }
+
+    private async Task RetirerHighlightAsync(string key, int versetNum)
+    {
+        try
+        {
+            await IndexedDb.InitializeAsync();
+            await IndexedDb.DeleteHighlightAsync(key);
+            _highlights.Remove(key);
+            Snackbar.Add("Surlignage retiré", Severity.Normal);
+        }
+        catch { Snackbar.Add("Erreur", Severity.Error); }
     }
 
     private async Task SauvegarderProgressionAsync()
