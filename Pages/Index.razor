@@ -26,9 +26,8 @@ else if (_versetDuJour != null)
             <MudButton Variant="Variant.Text" Color="Color.Primary" Href="@($"/lecture/{_versetDuJour.Value.Livre.Slug}/{_versetDuJour.Value.Chapitre.Numero}/{_versetDuJour.Value.Verset.Numero}")">
                 @_versetDuJour.Value.Livre.NomLivre @_versetDuJour.Value.Chapitre.Numero:@_versetDuJour.Value.Verset.Numero →
             </MudButton>
-            <MudButton Variant="Variant.Filled" Color="Color.Secondary" Size="Size.Small" OnClick="@PartagerVersetDuJour" StartIcon="@Icons.Material.Filled.Share">
-                Partager
-            </MudButton>
+            <MudIconButton Icon="@Icons.Material.Filled.Image" Color="Color.Primary" Size="Size.Small" OnClick="@ImageVersetDuJour" title="Télécharger l'image" />
+            <MudIconButton Icon="@Icons.Material.Filled.Share" Color="Color.Secondary" Size="Size.Small" OnClick="@PartagerVersetDuJour" title="Partager le texte" />
         </div>
     </MudPaper>
 }
@@ -128,7 +127,19 @@ else if (_versetDuJour != null)
         var v = _versetDuJour.Value;
         var refStr = $"{v.Livre.NomLivre} {v.Chapitre.Numero}:{v.Verset.Numero}";
         var siteUrl = "https://bibeli.vercel.app";
-        await Js.InvokeVoidAsync("bibleImage.shareVersetDuJour", v.Verset.TextePropre, refStr, siteUrl);
+        var text = $"✨ Verset Du Jour ✨\n\n\"{v.Verset.TextePropre}\" — {refStr} (LSG)\n\n📖 {siteUrl}";
+        try { await Js.InvokeVoidAsync("bibleUtils.shareOrCopy", text); }
+        catch (Exception ex) { Console.Error.WriteLine($"[Index] Échec partage texte: {ex.Message}"); }
+    }
+
+    private async Task ImageVersetDuJour()
+    {
+        if (_versetDuJour == null) return;
+        var v = _versetDuJour.Value;
+        var refStr = $"{v.Livre.NomLivre} {v.Chapitre.Numero}:{v.Verset.Numero}";
+        var siteUrl = "https://bibeli.vercel.app";
+        try { await Js.InvokeVoidAsync("bibleImage.generate", v.Verset.TextePropre, refStr, siteUrl); }
+        catch (Exception ex) { Console.Error.WriteLine($"[Index] Échec génération image: {ex.Message}"); }
     }
 
     private void NavigateTo(string slug)
