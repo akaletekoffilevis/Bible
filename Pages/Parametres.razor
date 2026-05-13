@@ -1,39 +1,4 @@
 @page "/parametres"
-@using MudBlazor
-@inject IJSRuntime JsRuntime
-@inject BibleApp.Services.ThemeService ThemeService
-@inject IDialogService DialogService
-@inject ISnackbar Snackbar
 
-<MudText Typo="Typo.h6" Class="mb-4 font-weight-bold d-flex align-center">
-    <MudIcon Icon="@Icons.Material.Filled.Settings" Class="mr-2" /> Paramètres
-</MudText>
-
-<MudText Typo="Typo.body2" Class="mud-text-secondary">Chargement...</MudText>
-
-@code {
-    protected override void OnInitialized()
-    {
-        Console.WriteLine("[Paramètres] OnInitialized");
-    }
-
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        try
-        {
-            if (firstRender)
-            {
-                Console.WriteLine("[Paramètres] OnAfterRenderAsync firstRender");
-                var theme = await JsRuntime.InvokeAsync<string>("bibleUtils.localStorageGet", "darkMode");
-                Console.WriteLine($"[Paramètres] darkMode = {theme}");
-                await JsRuntime.InvokeVoidAsync("bibleUtils.setBodyStyles", "18px", "serif", "2");
-                Console.WriteLine("[Paramètres] styles applied");
-                StateHasChanged();
-            }
-        }
-        catch (Exception ex)
-        {
-            Console.Error.WriteLine($"[Paramètres] ERREUR: {ex.Message}");
-        }
-    }
-}
+<h3>Paramètres</h3>
+<p>Page en cours de maintenance.</p>
