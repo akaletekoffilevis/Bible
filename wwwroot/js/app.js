@@ -1,23 +1,36 @@
 window.bibleDb = {
     db: null,
+    _supported: true,
 
     initialize: function (dbName, version) {
-        return new Promise((resolve, reject) => {
-            const request = indexedDB.open(dbName, version);
-            request.onerror = () => reject(request.error);
-            request.onsuccess = () => {
-                this.db = request.result;
+        var self = this;
+        if (typeof indexedDB === 'undefined') {
+            this._supported = false;
+            return Promise.resolve();
+        }
+        return new Promise(function(resolve) {
+            try {
+                var request = indexedDB.open(dbName, version);
+                request.onerror = function() {
+                    self._supported = false;
+                    resolve();
+                };
+                request.onsuccess = function() {
+                    self.db = request.result;
+                    resolve();
+                };
+                request.onupgradeneeded = function(event) {
+                    var db = event.target.result;
+                    ['bookmarks', 'notes', 'highlights', 'history', 'progress'].forEach(function(store) {
+                        if (!db.objectStoreNames.contains(store)) {
+                            db.createObjectStore(store, { keyPath: 'id' });
+                        }
+                    });
+                };
+            } catch(e) {
+                self._supported = false;
                 resolve();
-            };
-            request.onupgradeneeded = (event) => {
-                const db = event.target.result;
-                const stores = ['bookmarks', 'notes', 'highlights', 'history', 'progress'];
-                stores.forEach(store => {
-                    if (!db.objectStoreNames.contains(store)) {
-                        db.createObjectStore(store, { keyPath: 'id' });
-                    }
-                });
-            };
+            }
         });
     },
 
