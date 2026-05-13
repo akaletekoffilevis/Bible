@@ -49,6 +49,14 @@ body {
     -moz-osx-font-smoothing: grayscale;
 }
 
+/* Force custom font props on reading text (MudBlazor overrides body) */
+.verset-texte,
+.verset-card-body {
+    font-size: var(--bible-font-size) !important;
+    font-family: var(--bible-font-family), serif !important;
+    line-height: var(--bible-line-height) !important;
+}
+
 /* ---- Layout ---- */
 .content { padding-top: 1.1rem; }
 
