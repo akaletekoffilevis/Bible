@@ -1,7 +1,14 @@
 <!DOCTYPE html>
 <html lang="fr">
-
 <head>
+    <script>
+        (function() {
+            try {
+                var dm = localStorage.getItem('darkMode');
+                if (dm === 'true') document.documentElement.classList.add('mud-theme-dark');
+            } catch(e) {}
+        })();
+    </script>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Bible Louis Segond — Lire et étudier la Bible en ligne</title>

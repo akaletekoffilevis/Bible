@@ -84,21 +84,11 @@
         }
     };
 
-    protected override async Task OnInitializedAsync()
+    protected override void OnInitialized()
     {
         ThemeService.OnChange += StateHasChanged;
         Navigation.LocationChanged += OnLocationChanged;
         UpdateBackButton(Navigation.Uri);
-
-        try
-        {
-            var dm = await JsRuntime.InvokeAsync<string?>("bibleUtils.localStorageGet", "darkMode");
-            if (dm == "true" && !ThemeService.IsDarkMode)
-                ThemeService.SetDarkMode(true);
-            else if (dm != "true" && ThemeService.IsDarkMode)
-                ThemeService.SetDarkMode(false);
-        }
-        catch { }
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -112,6 +102,8 @@
             _showConsent = consent != "true";
 
             // Appliquer les préférences utilisateur globalement
+            var dm = await JsRuntime.InvokeAsync<string?>("bibleUtils.localStorageGet", "darkMode");
+            if (dm == "true" != ThemeService.IsDarkMode) ThemeService.SetDarkMode(dm == "true");
             var fs = await JsRuntime.InvokeAsync<string?>("bibleUtils.localStorageGet", "fontSize");
             var ff = await JsRuntime.InvokeAsync<string?>("bibleUtils.localStorageGet", "fontFamily");
             var lh = await JsRuntime.InvokeAsync<string?>("bibleUtils.localStorageGet", "lineHeight");
