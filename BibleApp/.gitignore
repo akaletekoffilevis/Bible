@@ -1,8 +1,8 @@
-# Source Bible JSONs (splitted into wwwroot/data/books/)
-BibleLS.json
-BibleLSFull.json
-BibleLSFull2.json
-BibleLSFull3.json
+# IDE
+.idea/
+*.swp
+*.swo
+*~
 
 # .NET
 bin/
@@ -11,14 +11,7 @@ obj/
 *.suo
 *.cache
 *.log
-
-# IDE
-.vs/
-.vscode/
-.idea/
-*.swp
-*.swo
-*~
+*.vs/
 
 # OS
 .DS_Store

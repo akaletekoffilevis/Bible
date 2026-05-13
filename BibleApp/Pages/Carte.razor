@@ -1,0 +1,44 @@
+@page "/carte"
+@using BibleApp.Models
+@implements IDisposable
+
+<Breadcrumb Nodes="@(new List<BreadcrumbNode> {
+    new() { Label = "Accueil", Href = "/", Icon = Icons.Material.Filled.Home },
+    new() { Label = "Carte biblique" }
+})" />
+
+<MudText Typo="Typo.h6" Class="mb-1 font-weight-bold d-flex align-center">
+    <MudIcon Icon="@Icons.Material.Filled.Map" Class="mr-2" /> Carte biblique
+</MudText>
+<MudText Typo="Typo.caption" Class="mb-3 mud-text-secondary">Lieux mentionnés dans la Bible</MudText>
+
+<MudPaper Elevation="0" Style="border-radius: 8px; overflow: hidden;">
+    <div id="bible-map" style="height: min(70vh, 500px); width:100%;"></div>
+</MudPaper>
+
+@code {
+    private bool _leafletLoaded;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && !_leafletLoaded)
+        {
+            _leafletLoaded = true;
+            await LoadLeafletAsync();
+            await JsRuntime.InvokeVoidAsync("bibleMap.init", "bible-map");
+        }
+    }
+
+    private async Task LoadLeafletAsync()
+    {
+        await JsRuntime.InvokeVoidAsync("bibleLeaflet.load");
+    }
+
+    public void Dispose()
+    {
+        _ = JsRuntime.InvokeVoidAsync("bibleMap.destroy");
+    }
+
+    [Inject]
+    private IJSRuntime JsRuntime { get; set; } = null!;
+}

@@ -1,0 +1,120 @@
+@page "/favoris"
+@using BibleApp.Models
+@using BibleApp.Services
+@inject IndexedDbService IndexedDb
+@inject ISnackbar Snackbar
+
+<Breadcrumb Nodes="@(new List<BreadcrumbNode> {
+    new() { Label = "Accueil", Href = "/", Icon = Icons.Material.Filled.Home },
+    new() { Label = "Mes favoris" }
+})" />
+
+<MudText Typo="Typo.h6" Class="mb-4 font-weight-bold d-flex align-center">
+    <MudIcon Icon="@Icons.Material.Filled.Bookmark" Class="mr-2" /> Mes favoris
+</MudText>
+
+<MudTabs>
+    <MudTabPanel Text="Marque-pages" BadgeColor="Color.Primary">
+        @if (_bookmarks.Count == 0)
+        {
+            <MudPaper Class="pa-8 text-center" Elevation="0">
+                <MudIcon Icon="@Icons.Material.Filled.BookmarkBorder" Size="Size.Large" Class="mud-text-secondary mb-4" />
+                <MudText Typo="Typo.body2" Class="mud-text-secondary mb-2">Aucun marque-page</MudText>
+                <MudText Typo="Typo.caption" Class="mud-text-secondary">
+                    Ajoutes-en depuis la lecture en cliquant sur 📋
+                </MudText>
+            </MudPaper>
+        }
+        @foreach (var bm in _bookmarks)
+        {
+            <MudPaper Class="mb-2" Style="border-radius: 8px;" Elevation="0">
+                <div Class="pa-3 d-flex align-center justify-space-between">
+                    <div @onclick="@(() => NavigateTo(bm))" Style="cursor:pointer; flex:1;">
+                        <MudText Typo="Typo.body2" Class="font-weight-medium">@bm.reference</MudText>
+                        <MudText Typo="Typo.caption" Class="mud-text-secondary">@bm.label</MudText>
+                    </div>
+                    <MudIconButton Icon="@Icons.Material.Filled.Close" Size="Size.Small" Color="Color.Error" OnClick="@(() => SupprimerBookmark(bm))" title="Supprimer" />
+                </div>
+            </MudPaper>
+        }
+    </MudTabPanel>
+
+    <MudTabPanel Text="Notes" BadgeColor="Color.Secondary">
+        @if (_notes.Count == 0)
+        {
+            <MudPaper Class="pa-8 text-center" Elevation="0">
+                <MudIcon Icon="@Icons.Material.Filled.NoteAdd" Size="Size.Large" Class="mud-text-secondary mb-4" />
+                <MudText Typo="Typo.body2" Class="mud-text-secondary mb-2">Aucune note</MudText>
+                <MudText Typo="Typo.caption" Class="mud-text-secondary">
+                    Ajoute des notes personnelles pendant ta lecture
+                </MudText>
+            </MudPaper>
+        }
+        @foreach (var note in _notes)
+        {
+            <MudCard Class="mb-2" Style="border-radius: 8px;">
+                <MudCardContent>
+                    <div class="d-flex align-center justify-space-between mb-1">
+                        <MudText Typo="Typo.caption" Class="mud-text-secondary">@note.reference</MudText>
+                        <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error" OnClick="@(() => SupprimerNote(note))" title="Supprimer" />
+                    </div>
+                    <MudText Typo="Typo.body2" Style="white-space: pre-wrap;">@note.texte</MudText>
+                </MudCardContent>
+            </MudCard>
+        }
+    </MudTabPanel>
+</MudTabs>
+
+@code {
+    private List<BookmarkItem> _bookmarks = new();
+    private List<NoteItem> _notes = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await IndexedDb.InitializeAsync();
+        _bookmarks = await IndexedDb.GetAllAsync<BookmarkItem>("bookmarks");
+        _notes = await IndexedDb.GetAllAsync<NoteItem>("notes");
+    }
+
+    private async Task SupprimerBookmark(BookmarkItem bm)
+    {
+        await IndexedDb.DeleteAsync("bookmarks", bm.id);
+        _bookmarks.Remove(bm);
+        _snackbar.Add("Marque-page supprimé", Severity.Success);
+    }
+
+    private async Task SupprimerNote(NoteItem note)
+    {
+        await IndexedDb.DeleteAsync("notes", note.id);
+        _notes.Remove(note);
+        _snackbar.Add("Note supprimée", Severity.Success);
+    }
+
+    private void NavigateTo(BookmarkItem bm)
+    {
+        NavigationManager.NavigateTo($"/lecture/{bm.slug}/{bm.chapitre}/{bm.verset}");
+    }
+
+    [Inject]
+    private NavigationManager NavigationManager { get; set; } = null!;
+
+    [Inject]
+    private ISnackbar _snackbar { get; set; } = null!;
+
+    public class BookmarkItem
+    {
+        public string id { get; set; } = string.Empty;
+        public string slug { get; set; } = string.Empty;
+        public int chapitre { get; set; }
+        public int verset { get; set; }
+        public string reference { get; set; } = string.Empty;
+        public string label { get; set; } = string.Empty;
+    }
+
+    public class NoteItem
+    {
+        public string id { get; set; } = string.Empty;
+        public string reference { get; set; } = string.Empty;
+        public string texte { get; set; } = string.Empty;
+    }
+}

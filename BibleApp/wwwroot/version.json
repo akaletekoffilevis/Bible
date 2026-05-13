@@ -1,0 +1,9 @@
+{
+  "version": "2.1",
+  "name": "Bibeli",
+  "description": "Bible Louis Segond (LSG) — PWA hors-ligne",
+  "buildDate": "2026-05-13",
+  "framework": ".NET 9",
+  "ui": "MudBlazor",
+  "type": "PWA"
+}

@@ -1,0 +1,449 @@
+@page "/lecture/{Slug}/{Chapitre:int}"
+@page "/lecture/{Slug}/{Chapitre:int}/{Verset:int}"
+@using BibleApp.Models
+@implements IDisposable
+@inject BibleApp.Services.BibleService BibleService
+@inject BibleApp.Services.SearchIndexService SearchIndexService
+@inject BibleApp.Services.IndexedDbService IndexedDb
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+
+<Breadcrumb Nodes="@(new List<BreadcrumbNode> {
+    new() { Label = "Accueil", Href = "/", Icon = Icons.Material.Filled.Home },
+    new() { Label = _livre?.NomLivre ?? "...", Href = $"/livre-chapitres/{Slug}" },
+    new() { Label = $"Chapitre {Chapitre}" }
+})" />
+
+<MudPaper Class="pa-4 mb-3" Elevation="0" Style="border-radius:12px; background: linear-gradient(135deg, var(--mud-palette-primary) 0%, var(--mud-palette-secondary) 100%); color:white;">
+    <div class="d-flex align-center justify-space-between">
+        <div>
+            <MudText Typo="Typo.h5" Class="font-weight-bold mb-1">@_livre?.NomLivre</MudText>
+            <MudText Typo="Typo.body2" Style="opacity:0.9;">
+                <MudIcon Icon="@Icons.Material.Filled.AutoStories" Size="Size.Small" Class="mr-1" />
+                Chapitre @Chapitre sur @(_livre?.ContenuChapitre.Count ?? 0)
+            </MudText>
+        </div>
+        <MudIcon Icon="@Icons.Material.Filled.MenuBook" Size="Size.Large" Style="opacity:0.3; font-size:3rem;" />
+    </div>
+</MudPaper>
+
+@if (_chapitre == null)
+{
+    <div class="pa-4">
+        @for (int i = 0; i < 8; i++)
+        {
+            <div class="skeleton-line mb-4" style="width: @(Random.Shared.Next(60, 100))%; height: 18px;"></div>
+        }
+    </div>
+}
+else
+{
+    <div class="d-flex align-center mb-3 lecture-toolbar" style="gap:4px; flex-wrap:wrap;">
+        <MudIconButton Icon="@Icons.Material.Filled.PlayArrow" Size="Size.Small" Color="@(_isPlaying ? Color.Primary : Color.Default)" OnClick="@PlayOuPause" title="Lecture audio" />
+        <MudIconButton Icon="@Icons.Material.Filled.Stop" Size="Size.Small" OnClick="@Stop" title="Arrêter" />
+        @if (_isPlaying)
+        {
+            <MudChip T="string" Size="Size.Small" Color="Color.Primary">Verset @_versetCourantTts</MudChip>
+        }
+        <MudText Typo="Typo.caption" Class="mud-text-secondary mx-1">
+            <a href="/livre-chapitres/@Slug" class="mud-text-secondary">&larr; Tous les chapitres</a>
+        </MudText>
+        <MudSpacer />
+        <MudIconButton Icon="@Icons.Material.Filled.Fullscreen" Size="Size.Small" OnClick="@BasculerPleinEcran" title="Plein écran" />
+        <MudIconButton Icon="@Icons.Material.Filled.PictureAsPdf" Size="Size.Small" OnClick="@ExporterPdf" title="Exporter PDF" />
+    </div>
+
+    <MudPaper Class="pa-3 pa-sm-4 mb-16 chapitre-paper" Elevation="0">
+        <div class="versets-container">
+            @foreach (var verset in _chapitre.ContenuVersets)
+            {
+                var vNum = verset.Numero;
+                <div class="verset-card @GetHighlightClass(vNum) @(_isPlaying && _versetCourantTts == vNum ? "verset-en-cours" : "")" id="@($"v-{vNum}")" tabindex="-1">
+                    <div class="verset-card-body">
+                        <span class="verset-num">@vNum</span>
+                        <span class="verset-texte">@verset.TextePropre</span>
+                    </div>
+                    <div class="verse-actions" role="group" aria-label="Actions du verset">
+                        <span @onclick="@(() => AjouterMarquePage(verset))" title="Marquer" role="button" tabindex="0" aria-label="Marquer ce verset">🔖</span>
+                        <span @onclick="@(() => AjouterNote(verset))" title="Note" role="button" tabindex="0" aria-label="Ajouter une note">📝</span>
+                        <span @onclick="@(() => BasculerHighlight(verset))" title="Surligner" role="button" tabindex="0" aria-label="Surligner ce verset" style="@(GetHighlightIconStyle(vNum))">🖍️</span>
+                        @if (_showHighlightPicker == vNum)
+                        {
+                            <span class="highlight-color-picker">
+                                @foreach (var (couleur, _) in Highlight.Couleurs)
+                                {
+                                    var cls = _highlights.TryGetValue($"{Slug}-{Chapitre}-{vNum}", out var h) && h.Couleur == couleur ? "highlight-dot active" : "highlight-dot";
+                                    <span class="@cls" style="background:@couleur;" @onclick="@(() => ChoisirCouleur(verset, couleur))" title="@couleur" role="button" tabindex="0"></span>
+                                }
+                            </span>
+                        }
+                        <span @onclick="@(() => PartagerVerset(verset))" title="Partager" role="button" tabindex="0" aria-label="Partager ce verset">📋</span>
+                        <span @onclick="@(() => GenererImage(verset))" title="Image" role="button" tabindex="0" aria-label="Générer une image">🖼️</span>
+                    </div>
+                </div>
+            }
+        </div>
+    </MudPaper>
+
+    <div class="lecture-nav">
+        <MudPaper Class="pa-2" Elevation="0" Style="border-radius:10px;">
+            <MudGrid>
+                <MudItem xs="6">
+                    @if (_chapitre.Numero > 1 || _slugIndex > 0)
+                    {
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" FullWidth="true" OnClick="@GoPrev" StartIcon="@Icons.Material.Filled.ChevronLeft" Class="nav-btn">
+                            Précédent
+                        </MudButton>
+                    }
+                </MudItem>
+                <MudItem xs="6" Class="text-right">
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" FullWidth="true" OnClick="@GoNext" EndIcon="@Icons.Material.Filled.ChevronRight" Class="nav-btn">
+                        Suivant
+                    </MudButton>
+                </MudItem>
+            </MudGrid>
+        </MudPaper>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public string Slug { get; set; } = string.Empty;
+
+    [Parameter]
+    public int Chapitre { get; set; } = 1;
+
+    [Parameter]
+    public int Verset { get; set; }
+
+    private Models.Livre? _livre;
+    private Models.Chapitre? _chapitre;
+    private int _slugIndex;
+    private bool _progressionSauvegardee;
+    private bool _isPlaying;
+    private int _versetCourantTts;
+    private DotNetObjectReference<Lecture>? _keyboardRef;
+    private DotNetObjectReference<Lecture>? _ttsRef;
+    private Dictionary<string, Highlight> _highlights = new();
+    private int _showHighlightPicker = -1;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        _livre = await BibleService.GetLivreAsync(Slug);
+        _chapitre = await BibleService.GetChapitreAsync(Slug, Chapitre);
+
+        var index = await BibleService.GetIndexAsync();
+        _slugIndex = index.FindIndex(i => i.Slug == Slug);
+
+        if (!SearchIndexService.IsIndexed(Slug))
+            _ = SearchIndexService.IndexLivreAsync(Slug);
+
+        _ = PrechargerAdjacentsAsync();
+        _ = SauvegarderDernierePositionAsync();
+        _ = ChargerHighlightsAsync();
+    }
+
+    private async Task PrechargerAdjacentsAsync()
+    {
+        await BibleService.GetAdjacentAsync(Slug, Chapitre, -1);
+        await BibleService.GetAdjacentAsync(Slug, Chapitre, 1);
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            _keyboardRef = DotNetObjectReference.Create(this);
+            await JsRuntime.InvokeVoidAsync("bibleKeyboard.init", _keyboardRef);
+        }
+
+        if (!_progressionSauvegardee && _chapitre != null)
+        {
+            _progressionSauvegardee = true;
+            _ = SauvegarderProgressionAsync();
+        }
+
+        if (Verset > 0)
+        {
+            await JsRuntime.InvokeVoidAsync("bibleUtils.scrollToElement", $"v-{Verset}");
+        }
+    }
+
+    [JSInvokable]
+    public async Task OnKeyDown(string direction)
+    {
+        if (direction == "prev") await GoPrev();
+        else if (direction == "next") await GoNext();
+    }
+
+    private async Task ChargerHighlightsAsync()
+    {
+        try
+        {
+            await IndexedDb.InitializeAsync();
+            var all = await IndexedDb.GetHighlightsAsync();
+            _highlights = all
+                .Where(h => h.Slug == Slug && h.Chapitre == Chapitre)
+                .ToDictionary(h => h.Id);
+            await InvokeAsync(StateHasChanged);
+        }
+        catch (Exception ex) { Console.Error.WriteLine($"[Lecture] Échec chargement highlights: {ex.Message}"); }
+    }
+
+    private string GetHighlightClass(int versetNum)
+    {
+        var key = $"{Slug}-{Chapitre}-{versetNum}";
+        return _highlights.TryGetValue(key, out var h) ? $"highlight-{h.Couleur}" : "";
+    }
+
+    private string GetHighlightIconStyle(int versetNum)
+    {
+        var key = $"{Slug}-{Chapitre}-{versetNum}";
+        if (!_highlights.TryGetValue(key, out var h)) return "";
+        var hex = Highlight.Couleurs.GetValueOrDefault(h.Couleur, "#fdd835");
+        return $"color:{hex};";
+    }
+
+    private void BasculerHighlight(Models.Verset verset)
+    {
+        var key = $"{Slug}-{Chapitre}-{verset.Numero}";
+        if (_showHighlightPicker == verset.Numero)
+        {
+            _showHighlightPicker = -1;
+            return;
+        }
+        if (_highlights.ContainsKey(key))
+        {
+            _ = RetirerHighlightAsync(key, verset.Numero);
+            return;
+        }
+        _showHighlightPicker = verset.Numero;
+    }
+
+    private async Task ChoisirCouleur(Models.Verset verset, string couleur)
+    {
+        var key = $"{Slug}-{Chapitre}-{verset.Numero}";
+        try
+        {
+            await IndexedDb.InitializeAsync();
+            var highlight = new Highlight
+            {
+                Id = key,
+                Slug = Slug,
+                Chapitre = Chapitre,
+                Verset = verset.Numero,
+                Couleur = couleur
+            };
+            await IndexedDb.SaveHighlightAsync(highlight);
+            _highlights[key] = highlight;
+            _showHighlightPicker = -1;
+            Snackbar.Add($"✓ Verset surligné en {couleur}", Severity.Success);
+        }
+        catch { Snackbar.Add("Erreur de sauvegarde", Severity.Error); }
+    }
+
+    private async Task RetirerHighlightAsync(string key, int versetNum)
+    {
+        try
+        {
+            await IndexedDb.InitializeAsync();
+            await IndexedDb.DeleteHighlightAsync(key);
+            _highlights.Remove(key);
+            Snackbar.Add("Surlignage retiré", Severity.Normal);
+        }
+        catch { Snackbar.Add("Erreur", Severity.Error); }
+    }
+
+    private async Task SauvegarderProgressionAsync()
+    {
+        try
+        {
+            await IndexedDb.InitializeAsync();
+            await IndexedDb.PutAsync("progress", $"{Slug}-{Chapitre}",
+                new { id = $"{Slug}-{Chapitre}", slug = Slug, chapitre = Chapitre, date = DateTime.UtcNow.ToString("yyyy-MM-dd") });
+        }
+        catch (Exception ex) { Console.Error.WriteLine($"[Lecture] Échec sauvegarde progression: {ex.Message}"); }
+    }
+
+    private async Task SauvegarderDernierePositionAsync()
+    {
+        try
+        {
+            await JsRuntime.InvokeVoidAsync("bibleUtils.localStorageSet", $"lastPos-{Slug}", $"{Chapitre}");
+        }
+        catch (Exception ex) { Console.Error.WriteLine($"[Lecture] Échec sauvegarde position: {ex.Message}"); }
+    }
+
+    private async Task PartagerVerset(Models.Verset verset)
+    {
+        var texte = verset.TextePropre;
+        var reference = $"{_livre?.NomLivre} {Chapitre}:{verset.Numero}";
+        var url = $"https://bibeli.vercel.app/lecture/{Slug}/{Chapitre}/{verset.Numero}";
+        try
+        {
+            await JsRuntime.InvokeVoidAsync("bibleImage.share", texte, reference, url);
+        }
+        catch
+        {
+            try { await JsRuntime.InvokeVoidAsync("bibleUtils.shareOrCopy", $"{reference} (LSG) — {texte}\n\n📖 {url}"); }
+            catch (Exception ex) { Console.Error.WriteLine($"[Lecture] Échec partage: {ex.Message}"); }
+        }
+    }
+
+    private async Task AjouterMarquePage(Models.Verset verset)
+    {
+        try
+        {
+            await IndexedDb.InitializeAsync();
+            var id = $"{Slug}-{Chapitre}-{verset.Numero}";
+            var reference = $"{_livre?.NomLivre} {Chapitre}:{verset.Numero}";
+            await IndexedDb.PutAsync("bookmarks", id, new
+            {
+                id,
+                slug = Slug,
+                chapitre = Chapitre,
+                verset = verset.Numero,
+                reference,
+                label = verset.TextePropre.Length > 80 ? verset.TextePropre[..80] + "..." : verset.TextePropre
+            });
+            Snackbar.Add("✓ Verset ajouté aux marque-pages", Severity.Success);
+        }
+        catch { Snackbar.Add("Erreur lors de l'ajout", Severity.Error); }
+    }
+
+    private async Task AjouterNote(Models.Verset verset)
+    {
+        try
+        {
+            await IndexedDb.InitializeAsync();
+            var id = $"{Slug}-{Chapitre}-{verset.Numero}-{DateTime.UtcNow.Ticks}";
+            var reference = $"{_livre?.NomLivre} {Chapitre}:{verset.Numero}";
+            var parameters = new DialogParameters
+            {
+                ["Reference"] = reference,
+                ["Id"] = id,
+                ["Slug"] = Slug,
+                ["Chapitre"] = Chapitre,
+                ["VersetNumero"] = verset.Numero
+            };
+            await DialogService.ShowAsync<NoteDialog>("Ajouter une note", parameters);
+        }
+        catch { Snackbar.Add("Erreur lors de l'ouverture", Severity.Error); }
+    }
+
+    private async Task GenererImage(Models.Verset verset)
+    {
+        var texte = verset.TextePropre;
+        var reference = $"{_livre?.NomLivre} {Chapitre}:{verset.Numero}";
+        var url = $"https://bibeli.vercel.app/lecture/{Slug}/{Chapitre}/{verset.Numero}";
+        try
+        {
+            await JsRuntime.InvokeVoidAsync("bibleImage.generate", texte, reference, url);
+        }
+        catch (Exception ex) { Console.Error.WriteLine($"[Lecture] Échec génération image: {ex.Message}"); }
+    }
+
+    private async Task BasculerPleinEcran()
+    {
+        try
+        {
+            await JsRuntime.InvokeVoidAsync("bibleFullscreen.toggle");
+        }
+        catch (Exception ex) { Console.Error.WriteLine($"[Lecture] Échec plein écran: {ex.Message}"); }
+    }
+
+    private async Task ExporterPdf()
+    {
+        try
+        {
+            await JsRuntime.InvokeVoidAsync("biblePrint.print");
+        }
+        catch (Exception ex) { Console.Error.WriteLine($"[Lecture] Échec export PDF: {ex.Message}"); }
+    }
+
+    [JSInvokable]
+    public void OnVerseChanged(int verseNum)
+    {
+        _versetCourantTts = verseNum;
+        InvokeAsync(StateHasChanged);
+    }
+
+    private async Task PlayOuPause()
+    {
+        if (_isPlaying)
+        {
+            await JsRuntime.InvokeVoidAsync("bibleTts.pause");
+            _isPlaying = false;
+            return;
+        }
+
+        if (_chapitre == null) return;
+
+        if (await JsRuntime.InvokeAsync<bool>("bibleTts.isSpeaking"))
+        {
+            await JsRuntime.InvokeVoidAsync("bibleTts.resume");
+            _isPlaying = true;
+            return;
+        }
+
+        var textes = _chapitre.ContenuVersets.Select(v => v.TextePropre).ToArray();
+        _isPlaying = true;
+        _versetCourantTts = 0;
+        _ttsRef?.Dispose();
+        _ttsRef = DotNetObjectReference.Create(this);
+        await JsRuntime.InvokeVoidAsync("bibleTts.speak", textes, "fr-FR", _ttsRef);
+    }
+
+    private async Task Stop()
+    {
+        await JsRuntime.InvokeVoidAsync("bibleTts.stop");
+        _isPlaying = false;
+        _versetCourantTts = 0;
+    }
+
+    private async Task GoPrev()
+    {
+        if (_chapitre != null && _chapitre.Numero > 1)
+        {
+            NavigationManager.NavigateTo($"/lecture/{Slug}/{_chapitre.Numero - 1}");
+            return;
+        }
+
+        var adj = await BibleService.GetAdjacentAsync(Slug, Chapitre, -1);
+        if (adj.HasValue)
+        {
+            var (livre, chap) = adj.Value;
+            NavigationManager.NavigateTo($"/lecture/{livre.Slug}/{chap.Numero}");
+        }
+    }
+
+    private async Task GoNext()
+    {
+        if (_chapitre != null && _livre != null &&
+            _chapitre.Numero < _livre.ContenuChapitre.Count)
+        {
+            NavigationManager.NavigateTo($"/lecture/{Slug}/{_chapitre.Numero + 1}");
+            return;
+        }
+
+        var adj = await BibleService.GetAdjacentAsync(Slug, Chapitre, 1);
+        if (adj.HasValue)
+        {
+            var (livre, chap) = adj.Value;
+            NavigationManager.NavigateTo($"/lecture/{livre.Slug}/{chap.Numero}");
+        }
+    }
+
+    [Inject]
+    private NavigationManager NavigationManager { get; set; } = null!;
+
+    [Inject]
+    private IJSRuntime JsRuntime { get; set; } = null!;
+
+    public void Dispose()
+    {
+        _keyboardRef?.Dispose();
+        _ttsRef?.Dispose();
+        _ = JsRuntime.InvokeVoidAsync("bibleKeyboard.dispose");
+    }
+}
