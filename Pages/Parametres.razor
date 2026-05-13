@@ -1,209 +1,20 @@
 @page "/parametres"
-@using BibleApp.Models
 @using MudBlazor
 @inject IJSRuntime JsRuntime
 @inject BibleApp.Services.ThemeService ThemeService
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
-@inject HttpClient Http
-
-<Breadcrumb Nodes="@(new List<BreadcrumbNode> {
-    new() { Label = "Accueil", Href = "/", Icon = Icons.Material.Filled.Home },
-    new() { Label = "Paramètres" }
-})" />
 
 <MudText Typo="Typo.h6" Class="mb-4 font-weight-bold d-flex align-center">
     <MudIcon Icon="@Icons.Material.Filled.Settings" Class="mr-2" /> Paramètres
 </MudText>
 
-<MudExpansionPanels MultiExpansion="true">
-    <MudExpansionPanel Text="Affichage" Class="mb-2">
-        <div class="d-flex align-center justify-space-between mb-3">
-            <MudText Typo="Typo.body2">Mode nuit</MudText>
-            <MudSwitch @bind-Value="_isDark" Color="Color.Primary" />
-        </div>
-
-        <MudText Typo="Typo.body2" Class="mb-1">Taille de police</MudText>
-        <MudSlider @bind-Value="_fontSize" Min="14" Max="28" Step="2" Class="mb-1" />
-        <MudText Typo="Typo.caption" Class="mud-text-secondary mb-3 d-block">@_fontSize px</MudText>
-
-        <MudText Typo="Typo.body2" Class="mb-1">Famille de police</MudText>
-        <MudSelect T="string" @bind-Value="_fontFamily" Variant="Variant.Outlined" Dense="true" Class="mb-3">
-            <MudSelectItem Value="@("serif")">Serif (défaut)</MudSelectItem>
-            <MudSelectItem Value="@("sans-serif")">Sans-serif</MudSelectItem>
-            <MudSelectItem Value="@("Georgia, serif")">Georgia</MudSelectItem>
-        </MudSelect>
-
-        <MudText Typo="Typo.body2" Class="mb-1">Interlignage</MudText>
-        <MudSlider @bind-Value="_lineHeight" Min="1.5" Max="2.8" Step="0.1" Class="mb-1" />
-        <MudText Typo="Typo.caption" Class="mud-text-secondary d-block">@_lineHeight.ToString("0.0")</MudText>
-    </MudExpansionPanel>
-
-    <MudExpansionPanel Text="Traduction" Class="mb-2">
-        <div class="d-flex align-center justify-space-between mb-2">
-            <div>
-                <MudText Typo="Typo.body2">Google Translate</MudText>
-                <MudText Typo="Typo.caption" Class="mud-text-secondary">Traduit l'interface en 11 langues</MudText>
-            </div>
-            <MudSwitch @bind-Value="_showTranslate" Color="Color.Secondary" />
-        </div>
-    </MudExpansionPanel>
-
-    <MudExpansionPanel Text="Installation" Class="mb-2">
-        <MudText Typo="Typo.body2" Class="mb-1">Installer l'application</MudText>
-        <MudText Typo="Typo.caption" Class="mud-text-secondary mb-3 d-block">
-            Installe Bibeli sur ton appareil pour une expérience hors-ligne optimale.
-            Compatible PC, mobile et tablette.
-        </MudText>
-        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@InstallerPwa" StartIcon="@Icons.Material.Filled.Download" Size="Size.Small" Disabled="@_pwaInstalled">
-            @(_pwaInstalled ? "Déjà installée" : "Installer l'application")
-        </MudButton>
-        <MudText Typo="Typo.caption" Class="mud-text-secondary mt-2 d-block">
-            @if (_pwaInstalled)
-            {
-                <span>✅ Bibeli est installée et disponible hors-ligne.</span>
-            }
-            else if (!_pwaInstallable)
-            {
-                <span>Dans Chrome/Safari, utilise le menu "Ajouter à l'écran d'accueil".</span>
-            }
-        </MudText>
-    </MudExpansionPanel>
-
-    <MudExpansionPanel Text="Espace de stockage" Class="mb-2">
-        <MudText Typo="Typo.body2" Class="mb-1">Données locales</MudText>
-        <MudText Typo="Typo.caption" Class="mud-text-secondary mb-3 d-block">
-            Les marque-pages, notes et la progression sont stockés dans le navigateur.
-        </MudText>
-        <MudButton Variant="Variant.Outlined" Color="Color.Error" OnClick="@EffacerDonnees" Size="Size.Small">
-            Effacer les données locales
-        </MudButton>
-    </MudExpansionPanel>
-
-    <MudExpansionPanel Text="À propos" Class="mb-2" Expanded="true">
-        <MudText Typo="Typo.body2" Class="mb-1">Bibeli — Bible Louis Segond (LSG)</MudText>
-        <MudText Typo="Typo.caption" Class="mud-text-secondary mb-2 d-block" Style="line-height:1.6;">
-            Bibeli est une application PWA gratuite et hors-ligne pour lire, étudier et partager la Bible Louis Segond.
-            Développée avec <strong>Blazor WASM .NET 9</strong> et <strong>MudBlazor</strong>.
-            Code source ouvert sous licence MIT.
-        </MudText>
-        <MudLink Href="https://github.com/akaletekoffilevis/Bible" Target="_blank" Typo="Typo.caption" Class="d-block mb-1">
-            <MudIcon Icon="@Icons.Material.Filled.Code" Size="Size.Small" Class="mr-1" /> GitHub — akaletekoffilevis/Bible
-        </MudLink>
-        <MudLink Href="mailto:koffilevis21@gmail.com" Typo="Typo.caption" Class="d-block mb-1">
-            <MudIcon Icon="@Icons.Material.Filled.Email" Size="Size.Small" Class="mr-1" /> koffilevis21@gmail.com
-        </MudLink>
-        <MudLink Href="https://wa.me/22791535220" Target="_blank" Typo="Typo.caption" Class="d-block mb-1">
-            <MudIcon Icon="@Icons.Material.Filled.Chat" Size="Size.Small" Class="mr-1" /> +227 91 53 52 20
-        </MudLink>
-        <MudText Typo="Typo.caption" Class="mud-text-secondary">
-            @if (_version != null)
-            {
-                <span>v@(_version.Trim())</span>
-            }
-            else if (!string.IsNullOrEmpty(_versionError))
-            {
-                <span>v2.1 — .NET 9 &bull; MudBlazor &bull; PWA</span>
-            }
-        </MudText>
-    </MudExpansionPanel>
-
-    <MudExpansionPanel Text="Confidentialité" Class="mb-2" Expanded="true">
-        <MudText Typo="Typo.caption" Class="mud-text-secondary" Style="line-height:1.6;">
-            <strong>Bibeli</strong> respecte votre vie privée. Aucune donnée personnelle n'est collectée, stockée ou transmise à un serveur tiers.
-            <br /><br />
-            <strong>Données locales :</strong> Marque-pages, notes, progression et préférences sont stockés exclusivement dans votre navigateur via IndexedDB et localStorage.
-            <br /><br />
-            <strong>Textes bibliques :</strong> La Bible Louis Segond est chargée depuis le serveur et mise en cache par le service worker. Aucune lecture individuelle n'est suivie.
-            <br /><br />
-            <strong>Google Translate :</strong> Si activé, le script de Google est chargé depuis leurs serveurs et soumis à leur politique de confidentialité.
-            <br /><br />
-            <strong>Aucun cookie</strong> tiers n'est utilisé à des fins de traçage ou de publicité.
-            <br /><br />
-            Pour toute question : <MudLink Href="mailto:koffilevis21@gmail.com" Typo="Typo.caption">koffilevis21@gmail.com</MudLink>
-        </MudText>
-    </MudExpansionPanel>
-
-    <MudExpansionPanel Text="Conditions d'utilisation" Class="mb-2" Expanded="true">
-        <MudText Typo="Typo.caption" Class="mud-text-secondary" Style="line-height:1.6;">
-            <strong>1. Acceptation</strong> — En utilisant Bibeli, vous acceptez les présentes conditions.
-            <br /><br />
-            <strong>2. Licence</strong> — La Bible Louis Segond est du domaine public. L'application est fournie gratuitement sous licence MIT.
-            <br /><br />
-            <strong>3. Utilisation</strong> — Les textes bibliques peuvent être lus, copiés et partagés à des fins personnelles et non commerciales.
-            <br /><br />
-            <strong>4. Disponibilité</strong> — L'application est maintenue au mieux mais sans garantie de disponibilité ininterrompue.
-            <br /><br />
-            <strong>5. Responsabilité</strong> — Bibeli est fournie "telle quelle". Le créateur ne peut être tenu responsable des dommages liés à son utilisation.
-            <br /><br />
-            <strong>6. Contact</strong> — <MudLink Href="https://wa.me/22791535220" Target="_blank" Typo="Typo.caption">WhatsApp +227 91 53 52 20</MudLink>
-        </MudText>
-    </MudExpansionPanel>
-
-    <MudExpansionPanel Text="Support & Contact" Class="mb-2" Expanded="true">
-        <MudText Typo="Typo.body2" Class="mb-2 font-weight-medium d-flex align-center" Style="gap:6px;">
-            <MudIcon Icon="@Icons.Material.Filled.BugReport" Size="Size.Small" Color="Color.Error" />
-            Signaler un problème
-        </MudText>
-        <MudText Typo="Typo.caption" Class="mud-text-secondary mb-3">
-            Un bug, une erreur dans le texte, une suggestion ? Contacte-moi directement :
-        </MudText>
-        <div class="d-flex flex-column" style="gap:8px;">
-            <MudButton Variant="Variant.Filled" Color="Color.Primary" 
-                       Href="https://wa.me/22791535220?text=Bonjour%20Koffi%2C%20je%20signale%20un%20probl%C3%A8me%20sur%20Bibeli%20%3A" 
-                       Target="_blank" 
-                       StartIcon="@Icons.Material.Filled.Chat" FullWidth="true">
-                WhatsApp +227 91 53 52 20
-            </MudButton>
-            <MudButton Variant="Variant.Outlined" Color="Color.Primary" 
-                       Href="mailto:koffilevis21@gmail.com?subject=Bibeli%20-%20Signalement%20de%20bug&body=Bonjour%20Koffi%2C%0A%0AJe%20signale%20un%20probl%C3%A8me%20sur%20Bibeli%20%3A" 
-                       Target="_blank" 
-                       StartIcon="@Icons.Material.Filled.Email" FullWidth="true">
-                koffilevis21@gmail.com
-            </MudButton>
-        </div>
-
-        <MudDivider Class="my-3" />
-
-        <MudText Typo="Typo.body2" Class="mb-2 font-weight-medium d-flex align-center" Style="gap:6px;">
-            <MudIcon Icon="@Icons.Material.Filled.Lightbulb" Size="Size.Small" Color="Color.Warning" />
-            Suggestion
-        </MudText>
-        <MudText Typo="Typo.caption" Class="mud-text-secondary mb-3">
-            Une idée pour améliorer Bibeli ? Je suis tout ouïe !
-        </MudText>
-        <MudButton Variant="Variant.Text" Color="Color.Secondary" 
-                   Href="mailto:koffilevis21@gmail.com?subject=Bibeli%20-%20Suggestion&body=Bonjour%20Koffi%2C%0A%0AVoici%20ma%20suggestion%20pour%20Bibeli%20%3A" 
-                   Target="_blank" 
-                   StartIcon="@Icons.Material.Filled.Email">
-            koffilevis21@gmail.com
-        </MudButton>
-    </MudExpansionPanel>
-</MudExpansionPanels>
+<MudText Typo="Typo.body2" Class="mud-text-secondary">Chargement...</MudText>
 
 @code {
-    private int _fontSize = 18;
-    private string _fontFamily = "serif";
-    private double _lineHeight = 2.0;
-    private bool _showTranslate;
-    private bool _isDark;
-    private bool _pwaInstallable;
-    private bool _pwaInstalled;
-
-    private int _prevFontSize;
-    private string _prevFontFamily = "";
-    private double _prevLineHeight;
-    private bool _prevShowTranslate;
-    private bool _prevIsDark;
-
-
-    private string? _version;
-    private string _versionError = "";
-
-    protected override async Task OnInitializedAsync()
+    protected override void OnInitialized()
     {
-        try { _version = await Http.GetStringAsync("version.txt"); }
-        catch (Exception ex) { _versionError = ex.Message; Console.Error.WriteLine($"[Paramètres] Échec chargement version: {ex.Message}"); }
+        Console.WriteLine("[Paramètres] OnInitialized");
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -212,121 +23,17 @@
         {
             if (firstRender)
             {
-                _prevFontSize = _fontSize = int.TryParse(await GetSettingAsync("fontSize"), out var fs) ? fs : 18;
-                _prevFontFamily = _fontFamily = await GetSettingAsync("fontFamily") ?? "serif";
-                _prevLineHeight = _lineHeight = double.TryParse(await GetSettingAsync("lineHeight"), out var lh) ? lh : 2.0;
-                _prevShowTranslate = _showTranslate = await GetSettingAsync("showTranslate") == "true";
-                _prevIsDark = _isDark = await GetSettingAsync("darkMode") == "true";
-
-                if (_isDark != ThemeService.IsDarkMode)
-                    ThemeService.SetDarkMode(_isDark);
-
-                await ApplyStylesAsync();
-                if (_showTranslate)
-                    await JsRuntime.InvokeVoidAsync("bibleUtils.toggleGoogleTranslate", true);
-                try
-                {
-                    _pwaInstallable = await JsRuntime.InvokeAsync<bool>("bibleInstall.isInstallable");
-                    _pwaInstalled = await JsRuntime.InvokeAsync<bool>("bibleInstall.isInstalled");
-                }
-                catch (Exception ex) { Console.Error.WriteLine($"[Paramètres] Échec statut PWA: {ex.Message}"); }
+                Console.WriteLine("[Paramètres] OnAfterRenderAsync firstRender");
+                var theme = await JsRuntime.InvokeAsync<string>("bibleUtils.localStorageGet", "darkMode");
+                Console.WriteLine($"[Paramètres] darkMode = {theme}");
+                await JsRuntime.InvokeVoidAsync("bibleUtils.setBodyStyles", "18px", "serif", "2");
+                Console.WriteLine("[Paramètres] styles applied");
                 StateHasChanged();
-                return;
-            }
-
-            if (_fontSize != _prevFontSize) { _prevFontSize = _fontSize; await PersistFontAsync(); }
-            if (_fontFamily != _prevFontFamily) { _prevFontFamily = _fontFamily; await PersistFontAsync(); }
-            if (Math.Abs(_lineHeight - _prevLineHeight) > 0.001) { _prevLineHeight = _lineHeight; await PersistFontAsync(); }
-            if (_showTranslate != _prevShowTranslate) { _prevShowTranslate = _showTranslate; await PersistTranslateAsync(); }
-            if (_isDark != _prevIsDark) { _prevIsDark = _isDark; await PersistDarkModeAsync(); }
-        }
-        catch (Exception ex) { Console.Error.WriteLine($"[Paramètres] Erreur OnAfterRenderAsync: {ex.Message}"); }
-    }
-
-    private async Task PersistFontAsync()
-    {
-        await ApplyStylesAsync();
-        await SetSettingAsync("fontSize", _fontSize.ToString());
-        await SetSettingAsync("fontFamily", _fontFamily);
-        await SetSettingAsync("lineHeight", _lineHeight.ToString("0.0"));
-    }
-
-    private async Task PersistTranslateAsync()
-    {
-        await SetSettingAsync("showTranslate", _showTranslate.ToString().ToLower());
-        await JsRuntime.InvokeVoidAsync("bibleUtils.toggleGoogleTranslate", _showTranslate);
-    }
-
-    private async Task PersistDarkModeAsync()
-    {
-        ThemeService.SetDarkMode(_isDark);
-        await SetSettingAsync("darkMode", _isDark.ToString().ToLower());
-    }
-
-    private async Task ApplyStylesAsync()
-    {
-        await JsRuntime.InvokeVoidAsync("bibleUtils.setBodyStyles",
-            $"{_fontSize}px", _fontFamily, $"{_lineHeight}");
-    }
-
-    private async Task InstallerPwa()
-    {
-        try
-        {
-            var ok = await JsRuntime.InvokeAsync<bool>("bibleInstall.promptInstall");
-            if (ok)
-            {
-                _pwaInstalled = true;
-                _pwaInstallable = false;
-                Snackbar.Add("✓ Application installée !", Severity.Success);
-            }
-            else
-            {
-                Snackbar.Add("Utilise le menu du navigateur : \"Ajouter à l'écran d'accueil\"", Severity.Info);
             }
         }
         catch (Exception ex)
         {
-            Console.Error.WriteLine($"[PWA] Échec installation: {ex.Message}");
-            Snackbar.Add("Installation non disponible sur ce navigateur", Severity.Warning);
+            Console.Error.WriteLine($"[Paramètres] ERREUR: {ex.Message}");
         }
-    }
-
-    private async Task EffacerDonnees()
-    {
-        var confirm = await DialogService.ShowMessageBox(
-            "Effacer les données ?",
-            "Marque-pages, notes, progression et préférences seront supprimés. Cette action est irréversible.",
-            yesText: "Oui, effacer",
-            cancelText: "Annuler");
-        if (confirm != true) return;
-
-        try
-        {
-            await JsRuntime.InvokeVoidAsync("bibleUtils.localStorageClear");
-            await JsRuntime.InvokeVoidAsync("bibleUtils.clearIndexedDB");
-        }
-        catch (Exception ex) { Console.Error.WriteLine($"[Paramètres] Échec effacement données: {ex.Message}"); }
-        _isDark = false;
-        _fontSize = 18;
-        _fontFamily = "serif";
-        _lineHeight = 2.0;
-        _showTranslate = false;
-        ThemeService.SetDarkMode(false);
-        await ApplyStylesAsync();
-        Snackbar.Add("Données effacées", Severity.Success);
-        StateHasChanged();
-    }
-
-    private async Task<string?> GetSettingAsync(string key)
-    {
-        try { return await JsRuntime.InvokeAsync<string?>("bibleUtils.localStorageGet", key); }
-        catch (Exception ex) { Console.Error.WriteLine($"[Paramètres] Échec lecture {key}: {ex.Message}"); return null; }
-    }
-
-    private async Task SetSettingAsync(string key, string value)
-    {
-        try { await JsRuntime.InvokeVoidAsync("bibleUtils.localStorageSet", key, value); }
-        catch (Exception ex) { Console.Error.WriteLine($"[Paramètres] Échec écriture {key}: {ex.Message}"); }
     }
 }
