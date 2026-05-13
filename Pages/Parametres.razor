@@ -5,6 +5,7 @@
 @inject BibleApp.Services.ThemeService ThemeService
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
+@inject HttpClient Http
 
 <Breadcrumb Nodes="@(new List<BreadcrumbNode> {
     new() { Label = "Accueil", Href = "/", Icon = Icons.Material.Filled.Home },
@@ -96,7 +97,14 @@
             <MudIcon Icon="@Icons.Material.Filled.Chat" Size="Size.Small" Class="mr-1" /> +227 91 53 52 20
         </MudLink>
         <MudText Typo="Typo.caption" Class="mud-text-secondary">
-            <span>v2.1 — .NET 9 &bull; MudBlazor &bull; PWA</span>
+            @if (_version != null)
+            {
+                <span>v@(_version.Trim())</span>
+            }
+            else if (!string.IsNullOrEmpty(_versionError))
+            {
+                <span>v2.1 — .NET 9 &bull; MudBlazor &bull; PWA</span>
+            }
         </MudText>
     </MudExpansionPanel>
 
@@ -189,8 +197,13 @@
     private bool _prevIsDark;
 
 
-    protected override void OnInitialized()
+    private string? _version;
+    private string _versionError = "";
+
+    protected override async Task OnInitializedAsync()
     {
+        try { _version = await Http.GetStringAsync("version.txt"); }
+        catch (Exception ex) { _versionError = ex.Message; Console.Error.WriteLine($"[Paramètres] Échec chargement version: {ex.Message}"); }
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
