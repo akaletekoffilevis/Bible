@@ -137,8 +137,7 @@ else if (_versetDuJour != null)
         if (_versetDuJour == null) return;
         var v = _versetDuJour.Value;
         var refStr = $"{v.Livre.NomLivre} {v.Chapitre.Numero}:{v.Verset.Numero}";
-        var siteUrl = "https://bibeli.vercel.app";
-        try { await Js.InvokeVoidAsync("bibleImage.generate", v.Verset.TextePropre, refStr, siteUrl); }
+        try { await Js.InvokeVoidAsync("bibleImage.generateVersetDuJour", v.Verset.TextePropre, refStr); }
         catch (Exception ex) { Console.Error.WriteLine($"[Index] Échec génération image: {ex.Message}"); }
     }
 

@@ -677,6 +677,35 @@ window.bibleImage = {
         }, 'image/png');
     },
 
+    // Generate image with "Verset Du Jour" title
+    generateVersetDuJour: function (texte, reference, url) {
+        var siteUrl = url || 'https://bibeli.vercel.app';
+        var canvas = this._draw(texte, reference, siteUrl.replace('https://', ''), 'Verset Du Jour', true);
+        var self = this;
+        canvas.toBlob(function (blob) {
+            var file = new File([blob], 'verset-du-jour.png', { type: 'image/png' });
+            // Try share on mobile first
+            if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+                navigator.share({
+                    title: 'Verset Du Jour — LSG',
+                    text: '"' + texte + '" — ' + reference + ' (LSG)',
+                    files: [file]
+                }).catch(function () {
+                    // fallback to download
+                    var link = document.createElement('a');
+                    link.download = 'verset-du-jour.png';
+                    link.href = canvas.toDataURL();
+                    link.click();
+                });
+            } else {
+                var link = document.createElement('a');
+                link.download = 'verset-du-jour.png';
+                link.href = canvas.toDataURL();
+                link.click();
+            }
+        }, 'image/png');
+    },
+
     // Share verse of the day with "Verset Du Jour" title
     shareVersetDuJour: function (texte, reference, url) {
         var self = this;
