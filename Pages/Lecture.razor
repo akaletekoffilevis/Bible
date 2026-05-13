@@ -64,9 +64,6 @@ else
                         <span class="verset-texte">@verset.TextePropre</span>
                     </div>
                     <div class="verse-actions" role="group" aria-label="Actions du verset">
-                        <span @onclick="@(() => AjouterMarquePage(verset))" title="Marquer" role="button" tabindex="0" aria-label="Marquer ce verset">🔖</span>
-                        <span @onclick="@(() => AjouterNote(verset))" title="Note" role="button" tabindex="0" aria-label="Ajouter une note">📝</span>
-                        <span @onclick="@(() => BasculerHighlight(verset))" title="Surligner" role="button" tabindex="0" aria-label="Surligner ce verset" style="@(GetHighlightIconStyle(vNum))">🖍️</span>
                         @if (_showHighlightPicker == vNum)
                         {
                             <span class="highlight-color-picker">
@@ -76,9 +73,21 @@ else
                                     <span class="@cls" style="background:@couleur;" @onclick="@(() => ChoisirCouleur(verset, couleur))" title="@couleur" role="button" tabindex="0"></span>
                                 }
                             </span>
+                            <span @onclick="@(() => _showHighlightPicker = -1)" title="Fermer" role="button" tabindex="0">✕</span>
                         }
-                        <span @onclick="@(() => PartagerVerset(verset))" title="Partager" role="button" tabindex="0" aria-label="Partager ce verset">📋</span>
-                        <span @onclick="@(() => GenererImage(verset))" title="Image" role="button" tabindex="0" aria-label="Générer une image">🖼️</span>
+                        else if (_activeMenuVerset == vNum)
+                        {
+                            <span @onclick="@(async () => { await AjouterMarquePage(verset); _activeMenuVerset = -1; })" title="Marquer" role="button" tabindex="0">🔖</span>
+                            <span @onclick="@(async () => { await AjouterNote(verset); _activeMenuVerset = -1; })" title="Note" role="button" tabindex="0">📝</span>
+                            <span @onclick="@(() => { BasculerHighlight(verset); _activeMenuVerset = -1; })" title="Surligner" role="button" tabindex="0" style="@(GetHighlightIconStyle(vNum))">🖍️</span>
+                            <span @onclick="@(async () => { await PartagerVerset(verset); _activeMenuVerset = -1; })" title="Partager" role="button" tabindex="0">📋</span>
+                            <span @onclick="@(async () => { await GenererImage(verset); _activeMenuVerset = -1; })" title="Image" role="button" tabindex="0">🖼️</span>
+                            <span @onclick="@(() => _activeMenuVerset = -1)" title="Fermer" role="button" tabindex="0">✕</span>
+                        }
+                        else
+                        {
+                            <span @onclick="@(() => _activeMenuVerset = vNum)" title="Actions" role="button" tabindex="0" class="menu-trigger">⋮</span>
+                        }
                     </div>
                 </div>
             }
@@ -126,6 +135,7 @@ else
     private DotNetObjectReference<Lecture>? _ttsRef;
     private Dictionary<string, Highlight> _highlights = new();
     private int _showHighlightPicker = -1;
+    private int _activeMenuVerset = -1;
 
     protected override async Task OnParametersSetAsync()
     {
