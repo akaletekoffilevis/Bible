@@ -186,6 +186,19 @@ body {
     flex-shrink: 0;
 }
 
+.verse-actions-select {
+    border: 1px solid var(--mud-palette-lines-inputs, rgba(0,0,0,0.12));
+    border-radius: 6px;
+    background: var(--mud-palette-surface, #fff);
+    color: var(--mud-palette-text-primary, #424242);
+    padding: 4px 6px;
+    font-size: 0.85em;
+    cursor: pointer;
+    max-width: 120px;
+    outline: none;
+    font-family: inherit;
+}
+
 .verset-card:hover .verse-actions,
 .verset-card:focus-within .verse-actions {
     opacity: 0.7;
@@ -388,6 +401,10 @@ body {
         padding: 8px 10px !important;
         font-size: 0.95em !important;
     }
+    .verse-actions-select {
+        padding: 8px 10px !important;
+        font-size: 0.95em !important;
+    }
 }
 
 @media (max-width: 600px) {
@@ -403,6 +420,11 @@ body {
     .verse-actions span {
         padding: 4px 5px !important;
         font-size: 0.8em !important;
+    }
+    .verse-actions-select {
+        padding: 6px 4px !important;
+        font-size: 0.85em !important;
+        max-width: 100px;
     }
     .lecture-nav .mud-button-root { padding: 12px 16px; }
     .chapitre-grid {
