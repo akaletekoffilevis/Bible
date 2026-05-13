@@ -1,4 +1,14 @@
-html, body { height: 100%; margin: 0; }
+html {
+    height: 100%;
+    margin: 0;
+    background-attachment: fixed;
+    background-color: var(--mud-palette-background, #f5f5f5);
+}
+body {
+    height: 100%;
+    margin: 0;
+    background: transparent !important;
+}
 h1:focus { outline: none; }
 .blazor-error-boundary, .blazor-error-boundary::after { display: none !important; }
 #blazor-error-ui {
@@ -58,8 +68,6 @@ body {
     line-height: var(--bible-line-height);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    background-attachment: fixed;
-    background-color: var(--mud-palette-background, #f5f5f5);
 }
 
 /* Force custom font props on reading text (MudBlazor overrides body) */
