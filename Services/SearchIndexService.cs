@@ -222,15 +222,31 @@ public class SearchIndexService
             .Replace("'", " ")
             .Replace("’", " ");
 
-        var sb = new System.Text.StringBuilder();
-        foreach (var c in normalized.Normalize(System.Text.NormalizationForm.FormD))
+        // Normalize(FormD) échoue avec InvariantGlobalization=true sur WASM
+        try
         {
-            var cat = System.Globalization.CharUnicodeInfo.GetUnicodeCategory(c);
-            if (cat != System.Globalization.UnicodeCategory.NonSpacingMark)
-                sb.Append(c);
+            var sb = new System.Text.StringBuilder();
+            foreach (var c in normalized.Normalize(System.Text.NormalizationForm.FormD))
+            {
+                var cat = System.Globalization.CharUnicodeInfo.GetUnicodeCategory(c);
+                if (cat != System.Globalization.UnicodeCategory.NonSpacingMark)
+                    sb.Append(c);
+            }
+            normalized = sb.ToString();
+        }
+        catch
+        {
+            // Fallback: replace common accented chars manually
+            normalized = normalized
+                .Replace("é", "e").Replace("è", "e").Replace("ê", "e").Replace("ë", "e")
+                .Replace("à", "a").Replace("â", "a").Replace("ä", "a")
+                .Replace("ù", "u").Replace("û", "u").Replace("ü", "u")
+                .Replace("ô", "o").Replace("ö", "o")
+                .Replace("î", "i").Replace("ï", "i")
+                .Replace("ç", "c");
         }
 
-        return sb.ToString()
+        return normalized
             .Split(' ', StringSplitOptions.RemoveEmptyEntries)
             .Where(w => w.Length > 1)
             .Distinct()
