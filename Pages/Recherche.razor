@@ -11,6 +11,7 @@
 
 <MudTextField @ref="_searchRef"
               @bind-Value="_query"
+              @bind-Value:after="Rechercher"
               Label="Rechercher un mot ou une expression..."
               Variant="Variant.Outlined"
               Adornment="Adornment.End"
@@ -45,7 +46,15 @@
     </MudItem>
 </MudGrid>
 
-@if (string.IsNullOrEmpty(_query) || _query.Length < 2)
+@if (_indexationEnCours && _resultats.Count == 0)
+{
+    <MudPaper Class="pa-8 text-center" Elevation="0">
+        <div class="skeleton-line mb-3" style="width: 60%; height: 16px; margin: 0 auto;"></div>
+        <div class="skeleton-line mb-3" style="width: 80%; height: 14px; margin: 0 auto;"></div>
+        <MudText Typo="Typo.caption" Class="mud-text-secondary mt-4">Indexation des textes en cours…</MudText>
+    </MudPaper>
+}
+else if (string.IsNullOrEmpty(_query) || _query.Length < 2)
 {
     <MudPaper Class="pa-8 text-center" Elevation="0">
         <MudIcon Icon="@Icons.Material.Filled.Search" Size="Size.Large" Class="mud-text-secondary mb-4" />
@@ -91,11 +100,19 @@ else
     private string? _livreSlug;
     private List<SearchResult> _resultats = new();
     private List<BibleApp.Models.LivreIndex> _index = new();
+    private bool _indexationEnCours;
 
     protected override async Task OnInitializedAsync()
     {
         _index = await BibleService.GetIndexAsync();
-        _ = Task.Run(async () => await SearchService.IndexAllLoadedAsync());
+        _indexationEnCours = true;
+        _ = IndexerAsync();
+    }
+
+    private async Task IndexerAsync()
+    {
+        try { await SearchService.IndexAllLoadedAsync(); }
+        finally { _indexationEnCours = false; StateHasChanged(); }
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)

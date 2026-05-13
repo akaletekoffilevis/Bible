@@ -7,6 +7,7 @@ public class IndexedDbService
     private readonly IJSRuntime _js;
     private const string DbName = "BibleAppDB";
     private const int DbVersion = 1;
+    private bool _initialized;
 
     public IndexedDbService(IJSRuntime js)
     {
@@ -15,7 +16,9 @@ public class IndexedDbService
 
     public async Task InitializeAsync()
     {
+        if (_initialized) return;
         await _js.InvokeVoidAsync("bibleDb.initialize", DbName, DbVersion);
+        _initialized = true;
     }
 
     public async Task<List<T>> GetAllAsync<T>(string storeName)

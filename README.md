@@ -15,6 +15,7 @@ Application **Progressive Web App (PWA)** pour lire la Bible Louis Segond en lig
 - **Notes personnelles** — attacher une note à chaque verset
 - **Copie / Partage** — Web Share API avec image PNG + copie au clic
 - **Image de verset** — génération Canvas PNG, 12 palettes, dégradé, lien `bibeli.vercel.app` + URL directe du verset
+- **Image Verset du Jour** — partage avec titre "✨ Verset Du Jour ✨", police aléatoire (Georgia, Palatino, Garamond...)
 - **Export PDF** — impression du chapitre en PDF
 - **Mode nuit** — thème sombre/clair
 - **Navigation clavier** — flèches ← → entre chapitres
@@ -26,6 +27,8 @@ Application **Progressive Web App (PWA)** pour lire la Bible Louis Segond en lig
 - **SEO** — sitemap.xml (66 livres), robots.txt optimisé, JSON-LD structuré, balises Open Graph, Google Search Console
 - **Analytics** — Google Analytics (G-FWDV79PT44)
 - **Contact & Support** — signalement de bug via WhatsApp/email, suggestions
+- **Personnalisation** — taille police (14-28px), famille (Serif/Sans-serif/Georgia), interlignage (1.5-2.8)
+- **Traduction** — Google Translate intégré (11 langues, chargé uniquement si activé)
 
 ---
 
@@ -46,26 +49,27 @@ Application **Progressive Web App (PWA)** pour lire la Bible Louis Segond en lig
 
 ---
 
-## Nouveautés (v2.0+)
+## Nouveautés
 
-- **Fil d'Ariane** : `Shared/Breadcrumb.razor` avec `BreadcrumbNode`, navigation contextuelle sur 8 pages
-- **Image de verset** : lien `bibeli.vercel.app` visible en bas + partage avec URL directe du verset
-- **Loading screen** : barre de progression avec pourcentage, 16 étapes progressives, délai ralenti vers la fin
-- **Paramètres** : bindings `@bind-Value:after`, `EffacerDonnees` avec `ShowMessageBox`, réinitialisation complète UI
-- **Support & Contact** : panneau dédié avec WhatsApp pré-rempli pour bug, email pour suggestions
-- **Panels expansibles** : À propos, Confidentialité, CGU, Support ouverts par défaut (`Expanded="true"`)
-- **Consent banner** : confirmation Snackbar au clic sur OK
-- **Drawer PC** : `!important` restreint à `mud-drawer--open`, fermeture uniquement sur mobile après navigation
-- **Sidebar navigation** : `MudButton` avec `Href` au lieu de `MudChip` (non fonctionnel pour la navigation)
-- **UI Chapitres** : bannière gradient, grille responsive en cards, badge "Lu" sur dernier chapitre
-- **UI Versets** : cartes individuelles, numéro en cercle, actions au hover, toolbar arrondie, boutons nav remplis
-- **Google Analytics** : `G-FWDV79PT44` avec CSP mis à jour (googletagmanager.com, google-analytics.com)
-- **Google Search Console** : meta tag de vérification
-- **Sitemap/robots** : rewrite Vercel corrigé pour servir `sitemap.xml` et `robots.txt` correctement
-- **`vercel.json`** : règles rewrite explicites pour fichiers statiques, `Content-Type: application/json` pour data
-- **`app.css`** : `chapitre-grid`, `verset-card`, `nav-chip`, transitions, print, mobile-first
-- **Service worker** : cache `bible-data-v1` séparé, 66 livres mis en cache à l'installation
-- **Performance** : `PublishTrimmed` + `AggressiveTrimming` (8.9 MB Brotli, 3.6 MB framework)
+### v2.1 (mai 2026)
+- **Partage image Verset du Jour** — titre "✨ Verset Du Jour ✨" avec police aléatoire (6 polices système), canvas 600×520px
+- **ErrorBoundary global** — capture les erreurs de rendu Blazor avec fallback UI + bouton Réessayer
+- **Gestion erreur JS** — `window.onerror` global avec fallback dans le loader
+- **Écran blanc mobile** — loader 45s avec message d'erreur + bouton + contact WhatsApp au lieu de page blanche
+- **Mémoire réduite** — `InvariantGlobalization=true` + `PreserveCollationData=false` (-2 MB WASM)
+- **IndexedDB résilient** — `_supported` flag, try/catch, ne rejette plus en mode privé
+- **CSS override lecture** — `!important` sur `.verset-texte`/`.verset-card-body` pour que les réglages police/taille/interligne s'appliquent malgré MudBlazor
+- **Recherche réparée** — `@bind-Value:after="Rechercher"` manquant bloquait toute recherche
+- **IndexedDbService** — `_initialized` flag évite d'ouvrir une connexion à chaque opération
+- **Recherche UX** — état "Indexation en cours..." avec skeleton pendant le chargement de l'index
+- **ErrorBoundary Recover** — navigation `forceLoad: false` (pas de reload complet inutile)
+
+### v2.0
+- Fil d'Ariane sur 8 pages, image verset avec branding, loading screen %, Paramètres robustes
+- Support & Contact, panels expansibles, consent banner avec Snackbar
+- Drawer PC/Mobile, sidebar MudButton, UI chapitres/versets améliorée
+- Google Analytics, Search Console, sitemap/robots optimisés, vercel.json propre
+- app.css complet, service worker cache séparé, PublishTrimmed + AggressiveTrimming
 
 ---
 
@@ -76,10 +80,10 @@ BibleApp/
 ├── Layout/
 │   └── MainLayout.razor       # Layout principal + drawer (Persistent/Temporary) + consentement + préférences
 ├── Pages/
-│   ├── Index.razor            # Accueil (verset du jour + skeleton)
+│   ├── Index.razor            # Accueil (verset du jour + skeleton + partage image)
 │   ├── LivreChapitres.razor   # Sélection de chapitre (grille cards + breadcrumb)
 │   ├── Lecture.razor          # Lecture chapitre (cartes versets + TTS + actions + breadcrumb)
-│   ├── Recherche.razor        # Recherche plein texte + breadcrumb
+│   ├── Recherche.razor        # Recherche plein texte + indexation + breadcrumb
 │   ├── Favoris.razor          # Marque-pages et notes + breadcrumb
 │   ├── Progression.razor      # Suivi de lecture AT/NT + breadcrumb
 │   ├── Quiz.razor             # Quiz biblique (Random.Shared) + breadcrumb
@@ -93,14 +97,14 @@ BibleApp/
 ├── Services/
 │   ├── BibleService.cs        # Chargement livres JSON + cache IndexedDB
 │   ├── SearchIndexService.cs  # Index recherche inversé (Singleton)
-│   ├── IndexedDbService.cs    # CRUD IndexedDB
+│   ├── IndexedDbService.cs    # CRUD IndexedDB (flag _initialized)
 │   └── ThemeService.cs        # Thème clair/sombre
 ├── Models/
 │   ├── Bible.cs               # Modèles de données (Livre, Chapitre, Verset)
 │   └── BreadcrumbNode.cs      # Modèle pour le fil d'Ariane
 ├── wwwroot/
-│   ├── css/app.css            # Styles personnalisés + responsive + transitions + print
-│   ├── js/app.js              # JS interop (TTS, IndexedDB, image canvas, drawer, Leaflet, PWA install)
+│   ├── css/app.css            # Styles personnalisés + responsive + transitions + print + error-boundary
+│   ├── js/app.js              # JS interop (TTS, IndexedDB résilient, image canvas, drawer, Leaflet, PWA install)
 │   ├── data/books/*.json      # 66 fichiers livres (LSG)
 │   ├── data/index.json        # Index des livres
 │   ├── index.html             # Point d'entrée + loading screen % + SEO JSON-LD + CSP + GA + Google Console
@@ -114,7 +118,7 @@ BibleApp/
 │   └── robots.txt             # SEO optimisé (Googlebot, Bingbot, Crawl-delay)
 ├── vercel.json                # Build .NET 9 + rewrites statics + en-têtes sécurité
 ├── LICENSE                    # Licence MIT
-└── BibleApp.csproj            # Projet .NET 9 (PublishTrimmed + AggressiveTrimming)
+└── BibleApp.csproj            # Projet .NET 9 (PublishTrimmed + AggressiveTrimming + InvariantGlobalization)
 ```
 
 ---
@@ -171,7 +175,7 @@ Le projet est connecté à GitHub + Vercel. Chaque push sur `main` déclenche au
 
 ---
 
-## Licence
+## License
 
 Distribué sous licence **MIT**. Voir le fichier [LICENSE](LICENSE).
 

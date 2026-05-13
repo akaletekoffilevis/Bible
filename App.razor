@@ -33,7 +33,7 @@
     private void Recover()
     {
         _errorBoundary?.Recover();
-        NavigationManager.NavigateTo("/", forceLoad: true);
+        StateHasChanged();
     }
 
     [Inject] private NavigationManager NavigationManager { get; set; } = null!;
