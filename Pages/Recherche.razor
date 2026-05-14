@@ -1,6 +1,186 @@
 @page "/recherche"
-@using MudBlazor
+@using BibleApp.Models
+@using BibleApp.Services
+@inject SearchIndexService SearchIndex
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+@implements IDisposable
 
-<h3>Recherche</h3>
-<MudTextField T="string" Label="Rechercher un mot ou une expression..." Variant="Variant.Outlined" Class="mb-3" />
-<MudText Typo="Typo.body2" Class="mud-text-secondary">Saisis au moins 2 caractères pour chercher dans la Bible</MudText>
+<Breadcrumb Nodes="@(new List<BreadcrumbNode> {
+    new() { Label = "Accueil", Href = "/", Icon = Icons.Material.Filled.Home },
+    new() { Label = "Recherche" }
+})" />
+
+<MudText Typo="Typo.h6" Class="mb-4 font-weight-bold d-flex align-center">
+    <MudIcon Icon="@Icons.Material.Filled.Search" Class="mr-2" /> Recherche
+</MudText>
+
+<MudTextField @ref="_inputRef"
+              @bind-Value="_query"
+              @bind-Value:after="OnQueryChanged"
+              Label="Rechercher un mot ou une expression..."
+              Variant="Variant.Outlined"
+              Class="mb-3"
+              FullWidth="true"
+              Adornment="Adornment.End"
+              AdornmentIcon="@Icons.Material.Filled.Search"
+              Placeholder="Ex: amour, grâce, paix..."
+              Disabled="_isIndexing" />
+
+@if (_isIndexing)
+{
+    <div class="d-flex align-center justify-center pa-8">
+        <MudProgressCircular Indeterminate="true" Size="Size.Small" Class="mr-3" />
+        <MudText Typo="Typo.body2" Class="mud-text-secondary">Indexation des textes...</MudText>
+    </div>
+}
+else if (_error != null)
+{
+    <MudPaper Class="pa-8 text-center" Elevation="0" Style="border-radius:12px;">
+        <MudIcon Icon="@Icons.Material.Filled.ErrorOutline" Size="Size.Large" Color="Color.Error" Class="mb-4" />
+        <MudText Typo="Typo.body2" Color="Color.Error" Class="mb-2">@_error</MudText>
+        <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="@Reessayer">Réessayer</MudButton>
+    </MudPaper>
+}
+else if (!_hasSearched)
+{
+    <MudPaper Class="pa-8 text-center" Elevation="0" Style="border-radius:12px;">
+        <MudIcon Icon="@Icons.Material.Filled.Search" Size="Size.Large" Class="mud-text-secondary mb-4" />
+        <MudText Typo="Typo.body2" Class="mud-text-secondary">
+            Saisis au moins 2 caractères pour chercher dans la Bible
+        </MudText>
+    </MudPaper>
+}
+else if (_results.Count == 0)
+{
+    <MudPaper Class="pa-8 text-center" Elevation="0" Style="border-radius:12px;">
+        <MudIcon Icon="@Icons.Material.Filled.SearchOff" Size="Size.Large" Class="mud-text-secondary mb-4" />
+        <MudText Typo="Typo.body2" Class="mud-text-secondary mb-2">Aucun résultat</MudText>
+        <MudText Typo="Typo.caption" Class="mud-text-secondary">
+            Essaie avec d'autres mots ou vérifie l'orthographe
+        </MudText>
+    </MudPaper>
+}
+else
+{
+    <div class="d-flex align-center justify-space-between mb-2">
+        <MudText Typo="Typo.caption" Class="mud-text-secondary">
+            @_results.Count résultat@(_results.Count > 1 ? "s" : "")
+        </MudText>
+    </div>
+
+    @foreach (var result in _results)
+    {
+        <MudPaper Class="mb-2 search-result-card" Elevation="0"
+                  Style="border-radius:8px; cursor:pointer;"
+                  @onclick="@(() => Navigation.NavigateTo($"/lecture/{result.Slug}/{result.Chapitre}/{result.Verset}"))">
+            <div Class="pa-3">
+                <MudText Typo="Typo.caption" Class="mud-text-secondary mb-1 font-weight-medium">
+                    @result.Reference
+                </MudText>
+                <MudText Typo="Typo.body2" Style="line-height:1.7;">
+                    @result.Texte
+                </MudText>
+            </div>
+        </MudPaper>
+    }
+}
+
+<style>
+    .search-result-card:hover {
+        background-color: var(--mud-palette-action-default-hover);
+    }
+</style>
+
+@code {
+    private MudTextField<string>? _inputRef;
+    private string _query = string.Empty;
+    private List<SearchResult> _results = new();
+    private bool _isIndexing = true;
+    private bool _hasSearched;
+    private string? _error;
+    private CancellationTokenSource? _debounceCts;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            await SearchIndex.IndexAllLoadedAsync();
+        }
+        catch (Exception ex)
+        {
+            _error = "Impossible d'indexer les textes. Vérifie ta connexion.";
+            Console.Error.WriteLine($"[Recherche] Échec indexation: {ex.Message}");
+        }
+        finally
+        {
+            _isIndexing = false;
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && _inputRef != null)
+            await _inputRef.FocusAsync();
+    }
+
+    private async Task OnQueryChanged()
+    {
+        _debounceCts?.Cancel();
+        _debounceCts = new CancellationTokenSource();
+        var token = _debounceCts.Token;
+
+        if (_query.Length < 2)
+        {
+            _hasSearched = false;
+            _results.Clear();
+            return;
+        }
+
+        _hasSearched = true;
+
+        try
+        {
+            await Task.Delay(300, token);
+
+            if (!token.IsCancellationRequested)
+            {
+                _error = null;
+                _results = SearchIndex.Rechercher(_query);
+            }
+        }
+        catch (OperationCanceledException) { }
+        catch (Exception ex)
+        {
+            _error = "Erreur lors de la recherche.";
+            _results.Clear();
+            Console.Error.WriteLine($"[Recherche] Échec recherche: {ex.Message}");
+        }
+    }
+
+    private async Task Reessayer()
+    {
+        _error = null;
+        _isIndexing = true;
+
+        try
+        {
+            await SearchIndex.IndexAllLoadedAsync();
+        }
+        catch (Exception ex)
+        {
+            _error = "Impossible d'indexer les textes. Vérifie ta connexion.";
+            Console.Error.WriteLine($"[Recherche] Échec indexation: {ex.Message}");
+        }
+        finally
+        {
+            _isIndexing = false;
+        }
+    }
+
+    public void Dispose()
+    {
+        _debounceCts?.Cancel();
+        _debounceCts?.Dispose();
+    }
+}
