@@ -1,1 +1,1 @@
-2.1 — .NET 9 · MudBlazor · PWA
+2.4 — .NET 9 · MudBlazor · PWA
