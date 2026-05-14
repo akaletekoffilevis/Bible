@@ -20,10 +20,10 @@ Application **Progressive Web App (PWA)** pour lire la Bible Louis Segond en lig
 - **Export PDF** — impression du chapitre en PDF
 - **Navigation par référence** — taper "Genèse 1:1", "Jn 3:16", "Ps 23" → accès direct
 - **Plan de lecture 1 an** — 365 jours, AT + NT + Psaumes, progression, streak jours consécutifs
-- **Mode nuit** — thème sombre/clair avec transitions CSS fluides
+- **Mode nuit** — thème sombre/clair fiable (contournement bug MudBlazor 8.15)
 - **Navigation clavier** — flèches ← → entre chapitres
 - **Fil d'Ariane (breadcrumb)** — navigation contextuelle sur toutes les pages
-- **Carte biblique** — 12 lieux avec Leaflet (lazy-load via unpkg)
+- ~~Carte biblique~~ — retirée du menu de navigation
 - **Quiz** — mot manquant, 10 questions aléatoires par partie
 - **Progression** — suivi des chapitres lus avec statistiques AT/NT
 - **PWA** — installation sur téléphone/desktop, cache offline 66 livres, notification Snackbar, détection automatique
@@ -54,6 +54,15 @@ Application **Progressive Web App (PWA)** pour lire la Bible Louis Segond en lig
 ---
 
 ## Nouveautés
+
+### v2.4 (mai 2026)
+- **Thème nuit/corrigé** — `@key` sur `MudThemeProvider` + `bibleUtils.applyTheme()` JS pour contourner un bug MudBlazor 8.15 qui ne ré-appliquait pas la classe `mud-theme-dark`
+- **Page Recherche fonctionnelle** — indexation automatique des 66 livres, debounce 300ms, recherche plein texte instantanée avec résultats cliquables
+- **Actions verset en overlay** — popup (🔖📝🖍️📋🖼️) et ☰ passés en `position:absolute` : ne poussent plus le texte. Fond `#ffffff` opaque, boutons agrandis (`1.2em`)
+- **DI corrigé** — `SearchIndexService` passe en `AddScoped` (était Singleton mais dépendait de `BibleService` scoped → bloquait tout le rendu)
+- **Slugifier sécurisé** — `Normalize(FormD)` + `CharUnicodeInfo` protégés par try/catch pour `InvariantGlobalization=true`
+- **Logs ajoutés** — `catch { }` → `catch (Exception ex) avec Console.Error.WriteLine` dans `BibleService`
+- **Navigation carte retirée** — lien `/carte` supprimé du menu de navigation
 
 ### v2.3 (mai 2026)
 - **Partage Verset du Jour** — deux boutons séparés : Image (téléchargement PNG) et Partager (texte brut)
@@ -101,7 +110,7 @@ Application **Progressive Web App (PWA)** pour lire la Bible Louis Segond en lig
 │   └── Breadcrumb.razor       # Fil d'Ariane contextuel
 ├── Services/
 │   ├── BibleService.cs        # Chargement livres JSON + cache IndexedDB
-│   ├── SearchIndexService.cs  # Index recherche inversé (Singleton, mémoire optimisée)
+│   ├── SearchIndexService.cs  # Index recherche inversé (Scoped, mémoire optimisée)
 │   ├── IndexedDbService.cs    # CRUD IndexedDB + highlights + planProgress
 │   ├── ReadingPlanService.cs  # Plan de lecture 365 jours
 │   └── ThemeService.cs        # Thème clair/sombre
