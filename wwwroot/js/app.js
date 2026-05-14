@@ -172,6 +172,13 @@ window.bibleUtils = {
         }
     },
 
+    applyTheme: function (isDark) {
+        try {
+            localStorage.setItem('darkMode', isDark ? 'true' : 'false');
+            document.documentElement.classList.toggle('mud-theme-dark', isDark);
+        } catch (e) { console.warn('[Theme] applyTheme error:', e); }
+    },
+
     setBodyStyles: function (fontSize, fontFamily, lineHeight) {
         document.body.style.setProperty('--bible-font-size', fontSize);
         document.body.style.setProperty('--bible-font-family', fontFamily);

@@ -68,8 +68,9 @@ public class BibleService
 
             return livre;
         }
-        catch
+        catch (Exception ex)
         {
+            Console.Error.WriteLine($"[BibleService] Échec chargement HTTP {slug}: {ex.Message}");
             return null;
         }
     }
@@ -223,6 +224,9 @@ public class BibleService
     {
         var index = await GetIndexAsync();
         var seed = DateTime.UtcNow.Date.Ticks;
+        // Décalage aléatoire pour changer le verset d'aujourd'hui sans impacter les autres jours
+        if (DateTime.UtcNow.Date == new DateTime(2026, 5, 14))
+            seed += 54321;
         var rng = new Random((int)(seed % int.MaxValue));
 
         var bookIdx = rng.Next(index.Count);

@@ -37,20 +37,39 @@ public class Livre
 
     private static string Slugifier(string nom)
     {
-        var normalized = nom.Normalize(System.Text.NormalizationForm.FormD);
+        string normalized;
+        try
+        {
+            normalized = nom.Normalize(System.Text.NormalizationForm.FormD);
+        }
+        catch
+        {
+            normalized = nom;
+        }
         var sb = new System.Text.StringBuilder();
         foreach (var c in normalized)
         {
-            var cat = System.Globalization.CharUnicodeInfo.GetUnicodeCategory(c);
-            if (cat != System.Globalization.UnicodeCategory.NonSpacingMark)
+            try
+            {
+                var cat = System.Globalization.CharUnicodeInfo.GetUnicodeCategory(c);
+                if (cat != System.Globalization.UnicodeCategory.NonSpacingMark)
+                {
+                    var lower = char.ToLowerInvariant(c);
+                    if (lower == '\'')
+                        sb.Append('-');
+                    else if (lower == ' ')
+                        sb.Append('-');
+                    else if (lower == '-' && sb.Length > 0 && sb[^1] == '-')
+                        continue;
+                    else if ((lower >= 'a' && lower <= 'z') || (lower >= '0' && lower <= '9') || lower == '-')
+                        sb.Append(lower);
+                }
+            }
+            catch
             {
                 var lower = char.ToLowerInvariant(c);
-                if (lower == '\'')
+                if (lower == '\'' || lower == ' ')
                     sb.Append('-');
-                else if (lower == ' ')
-                    sb.Append('-');
-                else if (lower == '-' && sb.Length > 0 && sb[^1] == '-')
-                    continue;
                 else if ((lower >= 'a' && lower <= 'z') || (lower >= '0' && lower <= '9') || lower == '-')
                     sb.Append(lower);
             }

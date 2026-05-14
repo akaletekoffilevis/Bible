@@ -8,7 +8,7 @@
 @inject ISnackbar Snackbar
 @implements IDisposable
 
-<MudThemeProvider Theme="_theme" IsDarkMode="ThemeService.IsDarkMode" />
+<MudThemeProvider Theme="_theme" IsDarkMode="ThemeService.IsDarkMode" @key="ThemeService.IsDarkMode" />
 <MudDialogProvider />
 <MudSnackbarProvider />
 
@@ -86,9 +86,19 @@
 
     protected override void OnInitialized()
     {
-        ThemeService.OnChange += StateHasChanged;
+        ThemeService.OnChange += OnThemeChanged;
         Navigation.LocationChanged += OnLocationChanged;
         UpdateBackButton(Navigation.Uri);
+    }
+
+    private async void OnThemeChanged()
+    {
+        try
+        {
+            StateHasChanged();
+            await JsRuntime.InvokeVoidAsync("bibleUtils.applyTheme", ThemeService.IsDarkMode);
+        }
+        catch (Exception ex) { Console.Error.WriteLine($"[Layout] Échec application thème: {ex.Message}"); }
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -195,7 +205,7 @@
                 "progression" => "Progression",
                 "plan-lecture" => "Plan de lecture",
                 "quiz" => "Quiz biblique",
-                "carte" => "Carte biblique",
+
                 "parametres" => "Paramètres",
                 _ => "Bible Louis Segond"
             };
@@ -231,7 +241,7 @@
 
     public void Dispose()
     {
-        ThemeService.OnChange -= StateHasChanged;
+        ThemeService.OnChange -= OnThemeChanged;
         Navigation.LocationChanged -= OnLocationChanged;
     }
 }
