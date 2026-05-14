@@ -151,6 +151,7 @@ body {
 }
 
 .verset-card {
+    position: relative;
     display: flex;
     align-items: flex-start;
     gap: 8px;
@@ -179,67 +180,84 @@ body {
 }
 
 .verse-actions {
+    position: absolute;
+    top: 4px;
+    right: 4px;
     display: flex;
     gap: 2px;
     opacity: 0;
     transition: opacity 0.2s;
-    flex-shrink: 0;
+    z-index: 5;
+    pointer-events: none;
+}
+
+.verse-actions-open,
+.verset-card:hover .verse-actions,
+.verset-card:focus-within .verse-actions {
+    opacity: 1;
+    pointer-events: auto;
 }
 
 .verse-actions-btn {
-    border: none;
-    background: var(--mud-palette-table-hover, rgba(0,0,0,0.04));
-    border-radius: 4px;
-    padding: 2px 6px;
-    font-size: 0.85em;
+    border: 1px solid #e0e0e0;
+    background: #ffffff;
+    border-radius: 6px;
+    padding: 4px 8px;
+    font-size: 1em;
     cursor: pointer;
     line-height: 1;
-    color: var(--mud-palette-text-primary, #424242);
+    color: #424242;
     transition: background 0.15s;
-    min-width: 24px;
+    min-width: 32px;
 }
-.verse-actions-btn:hover { background: var(--mud-palette-action-hover, rgba(0,0,0,0.08)); }
+.verse-actions-btn:hover { background: #f5f5f5; }
 
 .verse-actions-popup {
     display: flex;
-    gap: 2px;
-    background: var(--mud-palette-surface, #fff);
-    border: 1px solid var(--mud-palette-lines-inputs, rgba(0,0,0,0.12));
-    border-radius: 6px;
-    padding: 3px 4px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.12);
-    z-index: 10;
+    gap: 4px;
+    background: #ffffff;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 6px 8px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.18);
+    white-space: nowrap;
 }
 .verse-actions-popup button {
     border: none;
     background: none;
     cursor: pointer;
-    padding: 2px 4px;
-    border-radius: 4px;
-    font-size: 0.85em;
-    transition: background 0.15s;
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-size: 1.2em;
+    transition: background 0.15s, transform 0.15s;
     line-height: 1;
 }
 .verse-actions-popup button:hover {
-    background: var(--mud-palette-table-hover, rgba(0,0,0,0.06));
-    transform: scale(1.15);
+    background: #f0f0f0;
+    transform: scale(1.2);
 }
 
-.verset-card:hover .verse-actions,
-.verset-card:focus-within .verse-actions {
-    opacity: 0.7;
+.verse-actions .highlight-color-picker {
+    display: flex;
+    gap: 3px;
+    align-items: center;
+    background: #ffffff;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 4px 8px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.18);
 }
 
 .verse-actions span {
     cursor: pointer;
-    padding: 4px 6px;
+    padding: 6px 8px;
     border-radius: 6px;
-    font-size: 0.85em;
+    font-size: 0.95em;
     transition: background 0.15s, transform 0.15s;
 }
 
 .verse-actions span:hover {
-    background: var(--mud-palette-table-hover, rgba(0,0,0,0.06));
+    background: #f0f0f0;
     transform: scale(1.15);
 }
 
@@ -411,16 +429,13 @@ body {
     .mud-drawer .mud-navmenu { padding-top: 0; }
 }
 
-/* ---- Mobile optimizations ---- */
+/* ---- Mobile optimisations ---- */
 @media (hover: none) and (pointer: coarse) {
     .verse-actions {
-        opacity: 0;
         pointer-events: none;
         transition: opacity 0.15s;
     }
-    .verset-card:focus-within .verse-actions,
-    .verset-card:active .verse-actions {
-        opacity: 0.9;
+    .verse-actions-open {
         pointer-events: auto;
     }
     .verse-actions span {
@@ -438,10 +453,8 @@ body {
     .verset-card { padding: 8px 10px; gap: 6px; }
     .verset-texte { line-height: 1.7; }
     .verse-actions {
-        opacity: 0.6;
-        flex-shrink: 0;
-        flex-direction: column;
-        gap: 1px;
+        top: 2px;
+        right: 2px;
     }
     .verse-actions span {
         padding: 4px 5px !important;

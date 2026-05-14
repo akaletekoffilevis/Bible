@@ -63,7 +63,7 @@ else
                         <span class="verset-num">@vNum</span>
                         <span class="verset-texte">@verset.TextePropre</span>
                     </div>
-                    <div class="verse-actions" role="group" aria-label="Actions du verset">
+                    <div class="verse-actions @(_openActionsVerset == vNum || _showHighlightPicker == vNum ? "verse-actions-open" : "")" role="group" aria-label="Actions du verset">
                         @if (_showHighlightPicker == vNum)
                         {
                             <span class="highlight-color-picker">
