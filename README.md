@@ -55,6 +55,17 @@ Application **Progressive Web App (PWA)** pour lire la Bible Louis Segond en lig
 
 ## Nouveautés
 
+### v2.5 (novembre 2026)
+- **Crash au chargement corrigé** — service worker `skipWaiting`/`clients.claim`, cache-on-read, auto-récupération, loader honnête.
+- **Migration .NET 10** + MudBlazor 9.5.
+- **Optimisation max** — `Cache-Control: immutable`, verset du jour pré-calculé, quiz plafonné.
+- **SEO max** — Open Graph, Twitter cards, JSON-LD, sitemap 77 URLs.
+- **Redesign UI/UX** — palette indigo/or, Crimson Pro, bottom-nav mobile, accessibilité.
+- **Responsive mobile max** — bottom navigation, drawer plein écran, touch targets 44 px, safe-area.
+- **Nouvelles fonctionnalités** — Mémorisation (SM-2), Statistiques, Concordance (18 thèmes), Mode enfant.
+- **Icônes réelles** (Material Icons).
+- **Correction de données** — 4 livres à chapitre unique.
+
 ### v2.4 (mai 2026)
 - **Thème nuit/corrigé** — `@key` sur `MudThemeProvider` + `bibleUtils.applyTheme()` JS pour contourner un bug MudBlazor 8.15 qui ne ré-appliquait pas la classe `mud-theme-dark`
 - **Page Recherche fonctionnelle** — indexation automatique des 66 livres, debounce 300ms, recherche plein texte instantanée avec résultats cliquables

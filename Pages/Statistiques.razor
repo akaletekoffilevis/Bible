@@ -1,0 +1,187 @@
+@page "/statistiques"
+@using BibleApp.Models
+@using BibleApp.Services
+@inject IndexedDbService Db
+@inject BibleService BibleService
+@inject MemorisationService MemoService
+
+<Breadcrumb Nodes="@(new List<BreadcrumbNode> {
+    new() { Label = "Accueil", Href = "/", Icon = Icons.Material.Filled.Home },
+    new() { Label = "Statistiques" }
+})" />
+
+<MudText Typo="Typo.h6" Class="mb-3 font-weight-bold d-flex align-center">
+    <MudIcon Icon="@Icons.Material.Filled.Insights" Class="mr-2" /> Statistiques de lecture
+</MudText>
+
+@if (_chargement)
+{
+    <div class="d-flex justify-center pa-8"><MudProgressCircular Indeterminate /></div>
+}
+else
+{
+    <MudGrid>
+        <MudItem xs="6" sm="3">
+            <MudPaper Class="pa-4 text-center" Elevation="0" Style="border-radius:12px;">
+                <MudText Typo="Typo.h4" Color="Color.Primary">@_chapitresLus</MudText>
+                <MudText Typo="Typo.caption" Class="mud-text-secondary">Chapitres lus</MudText>
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="6" sm="3">
+            <MudPaper Class="pa-4 text-center" Elevation="0" Style="border-radius:12px;">
+                <MudText Typo="Typo.h4" Color="Color.Secondary">@_livresCommences</MudText>
+                <MudText Typo="Typo.caption" Class="mud-text-secondary">Livres commencés</MudText>
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="6" sm="3">
+            <MudPaper Class="pa-4 text-center" Elevation="0" Style="border-radius:12px;">
+                <MudText Typo="Typo.h4" Color="Color.Success">@_versetsMemorises</MudText>
+                <MudText Typo="Typo.caption" Class="mud-text-secondary">Cartes mémoire</MudText>
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="6" sm="3">
+            <MudPaper Class="pa-4 text-center" Elevation="0" Style="border-radius:12px;">
+                <MudText Typo="Typo.h4" Color="Color.Info">@_streak</MudText>
+                <MudText Typo="Typo.caption" Class="mud-text-secondary">Jours de suite</MudText>
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
+
+    <MudText Typo="Typo.subtitle1" Class="mt-4 mb-2 font-weight-bold">Progression par testament</MudText>
+    <MudPaper Class="pa-4" Elevation="0" Style="border-radius:12px;">
+        <div class="mb-3">
+            <div class="d-flex justify-space-between mb-1">
+                <MudText Typo="Typo.body2">Ancien Testament</MudText>
+                <MudText Typo="Typo.body2">@_atPct %</MudText>
+            </div>
+            <MudProgressLinear Value="@_atPct" Color="Color.Primary" Rounded="true" Size="Size.Medium" />
+        </div>
+        <div>
+            <div class="d-flex justify-space-between mb-1">
+                <MudText Typo="Typo.body2">Nouveau Testament</MudText>
+                <MudText Typo="Typo.body2">@_ntPct %</MudText>
+            </div>
+            <MudProgressLinear Value="@_ntPct" Color="Color.Secondary" Rounded="true" Size="Size.Medium" />
+        </div>
+    </MudPaper>
+
+    <MudText Typo="Typo.subtitle1" Class="mt-4 mb-2 font-weight-bold">Livres les plus lus</MudText>
+    <MudPaper Class="pa-4" Elevation="0" Style="border-radius:12px;">
+        @if (_topLivres.Count == 0)
+        {
+            <MudText Typo="Typo.body2" Class="mud-text-secondary">Aucune donnée pour l'instant. Commence à lire !</MudText>
+        }
+        else
+        {
+            @foreach (var (nom, n) in _topLivres)
+            {
+                <div class="d-flex align-center mb-2">
+                    <MudText Typo="Typo.body2" Style="width:160px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">@nom</MudText>
+                    <MudProgressLinear Value="@((double)n / _maxTop * 100)" Color="Color.Primary" Rounded="true" Size="Size.Small" Class="flex-grow-1 mx-2" />
+                    <MudText Typo="Typo.caption">@n</MudText>
+                </div>
+            }
+        }
+    </MudPaper>
+
+    <MudText Typo="Typo.subtitle1" Class="mt-4 mb-2 font-weight-bold">Plan de lecture (1 an)</MudText>
+    <MudPaper Class="pa-4" Elevation="0" Style="border-radius:12px;">
+        <div class="d-flex align-center justify-space-between mb-2">
+            <MudText Typo="Typo.body2">Jours complétés</MudText>
+            <MudText Typo="Typo.body2" Class="font-weight-bold">@_planJours / 365</MudText>
+        </div>
+        <MudProgressLinear Value="@((double)_planJours / 365 * 100)" Color="Color.Success" Rounded="true" Size="Size.Medium" />
+    </MudPaper>
+}
+
+@code {
+    private bool _chargement = true;
+    private int _chapitresLus;
+    private int _livresCommences;
+    private int _versetsMemorises;
+    private int _streak;
+    private int _atPct;
+    private int _ntPct;
+    private int _planJours;
+    private int _maxTop = 1;
+    private List<(string nom, int n)> _topLivres = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            await Db.InitializeAsync();
+            var progress = await Db.GetAllAsync<ProgressEntry>("progress");
+            var plan = await Db.GetAllAsync<PlanJour>("planProgress");
+            var memo = await MemoService.GetAllAsync();
+
+            // progress entries: {id, slug, chapitre, ...}
+            var byBook = progress.GroupBy(p => p.Slug ?? "").Where(g => !string.IsNullOrEmpty(g.Key))
+                .Select(g => (g.Key, g.Count())).ToList();
+
+            var index = await BibleService.GetIndexAsync();
+            var nameOf = index.ToDictionary(i => i.Slug, i => i.NomLivre);
+
+            _chapitresLus = progress.Select(p => (p.Slug, p.Chapitre)).Distinct().Count();
+            _livresCommences = byBook.Count;
+            _versetsMemorises = memo.Count;
+            _planJours = plan.Count;
+
+            // AT/NT percentages
+            var atSlugs = index.Where(i => i.Testament.StartsWith("Ancien")).Select(i => i.Slug).ToHashSet();
+            var ntSlugs = index.Where(i => i.Testament.StartsWith("Nouveau")).Select(i => i.Slug).ToHashSet();
+            var atTotal = atSlugs.Sum(s => index.First(i => i.Slug == s).NombreChapitres);
+            var ntTotal = ntSlugs.Sum(s => index.First(i => i.Slug == s).NombreChapitres);
+            var atRead = progress.Where(p => atSlugs.Contains(p.Slug ?? "")).Select(p => (p.Slug, p.Chapitre)).Distinct().Count();
+            var ntRead = progress.Where(p => ntSlugs.Contains(p.Slug ?? "")).Select(p => (p.Slug, p.Chapitre)).Distinct().Count();
+            _atPct = atTotal > 0 ? (int)Math.Round(100.0 * atRead / atTotal) : 0;
+            _ntPct = ntTotal > 0 ? (int)Math.Round(100.0 * ntRead / ntTotal) : 0;
+
+            // top books
+            _topLivres = byBook
+                .Select(b => (nameOf.TryGetValue(b.Key, out var n) ? n : b.Key, b.Item2))
+                .OrderByDescending(x => x.Item2).Take(8).ToList();
+            _maxTop = _topLivres.Count > 0 ? _topLivres.Max(x => x.Item2) : 1;
+
+            // streak: consecutive days with progress (approx via planProgress dates if available)
+            _streak = ComputeStreak(progress);
+        }
+        catch (Exception ex) { Console.Error.WriteLine($"[Stats] {ex.Message}"); }
+        finally { _chargement = false; }
+    }
+
+    private int ComputeStreak(List<ProgressEntry> progress)
+    {
+        var days = progress
+            .Where(p => !string.IsNullOrEmpty(p.Date))
+            .Select(p => DateTime.TryParse(p.Date, out var d) ? d.Date : (DateTime?)null)
+            .Where(d => d.HasValue).Select(d => d!.Value)
+            .Distinct().OrderByDescending(d => d).ToList();
+        if (days.Count == 0) return 0;
+        int streak = 1;
+        for (int i = 1; i < days.Count; i++)
+        {
+            if ((days[i - 1] - days[i]).TotalDays == 1) streak++;
+            else break;
+        }
+        // Only count if the most recent day is today or yesterday.
+        if ((DateTime.UtcNow.Date - days[0]).TotalDays > 1) return 0;
+        return streak;
+    }
+
+    // Minimal DTOs matching IndexedDB stored shape.
+    public class ProgressEntry
+    {
+        [System.Text.Json.Serialization.JsonPropertyName("slug")]
+        public string? Slug { get; set; }
+        [System.Text.Json.Serialization.JsonPropertyName("chapitre")]
+        public int Chapitre { get; set; }
+        [System.Text.Json.Serialization.JsonPropertyName("date")]
+        public string? Date { get; set; }
+    }
+    public class PlanJour
+    {
+        public int Jour { get; set; }
+        public bool Termine { get; set; }
+    }
+}

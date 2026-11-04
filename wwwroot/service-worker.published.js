@@ -2,126 +2,104 @@
 // offline support. See https://aka.ms/blazor-offline-considerations
 
 self.importScripts('./service-worker-assets.js');
-self.addEventListener('install', event => event.waitUntil(onInstall(event)));
-self.addEventListener('activate', event => event.waitUntil(onActivate(event)));
-self.addEventListener('fetch', event => event.respondWith(onFetch(event)));
 
-const cacheNamePrefix = 'offline-cache-';
-const cacheName = `${cacheNamePrefix}${self.assetsManifest.version}`;
-const offlineAssetsInclude = [ /\.dll$/, /\.pdb$/, /\.wasm/, /\.html/, /\.js$/, /\.json$/, /\.css$/, /\.woff$/, /\.png$/, /\.jpe?g$/, /\.gif$/, /\.ico$/, /\.blat$/, /\.dat$/ ];
-const offlineAssetsExclude = [ /^service-worker\.js$/ ];
+const SW_VERSION = self.assetsManifest.version;
+const CACHE_PREFIX = 'bibeli-';
+const FRAMEWORK_CACHE = `${CACHE_PREFIX}framework-${SW_VERSION}`;
+const DATA_CACHE = `${CACHE_PREFIX}data-v2`;
+const OFFLINE_URL = '/';
 
-// Replace with your base path if you are hosting on a subfolder. Ensure there is a trailing '/'.
-const base = "/";
-const baseUrl = new URL(base, self.origin);
-const manifestUrlList = self.assetsManifest.assets.map(asset => new URL(asset.url, baseUrl).href);
-
-async function onInstall(event) {
-    console.info('Service worker: Install');
-
-    // Fetch and cache all matching items from the assets manifest
-    const assetsRequests = self.assetsManifest.assets
-        .filter(asset => offlineAssetsInclude.some(pattern => pattern.test(asset.url)))
-        .filter(asset => !offlineAssetsExclude.some(pattern => pattern.test(asset.url)))
-        .map(asset => new Request(asset.url, { integrity: asset.hash, cache: 'no-cache' }));
-    const cache = await caches.open(cacheName);
-    await cache.addAll(assetsRequests);
-
-    // Cache all Bible data for full offline access
-    // Uses individual fetches instead of addAll to avoid:
-    //   - Single-file failure killing the entire batch
-    //   - Browser timeout with 67 URLs / 43 MB
-    const dataCache = await caches.open('bible-data-v1');
-    let cachedCount = 0;
-    let failCount = 0;
-
-    // 1. Cache index.json first (critical, small)
-    try {
-        const idxResp = await fetch('/data/index.json');
-        if (idxResp.ok) {
-            await dataCache.put('/data/index.json', idxResp);
-            cachedCount++;
+self.addEventListener('install', event => {
+    console.info('[SW] Install', SW_VERSION);
+    // Take over immediately instead of waiting for all tabs to close.
+    self.skipWaiting();
+    event.waitUntil((async () => {
+        // Pre-cache only the app shell + framework (NOT the 66 Bible books).
+        const cache = await caches.open(FRAMEWORK_CACHE);
+        const assets = self.assetsManifest.assets
+            .filter(a => /\.(dll|wasm|html|js|css|woff2?|png|svg|ico|webmanifest|json)$/.test(a.url))
+            .filter(a => !a.url.startsWith('data/books/'))
+            .map(a => new Request(a.url, { integrity: a.hash, cache: 'no-cache' }));
+        // addAll in small batches so one failure doesn't kill the install.
+        const BATCH = 8;
+        for (let i = 0; i < assets.length; i += BATCH) {
+            try { await cache.addAll(assets.slice(i, i + BATCH)); }
+            catch (e) { console.warn('[SW] batch failed', e); }
         }
-    } catch (e) {
-        console.warn('Service worker: Could not cache index.json', e);
-        failCount++;
-    }
+        // Cache the verse-of-the-day file.
+        try {
+            const r = await fetch('/data/verset-du-jour.json');
+            if (r.ok) await cache.put('/data/verset-du-jour.json', r.clone());
+        } catch (e) {}
+    })());
+});
 
-    // 2. Parse index to get book list (from network or cache)
-    let books = [];
-    try {
-        const idxResp2 = await dataCache.match('/data/index.json') || await fetch('/data/index.json');
-        books = await (idxResp2 instanceof Response ? idxResp2 : idxResp2).json();
-    } catch (e) {
-        console.warn('Service worker: Could not read book index, skipping book caching', e);
-    }
+self.addEventListener('activate', event => {
+    console.info('[SW] Activate', SW_VERSION);
+    event.waitUntil((async () => {
+        // Claim clients immediately.
+        await self.clients.claim();
+        // Delete obsolete caches.
+        const keys = await caches.keys();
+        await Promise.all(keys
+            .filter(k => k.startsWith(CACHE_PREFIX) && k !== FRAMEWORK_CACHE && k !== DATA_CACHE)
+            .map(k => caches.delete(k)));
+    })());
+});
 
-    // 3. Cache books individually in small batches (5 at a time)
-    //    so a single failure doesn't block everything
-    if (books.length > 0) {
-        const BATCH_SIZE = 5;
-        for (let i = 0; i < books.length; i += BATCH_SIZE) {
-            const batch = books.slice(i, i + BATCH_SIZE);
-            await Promise.all(batch.map(async (book) => {
-                const url = `/data/books/${book.slug}.json`;
-                try {
-                    const resp = await fetch(url);
-                    if (resp.ok) {
-                        await dataCache.put(url, resp);
-                        cachedCount++;
-                    } else {
-                        failCount++;
-                    }
-                } catch (e) {
-                    failCount++;
-                    console.warn(`Service worker: Could not cache ${url}`, e);
-                }
-            }));
-        }
-        console.info(`Service worker: Cached ${cachedCount}/${books.length + 1} Bible files for offline (${failCount} failed)`);
-    }
-}
+self.addEventListener('fetch', event => {
+    if (event.request.method !== 'GET') return;
+    const url = new URL(event.request.url);
+    if (url.origin !== self.location.origin) return;
 
-async function onActivate(event) {
-    console.info('Service worker: Activate');
-
-    // Delete unused caches (framework + data)
-    const cacheKeys = await caches.keys();
-    await Promise.all(cacheKeys
-        .filter(key => (key.startsWith(cacheNamePrefix) && key !== cacheName) || (key.startsWith('bible-data-') && key !== 'bible-data-v1'))
-        .map(key => caches.delete(key)));
-}
-
-async function onFetch(event) {
-    let cachedResponse = null;
-    if (event.request.method === 'GET') {
-        const url = new URL(event.request.url);
-
-        // Bible data: check dedicated data cache first, fall back to network
-        if (url.pathname.startsWith('/data/')) {
-            const dataCache = await caches.open('bible-data-v1');
-            cachedResponse = await dataCache.match(event.request);
-            if (cachedResponse) return cachedResponse;
+    // Bible data: cache-on-read, versioned data cache.
+    if (url.pathname.startsWith('/data/')) {
+        event.respondWith((async () => {
+            const dataCache = await caches.open(DATA_CACHE);
+            const cached = await dataCache.match(event.request);
+            if (cached) return cached;
             try {
                 const response = await fetch(event.request);
-                if (response.ok) {
-                    const cache = await caches.open(cacheName);
-                    cache.put(event.request, response.clone());
-                }
+                if (response.ok) dataCache.put(event.request, response.clone());
                 return response;
             } catch (err) {
-                return new Response('', { status: 503 });
+                return new Response('', { status: 503, statusText: 'Offline' });
             }
-        }
-
-        // For all navigation requests, try to serve index.html from cache
-        const shouldServeIndexHtml = event.request.mode === 'navigate'
-            && !manifestUrlList.some(url => url === event.request.url);
-
-        const request = shouldServeIndexHtml ? 'index.html' : event.request;
-        const cache = await caches.open(cacheName);
-        cachedResponse = await cache.match(request);
+        })());
+        return;
     }
 
-    return cachedResponse || fetch(event.request);
-}
+    // Navigation requests: serve index.html from cache (SPA fallback).
+    if (event.request.mode === 'navigate') {
+        event.respondWith((async () => {
+            const cache = await caches.open(FRAMEWORK_CACHE);
+            const cached = await cache.match('/index.html') || await cache.match('index.html');
+            if (cached) return cached;
+            try { return await fetch(event.request); }
+            catch { return new Response('Offline', { status: 503 }); }
+        })());
+        return;
+    }
+
+    // Other assets: cache-first, then network.
+    event.respondWith((async () => {
+        const cache = await caches.open(FRAMEWORK_CACHE);
+        const cached = await cache.match(event.request);
+        if (cached) return cached;
+        try {
+            const response = await fetch(event.request);
+            if (response.ok) cache.put(event.request, response.clone());
+            return response;
+        } catch (err) {
+            return new Response('', { status: 503 });
+        }
+    })());
+});
+
+// Allow the page to trigger an update.
+self.addEventListener('message', event => {
+    if (event.data === 'SKIP_WAITING') self.skipWaiting();
+    if (event.data === 'CLEAR_CACHE') {
+        caches.keys().then(keys => Promise.all(keys.map(k => caches.delete(k))));
+    }
+});

@@ -1,0 +1,22 @@
+{
+  "themes": [
+    { "nom": "Amour", "icone": "favorite", "versets": ["Jean 3:16", "1 Jean 4:8", "1 Corinthiens 13:4", "Romains 8:38", "Jean 15:13", "1 Jean 4:19"] },
+    { "nom": "Paix", "icone": "self_improvement", "versets": ["Jean 14:27", "Philippiens 4:7", "Esaïe 26:3", "Psaumes 4:9", "Colossiens 3:15", "Jean 16:33"] },
+    { "nom": "Foi", "icone": "auto_awesome", "versets": ["Hébreux 11:1", "Romains 10:17", "Marc 11:24", "Galates 2:20", "Ephésiens 2:8", "Habacuc 2:4"] },
+    { "nom": "Espérance", "icone": "wb_sunny", "versets": ["Romains 15:13", "Jérémie 29:11", "Hébreux 6:19", "Psaumes 42:12", "Romains 5:5", "1 Pierre 1:3"] },
+    { "nom": "Salut", "icone": "shield", "versets": ["Actes des Apôtres 4:12", "Ephésiens 2:8", "Romains 10:9", "Jean 3:16", "Tite 3:5", "Jean 14:6"] },
+    { "nom": "Prière", "icone": "volunteer_activism", "versets": ["Matthieu 6:6", "Philippiens 4:6", "1 Thessaloniciens 5:17", "Marc 11:24", "Jacques 5:16", "Psaumes 145:18"] },
+    { "nom": "Force", "icone": "fitness_center", "versets": ["Esaïe 40:31", "Philippiens 4:13", "Psaumes 46:2", "2 Corinthiens 12:9", "Deutéronome 31:6", "Josué 1:9"] },
+    { "nom": "Sagesse", "icone": "school", "versets": ["Proverbes 9:10", "Jacques 1:5", "Proverbes 3:5", "Colossiens 3:16", "Proverbes 4:7", "1 Rois 3:9"] },
+    { "nom": "Joie", "icone": "sentiment_very_satisfied", "versets": ["Psaumes 16:11", "Néhémie 8:10", "Philippiens 4:4", "Galates 5:22", "Jean 15:11", "Psaumes 30:6"] },
+    { "nom": "Patience", "icone": "hourglass_empty", "versets": ["Galates 6:9", "Romains 12:12", "Jacques 1:3", "Colossiens 3:12", "Psaumes 37:7", "2 Pierre 3:9"] },
+    { "nom": "Grâce", "icone": "card_giftcard", "versets": ["Ephésiens 2:8", "2 Corinthiens 12:9", "Jean 1:16", "Tite 2:11", "Romains 3:24", "Hébreux 4:16"] },
+    { "nom": "Miséricorde", "icone": "favorite_border", "versets": ["Lamentations de Jérémie 3:22", "Psaumes 103:8", "Luc 6:36", "Michée 6:8", "Ephésiens 2:4", "Tite 3:5"] },
+    { "nom": "Vérité", "icone": "verified", "versets": ["Jean 8:32", "Jean 14:6", "Psaumes 119:160", "Ephésiens 4:15", "3 Jean 1:4", "Proverbes 12:19"] },
+    { "nom": "Lumière", "icone": "lightbulb", "versets": ["Matthieu 5:14", "Jean 8:12", "Ephésiens 5:8", "Psaumes 119:105", "1 Jean 1:7", "Esaïe 60:1"] },
+    { "nom": "Vie éternelle", "icone": "all_inclusive", "versets": ["Jean 3:16", "Jean 17:3", "Romains 6:23", "1 Jean 5:11", "Jean 5:24", "Jean 10:28"] },
+    { "nom": "Courage", "icone": "shield", "versets": ["Josué 1:9", "Esaïe 41:10", "2 Timothée 1:7", "Psaumes 27:1", "Deutéronome 31:6", "1 Corinthiens 16:13"] },
+    { "nom": "Humilité", "icone": "person", "versets": ["Philippiens 2:3", "Jacques 4:6", "Michée 6:8", "Proverbes 22:4", "Matthieu 18:4", "1 Pierre 5:6"] },
+    { "nom": "Pardon", "icone": "healing", "versets": ["Ephésiens 4:32", "1 Jean 1:9", "Colossiens 3:13", "Matthieu 6:14", "Psaumes 103:3", "Marc 11:25"] }
+  ]
+}

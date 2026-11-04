@@ -6,7 +6,7 @@ public class IndexedDbService
 {
     private readonly IJSRuntime _js;
     private const string DbName = "BibleAppDB";
-    private const int DbVersion = 2;
+    private const int DbVersion = 3;
     private bool _initialized;
 
     public IndexedDbService(IJSRuntime js)

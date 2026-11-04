@@ -7,6 +7,10 @@ Allow: /
 Allow: /recherche
 Allow: /quiz
 Allow: /carte
+Allow: /concordance
+Allow: /memorisation
+Allow: /statistiques
+Allow: /enfant
 Allow: /livre-chapitres/
 Allow: /lecture/
 Disallow: /parametres

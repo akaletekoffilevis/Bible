@@ -1,0 +1,133 @@
+@page "/concordance"
+@using BibleApp.Models
+@using BibleApp.Services
+@using System.Net.Http.Json
+@inject BibleService BibleService
+@inject NavigationManager Navigation
+@inject HttpClient Http
+
+<Breadcrumb Nodes="@(new List<BreadcrumbNode> {
+    new() { Label = "Accueil", Href = "/", Icon = Icons.Material.Filled.Home },
+    new() { Label = "Concordance" }
+})" />
+
+<MudText Typo="Typo.h6" Class="mb-3 font-weight-bold d-flex align-center">
+    <MudIcon Icon="@Icons.Material.Filled.LibraryBooks" Class="mr-2" /> Concordance thématique
+</MudText>
+
+<MudText Typo="Typo.body2" Class="mb-3 mud-text-secondary">
+    Explore la Bible par thèmes : choisis un sujet pour voir les versets clés.
+</MudText>
+
+@if (_chargement)
+{
+    <div class="d-flex justify-center pa-8"><MudProgressCircular Indeterminate /></div>
+}
+else if (_themeActif == null)
+{
+    <MudGrid>
+        @foreach (var t in _themes)
+        {
+            <MudItem xs="6" sm="4" md="3">
+                <MudPaper Class="pa-4 text-center" Elevation="0" Style="border-radius:12px; cursor:pointer;"
+                          @onclick="@(() => OuvrirTheme(t))">
+                    <span class="material-icons" style="font-size:2.5rem; color:var(--mud-palette-primary);">@t.Icone</span>
+                    <MudText Typo="Typo.body1" Class="font-weight-medium">@t.Nom</MudText>
+                    <MudText Typo="Typo.caption" Class="mud-text-secondary">@t.Versets.Count versets</MudText>
+                </MudPaper>
+            </MudItem>
+        }
+    </MudGrid>
+}
+else
+{
+    <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.ArrowBack"
+               OnClick="@(() => _themeActif = null)" Class="mb-3">Tous les thèmes</MudButton>
+    <MudText Typo="Typo.h6" Class="mb-3 d-flex align-center">
+        <span class="material-icons mr-2" style="color:var(--mud-palette-primary);">@_themeActif.Icone</span>
+        @_themeActif.Nom
+    </MudText>
+
+    @if (_chargementVersets)
+    {
+        <div class="d-flex justify-center pa-8"><MudProgressCircular Indeterminate /></div>
+    }
+    else
+    {
+        @foreach (var v in _versetsTheme)
+        {
+            <MudPaper Class="mb-2 pa-3" Elevation="0" Style="border-radius:10px; cursor:pointer;"
+                      @onclick="@(() => Navigation.NavigateTo($"/lecture/{v.Slug}/{v.Chapitre}/{v.Verset}"))">
+                <MudText Typo="Typo.caption" Class="mud-text-secondary mb-1 font-weight-medium">@v.Reference</MudText>
+                <MudText Typo="Typo.body2" Style="line-height:1.7;">@v.Texte</MudText>
+            </MudPaper>
+        }
+    }
+}
+
+@code {
+    private class Theme { public string Nom { get; set; } = ""; public string Icone { get; set; } = "label"; public List<string> Versets { get; set; } = new(); }
+    private class ThemeVerset { public string Slug { get; set; } = ""; public string Reference { get; set; } = ""; public int Chapitre { get; set; } public int Verset { get; set; } public string Texte { get; set; } = ""; }
+
+    private List<Theme> _themes = new();
+    private Theme? _themeActif;
+    private List<ThemeVerset> _versetsTheme = new();
+    private bool _chargement = true;
+    private bool _chargementVersets;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            // fetch via injected HttpClient (relative to base address)
+            var doc = await Http.GetFromJsonAsync<System.Text.Json.JsonElement>("data/themes.json");
+            foreach (var t in doc.GetProperty("themes").EnumerateArray())
+            {
+                _themes.Add(new Theme
+                {
+                    Nom = t.GetProperty("nom").GetString() ?? "",
+                    Icone = t.GetProperty("icone").GetString() ?? "label",
+                    Versets = t.GetProperty("versets").EnumerateArray().Select(x => x.GetString() ?? "").ToList()
+                });
+            }
+        }
+        catch (Exception ex) { Console.Error.WriteLine($"[Concordance] {ex.Message}"); }
+        finally { _chargement = false; }
+    }
+
+    private async Task OuvrirTheme(Theme t)
+    {
+        _themeActif = t;
+        _chargementVersets = true;
+        _versetsTheme = new();
+        StateHasChanged();
+        foreach (var refStr in t.Versets)
+        {
+            try
+            {
+                var parts = refStr.Split(' ');
+                var versePart = parts[^1];
+                var bookName = string.Join(" ", parts[..^1]);
+                var cv = versePart.Split(':');
+                if (cv.Length != 2) continue;
+                var chap = int.Parse(cv[0]);
+                var ver = int.Parse(cv[1]);
+                var slug = await BibleService.ResolveSlugAsync(bookName);
+                if (slug == null) continue;
+                var v = await BibleService.GetVersetAsync(slug, chap, ver);
+                if (v == null) continue;
+                _versetsTheme.Add(new ThemeVerset
+                {
+                    Slug = slug,
+                    Reference = $"{bookName} {chap}:{ver}",
+                    Chapitre = chap,
+                    Verset = ver,
+                    Texte = v.TextePropre
+                });
+            }
+            catch (Exception ex) { Console.Error.WriteLine($"[Concordance] {ex.Message}"); }
+        }
+        _chargementVersets = false;
+        StateHasChanged();
+    }
+}

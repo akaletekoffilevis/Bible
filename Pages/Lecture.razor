@@ -4,6 +4,7 @@
 @implements IDisposable
 @inject BibleApp.Services.BibleService BibleService
 @inject BibleApp.Services.SearchIndexService SearchIndexService
+@inject BibleApp.Services.MemorisationService MemorisationService
 @inject BibleApp.Services.IndexedDbService IndexedDb
 @inject ISnackbar Snackbar
 @inject IDialogService DialogService
@@ -78,17 +79,18 @@ else
                         else if (_openActionsVerset == vNum)
                         {
                             <span class="verse-actions-popup">
-                                <button @onclick="@(async () => { await AjouterMarquePage(verset); _openActionsVerset = -1; })" title="Marquer">🔖</button>
-                                <button @onclick="@(async () => { await AjouterNote(verset); _openActionsVerset = -1; })" title="Note">📝</button>
-                                <button @onclick="@(() => { BasculerHighlight(verset); _openActionsVerset = -1; })" title="Surligner">🖍️</button>
-                                <button @onclick="@(async () => { await PartagerVerset(verset); _openActionsVerset = -1; })" title="Partager">📋</button>
-                                <button @onclick="@(async () => { await GenererImage(verset); _openActionsVerset = -1; })" title="Image">🖼️</button>
-                                <button @onclick="@(() => _openActionsVerset = -1)" title="Fermer">✕</button>
+                                <button @onclick="@(async () => { await AjouterMarquePage(verset); _openActionsVerset = -1; })" title="Marquer"><span class="material-icons">bookmark_add</span></button>
+                                <button @onclick="@(async () => { await AjouterNote(verset); _openActionsVerset = -1; })" title="Note"><span class="material-icons">edit_note</span></button>
+                                <button @onclick="@(() => { BasculerHighlight(verset); _openActionsVerset = -1; })" title="Surligner"><span class="material-icons">format_paint</span></button>
+                                <button @onclick="@(async () => { await PartagerVerset(verset); _openActionsVerset = -1; })" title="Partager"><span class="material-icons">share</span></button>
+                                <button @onclick="@(async () => { await GenererImage(verset); _openActionsVerset = -1; })" title="Image"><span class="material-icons">image</span></button>
+                                <button @onclick="@(async () => { await AjouterMemorisation(verset); _openActionsVerset = -1; })" title="Memoriser"><span class="material-icons">push_pin</span></button>
+                                <button @onclick="@(() => _openActionsVerset = -1)" title="Fermer"><span class="material-icons">close</span></button>
                             </span>
                         }
                         else
                         {
-                            <button class="verse-actions-btn" @onclick="@(() => _openActionsVerset = vNum)" title="Actions" aria-label="Actions du verset">☰</button>
+                            <button class="verse-actions-btn" @onclick="@(() => _openActionsVerset = vNum)" title="Actions" aria-label="Actions du verset"><span class="material-icons">more_vert</span></button>
                         }
                     </div>
                 </div>
@@ -365,6 +367,26 @@ else
             await JsRuntime.InvokeVoidAsync("bibleImage.generate", texte, reference, url);
         }
         catch (Exception ex) { Console.Error.WriteLine($"[Lecture] Échec génération image: {ex.Message}"); }
+    }
+
+    private async Task AjouterMemorisation(Models.Verset verset)
+    {
+        try
+        {
+            var id = $"{Slug}-{Chapitre}-{verset.Numero}";
+            var carte = new Models.MemorisationCarte
+            {
+                Id = id,
+                Slug = Slug,
+                NomLivre = _livre?.NomLivre ?? Slug,
+                Chapitre = Chapitre,
+                Verset = verset.Numero,
+                Texte = verset.TextePropre
+            };
+            await MemorisationService.AjouterAsync(carte);
+            Snackbar.Add("Verset ajoute a la memorisation", Severity.Success);
+        }
+        catch (Exception ex) { Console.Error.WriteLine($"[Lecture] Échec mémorisation: {ex.Message}"); }
     }
 
     private async Task BasculerPleinEcran()

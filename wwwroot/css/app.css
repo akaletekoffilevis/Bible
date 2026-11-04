@@ -47,12 +47,15 @@ code { color: #c02d76; }
 
 :root {
     --bible-font-size: 18px;
-    --bible-font-family: serif;
-    --bible-line-height: 2;
+    --bible-font-family: "Crimson Pro", Georgia, serif;
+    --bible-line-height: 1.85;
     --skeleton-color: rgba(0,0,0,0.06);
     --scrollbar-thumb: rgba(0,0,0,0.15);
     --verse-shadow: rgba(0,0,0,0.04);
     --verse-hover-bg: var(--mud-palette-table-hover, rgba(0,0,0,0.03));
+    --accent: #c9a227;
+    --radius: 12px;
+    --ease: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .mud-theme-dark {
@@ -211,6 +214,110 @@ body {
     min-width: 32px;
 }
 .verse-actions-btn:hover { background: #f5f5f5; }
+
+/* ---- Accessibility & UX polish ---- */
+*:focus-visible { outline: 2px solid var(--mud-palette-primary, #1e3a8a); outline-offset: 2px; border-radius: 4px; }
+button, a { min-height: 44px; }
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}
+.mud-main-content { animation: fadeIn 0.25s var(--ease, ease-out); }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+
+/* Cards */
+.mud-paper { border-radius: var(--radius, 12px) !important; }
+
+/* Smooth scroll */
+html { scroll-behavior: smooth; }
+
+/* Mobile bottom safe area */
+@supports (padding: env(safe-area-inset-bottom)) {
+    .mud-main-content { padding-bottom: env(safe-area-inset-bottom); }
+}
+
+/* ---- Mobile bottom navigation ---- */
+.mobile-bottom-nav {
+    display: none;
+}
+@media (max-width: 960px) {
+    .mobile-bottom-nav {
+        display: flex;
+        position: fixed;
+        bottom: 0; left: 0; right: 0;
+        z-index: 1300;
+        background: var(--mud-palette-surface, #fff);
+        border-top: 1px solid var(--mud-palette-divider, #e5e7eb);
+        padding: 6px 4px calc(6px + env(safe-area-inset-bottom, 0px));
+        justify-content: space-around;
+        box-shadow: 0 -2px 12px rgba(0,0,0,0.08);
+    }
+    .mbn-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 2px;
+        color: var(--mud-palette-text-secondary, #6b7280);
+        text-decoration: none;
+        font-size: 0.65rem;
+        font-weight: 500;
+        padding: 4px 8px;
+        border: none;
+        background: transparent;
+        cursor: pointer;
+        min-width: 56px;
+        min-height: 44px;
+        border-radius: 8px;
+        transition: color 0.15s, background 0.15s;
+    }
+    .mbn-item .material-icons { font-size: 1.5rem; }
+    .mbn-item:hover, .mbn-item:active { color: var(--mud-palette-primary, #1e3a8a); background: var(--mud-palette-action-default-hover, rgba(0,0,0,0.04)); }
+    /* push content above bottom nav */
+    .mud-main-content { padding-bottom: 72px; }
+    @supports (padding: env(safe-area-inset-bottom)) {
+        .mud-main-content { padding-bottom: calc(72px + env(safe-area-inset-bottom)); }
+    }
+    /* hide the top app bar search/bookmark icons on very small screens to save space */
+    .mud-appbar .mud-icon-button { min-width: 40px; }
+}
+
+/* ---- Responsive typography ---- */
+@media (max-width: 600px) {
+    .mud-typography-h4 { font-size: 1.5rem !important; }
+    .mud-typography-h5 { font-size: 1.25rem !important; }
+    .mud-typography-h6 { font-size: 1.1rem !important; }
+    .verset-texte { font-size: calc(var(--bible-font-size) * 0.95) !important; }
+    .mud-container { padding-left: 12px !important; padding-right: 12px !important; }
+}
+
+/* ---- Touch-friendly targets ---- */
+@media (pointer: coarse) {
+    .mud-button-root, .mud-icon-button { min-height: 44px; min-width: 44px; }
+    .chapitre-card { min-height: 48px; min-width: 48px; }
+    .verse-actions-btn { min-width: 36px; min-height: 36px; }
+}
+
+/* ---- Drawer on mobile: full width ---- */
+@media (max-width: 960px) {
+    .mud-drawer { width: 88vw !important; max-width: 360px; }
+}
+
+/* ---- Reading toolbar sticky ---- */
+.lecture-toolbar {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: var(--mud-palette-background, #faf7f2);
+    padding: 8px 4px;
+    margin: -4px -4px 8px;
+    border-radius: 8px;
+}
+.verse-actions .material-icons,
+.verse-actions-btn .material-icons,
+.verse-actions-popup .material-icons {
+    font-size: 1.15em;
+    vertical-align: middle;
+    line-height: 1;
+}
 
 .verse-actions-popup {
     display: flex;

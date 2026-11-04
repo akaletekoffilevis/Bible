@@ -24,9 +24,31 @@
     <meta property="og:locale" content="fr_FR" />
 
     <!-- Twitter Card -->
-    <meta name="twitter:card" content="summary" />
-    <meta name="twitter:title" content="Bible Louis Segond" />
-    <meta name="twitter:description" content="Lire et étudier la Bible Louis Segond en ligne." />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Bible Louis Segond — Lire et étudier la Bible en ligne" />
+    <meta name="twitter:description" content="Lire la Bible Louis Segond (LSG) en ligne et hors-ligne. Recherche plein texte, audio, marque-pages, notes, quiz, plans de lecture." />
+    <meta name="twitter:image" content="https://bibeli.vercel.app/icon-512.png" />
+
+    <!-- Open Graph étendu -->
+    <meta property="og:url" content="https://bibeli.vercel.app/" />
+    <meta property="og:image" content="https://bibeli.vercel.app/icon-512.png" />
+    <meta property="og:image:width" content="512" />
+    <meta property="og:image:height" content="512" />
+    <meta property="og:site_name" content="Bibeli" />
+
+    <!-- PWA / mobile -->
+    <meta name="theme-color" content="#1e3a8a" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Bible LSG" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="application-name" content="Bible Louis Segond" />
+    <meta name="format-detection" content="telephone=no" />
+
+    <!-- SEO -->
+    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+    <meta name="googlebot" content="index, follow" />
+    <link rel="canonical" href="https://bibeli.vercel.app/" />
 
     <!-- Google tag (gtag.js) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-FWDV79PT44"></script>
@@ -39,7 +61,10 @@
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all';this.onload=null" />
+    <link rel="preload" href="_framework/blazor.webassembly.js" as="script" fetchpriority="high" />
+    <link rel="preload" href="css/app.css" as="style" />
+    <link rel="modulepreload" href="_framework/dotnet.js" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Crimson+Pro:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet" media="print" onload="this.media='all';this.onload=null" />
     <link href="_content/MudBlazor/MudBlazor.min.css" rel="stylesheet" />
     <link rel="stylesheet" href="css/app.css" />
     <link rel="icon" type="image/svg+xml" href="favicon.svg" />
@@ -49,25 +74,43 @@
     <link rel="apple-touch-icon" sizes="512x512" href="icon-512.png" />
     <link rel="apple-touch-icon" sizes="192x192" href="icon-192.png" />
     <meta name="google-site-verification" content="dKMVckGESWBaVzAYgMT9muEyYC-Gc-RaF8QLjMqRT8A" />
-    <link rel="canonical" href="https://bibeli.vercel.app/" />
     <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.vercel.app https://translate.googleapis.com https://translate.google.com; img-src 'self' data: https://*.tile.openstreetmap.org; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://unpkg.com; font-src 'self' https://fonts.gstatic.com; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://unpkg.com https://translate.google.com https://*.googleapis.com https://www.googletagmanager.com; connect-src 'self' https://*.vercel.app https://www.google-analytics.com; frame-src https://translate.google.com;" />
 
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
-      "@type": "WebApplication",
-      "name": "Bible Louis Segond",
-      "url": "https://bibeli.vercel.app/",
-      "description": "Lire la Bible Louis Segond (LSG) en ligne et hors-ligne. Recherche plein texte, audio, marque-pages, notes, quiz biblique, et carte des lieux.",
-      "applicationCategory": "Religion",
-      "operatingSystem": "Web",
-      "offers": {"@type": "Offer", "price": "0", "priceCurrency": "EUR"},
-      "about": {
-        "@type": "Book",
-        "name": "La Bible",
-        "translator": "Louis Segond",
-        "inLanguage": "fr"
-      }
+      "@graph": [
+        {
+          "@type": "WebSite",
+          "@id": "https://bibeli.vercel.app/#website",
+          "url": "https://bibeli.vercel.app/",
+          "name": "Bible Louis Segond",
+          "description": "Lire la Bible Louis Segond (LSG) en ligne et hors-ligne. Recherche plein texte, audio, marque-pages, notes, quiz, plans de lecture.",
+          "inLanguage": "fr-FR",
+          "potentialAction": {
+            "@type": "SearchAction",
+            "target": "https://bibeli.vercel.app/recherche?q={search_term_string}",
+            "query-input": "required name=search_term_string"
+          }
+        },
+        {
+          "@type": "WebApplication",
+          "@id": "https://bibeli.vercel.app/#app",
+          "name": "Bible Louis Segond",
+          "url": "https://bibeli.vercel.app/",
+          "description": "Lire et étudier la Bible Louis Segond en ligne. Application PWA gratuite avec recherche, audio TTS, marque-pages, notes, surlignage, quiz et plans de lecture.",
+          "applicationCategory": "Religion",
+          "operatingSystem": "Web, Android, iOS",
+          "offers": { "@type": "Offer", "price": "0", "priceCurrency": "EUR" },
+          "inLanguage": "fr",
+          "about": {
+            "@type": "Book",
+            "name": "La Sainte Bible",
+            "translator": "Louis Segond",
+            "inLanguage": "fr"
+          }
+        }
+      ]
     }
     </script>
 
@@ -182,56 +225,30 @@
             var pct = document.getElementById('loader-percent');
             var text = document.getElementById('loader-text');
             var subtitle = document.getElementById('loader-subtitle');
-            var steps = [
-                [3, "Préparation..."],
-                [8, "Initialisation..."],
-                [15, "Chargement du noyau..."],
-                [22, "Vérification du cache..."],
-                [30, "Modules principaux..."],
-                [38, "Composants d'interface..."],
-                [47, "Téléchargement des ressources..."],
-                [55, "Optimisation..."],
-                [62, "Configuration du thème..."],
-                [70, "Préparation de la Bible..."],
-                [77, "Indexation des textes..."],
-                [83, "Configuration de l'interface..."],
-                [89, "Finalisation..."],
-                [94, "Presque prêt..."],
-                [98, "Dernière vérification..."],
-                [100, "Lancement..."]
-            ];
-            var i = 0;
-            (function next() {
-                if (window._loaderDone || i >= steps.length) return;
-                fill.style.width = steps[i][0] + '%';
-                if (pct) pct.textContent = steps[i][0] + '%';
-                text.textContent = steps[i][1];
-                if (steps[i][0] >= 100) subtitle.textContent = 'Prêt ✓';
-                i++;
-                var delay = i < 5 ? 600 + Math.random() * 400 :
-                            i < 10 ? 900 + Math.random() * 600 :
-                            i < 14 ? 1200 + Math.random() * 800 :
-                                     1800 + Math.random() * 1200;
-                setTimeout(next, delay);
-            })();
 
             window.hideLoader = function() {
                 if (window._loaderDone) return;
                 window._loaderDone = true;
                 var el = document.getElementById('bible-loader');
                 if (el) {
-                    var f = document.getElementById('loader-progress-fill');
-                    var t = document.getElementById('loader-text');
-                    var p = document.getElementById('loader-percent');
-                    if (f) f.style.width = '100%';
-                    if (p) p.textContent = '100%';
-                    if (t) t.textContent = 'Bienvenue !';
+                    if (fill) fill.style.width = '100%';
+                    if (pct) pct.textContent = '100%';
+                    if (text) text.textContent = 'Bienvenue !';
+                    if (subtitle) subtitle.textContent = 'Pret';
                     el.classList.add('hidden');
                     setTimeout(function() { el.style.display = 'none'; }, 400);
                 }
             };
 
-            // MutationObserver: dès que Blazor remplit #app → on cache le loader
+            var messages = ["Preparation...", "Chargement du noyau...", "Modules...", "Presque pret..."];
+            var mi = 0;
+            (function tick() {
+                if (window._loaderDone) return;
+                if (text) text.textContent = messages[mi % messages.length];
+                mi++;
+                setTimeout(tick, 1800);
+            })();
+
             var target = document.getElementById('app');
             if (target) {
                 var observer = new MutationObserver(function() {
@@ -241,30 +258,56 @@
                     }
                 });
                 observer.observe(target, { childList: true, subtree: true });
-                // Fallback: si Blazor ne charge pas en 45s, afficher une erreur
-                setTimeout(function() {
-                    observer.disconnect();
-                    if (!window._loaderDone) {
-                        window._loaderDone = true;
-                        var el = document.getElementById('bible-loader');
-                        if (el) {
-                            el.innerHTML =
-                                '<div class="loader-container">' +
-                                '<div style="font-size:3rem;margin-bottom:1rem;">⚠️</div>' +
-                                '<div class="loader-title" style="margin-bottom:0.5rem;">Problème de chargement</div>' +
-                                '<div class="loader-subtitle" style="margin-bottom:1.5rem;line-height:1.6;">' +
-                                'L\'application n\'a pas pu se charger complètement.<br/>' +
-                                'Vérifie ta connexion internet ou réessaie.' +
-                                '</div>' +
-                                '<button onclick="location.reload()" style="background:#ffd54f;color:#1a237e;border:none;padding:12px 32px;border-radius:8px;font-size:1rem;font-weight:700;cursor:pointer;">Réessayer</button>' +
-                                '<div style="margin-top:1rem;font-size:0.8rem;opacity:0.6;">' +
-                                'Si le problème persiste, contacte-nous sur WhatsApp +227 91 53 52 20' +
-                                '</div>' +
-                                '</div>';
-                        }
-                    }
-                }, 45000);
             }
+
+            window.bibleRecover = function() {
+                try { localStorage.clear(); } catch (e) {}
+                if (navigator.serviceWorker) {
+                    navigator.serviceWorker.getRegistrations().then(function(regs) {
+                        return Promise.all(regs.map(function(r) { return r.unregister(); }));
+                    }).then(function() { location.reload(); })
+                      .catch(function() { location.reload(); });
+                } else {
+                    location.reload();
+                }
+            };
+
+            try {
+                var lastVer = localStorage.getItem('bibeli-sw-version');
+                if (navigator.serviceWorker && navigator.serviceWorker.controller) {
+                    fetch('/service-worker-assets.js', { cache: 'no-store' })
+                        .then(function(r) { return r.text(); })
+                        .then(function(t) {
+                            var m = t.match(/Manifest version: ([^\s*]+)/);
+                            var ver = m ? m[1] : null;
+                            if (ver && lastVer && ver !== lastVer) {
+                                if (!sessionStorage.getItem('bibeli-reloaded')) {
+                                    sessionStorage.setItem('bibeli-reloaded', '1');
+                                    window.bibleRecover();
+                                }
+                            }
+                            if (ver) localStorage.setItem('bibeli-sw-version', ver);
+                        }).catch(function() {});
+                }
+            } catch (e) {}
+
+            setTimeout(function() {
+                if (window._loaderDone) return;
+                window._loaderDone = true;
+                var el = document.getElementById('bible-loader');
+                if (el) {
+                    el.innerHTML =
+                        '<div class="loader-container">' +
+                        '<div style="font-size:3rem;margin-bottom:1rem;">&#9888;</div>' +
+                        '<div class="loader-title" style="margin-bottom:0.5rem;">Probleme de chargement</div>' +
+                        '<div class="loader-subtitle" style="margin-bottom:1.5rem;line-height:1.6;">' +
+                        "L'application n'a pas pu se charger.<br/>Cela arrive souvent apres une mise a jour." +
+                        '</div>' +
+                        '<button onclick="bibleRecover()" style="background:#ffd54f;color:#1a237e;border:none;padding:12px 32px;border-radius:8px;font-size:1rem;font-weight:700;cursor:pointer;margin-right:8px;">Reessayer</button>' +
+                        '<button onclick="location.reload()" style="background:transparent;color:#fff;border:1px solid rgba(255,255,255,0.4);padding:12px 32px;border-radius:8px;font-size:1rem;font-weight:700;cursor:pointer;">Recharger</button>' +
+                        '</div>';
+                }
+            }, 20000);
         })();
     </script>
 

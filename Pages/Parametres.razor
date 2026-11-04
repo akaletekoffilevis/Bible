@@ -370,12 +370,9 @@
 
     private async Task EffacerDonnees()
     {
-        var confirm = await DialogService.ShowMessageBox(
-            "Effacer les données ?",
-            "Marque-pages, notes, progression et préférences seront supprimés. Cette action est irréversible.",
-            yesText: "Oui, effacer",
-            cancelText: "Annuler");
-        if (confirm != true) return;
+        var confirm = await JsRuntime.InvokeAsync<bool>("confirm",
+            "Effacer les données ? Marque-pages, notes, progression et préférences seront supprimés. Cette action est irréversible.");
+        if (!confirm) return;
 
         try
         {

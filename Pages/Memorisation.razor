@@ -1,0 +1,183 @@
+@page "/memorisation"
+@using BibleApp.Models
+@using BibleApp.Services
+@inject MemorisationService MemoService
+@inject BibleService BibleService
+@inject ISnackbar Snackbar
+@inject NavigationManager Navigation
+@implements IDisposable
+
+<Breadcrumb Nodes="@(new List<BreadcrumbNode> {
+    new() { Label = "Accueil", Href = "/", Icon = Icons.Material.Filled.Home },
+    new() { Label = "Mémorisation" }
+})" />
+
+<MudText Typo="Typo.h6" Class="mb-3 font-weight-bold d-flex align-center">
+    <MudIcon Icon="@Icons.Material.Filled.Style" Class="mr-2" /> Mémorisation de versets
+</MudText>
+
+@if (_reviewMode)
+{
+    @if (_due.Count == 0)
+    {
+        <MudPaper Class="pa-8 text-center" Elevation="0" Style="border-radius:12px;">
+            <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Size="Size.Large" Color="Color.Success" Class="mb-3" />
+            <MudText Typo="Typo.h6">Tout est a jour !</MudText>
+            <MudText Typo="Typo.body2" Class="mud-text-secondary mt-2">Aucune carte à réviser aujourd'hui.</MudText>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="mt-4" OnClick="@(() => _reviewMode = false)">Retour à la liste</MudButton>
+        </MudPaper>
+    }
+    else
+    {
+        var carte = _due[_reviewIndex];
+        <MudPaper Class="pa-6 text-center" Elevation="1" Style="border-radius:16px; min-height:260px; display:flex; flex-direction:column; justify-content:center;">
+            <MudText Typo="Typo.caption" Class="mud-text-secondary mb-2">@carte.Reference</MudText>
+            @if (!_revealed)
+            {
+                <MudText Typo="Typo.h6" Class="mb-4">Essaie de te souvenir du verset…</MudText>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Large" OnClick="@Reveler">Révéler</MudButton>
+            }
+            else
+            {
+                <MudText Typo="Typo.body1" Style="font-family:'Crimson Pro',serif; font-size:1.25rem; line-height:1.7; font-style:italic;">
+                    « @carte.Texte »
+                </MudText>
+                <MudText Typo="Typo.caption" Class="mt-3 mud-text-secondary">@carte.Reference (LSG)</MudText>
+                <div class="d-flex justify-center mt-4" style="gap:8px; flex-wrap:wrap;">
+                    <MudButton Variant="Variant.Outlined" Color="Color.Error" OnClick="@(() => Noter(0))">Oublié (0)</MudButton>
+                    <MudButton Variant="Variant.Outlined" Color="Color.Warning" OnClick="@(() => Noter(2))">Difficile (2)</MudButton>
+                    <MudButton Variant="Variant.Outlined" Color="Color.Info" OnClick="@(() => Noter(3))">Moyen (3)</MudButton>
+                    <MudButton Variant="Variant.Outlined" Color="Color.Success" OnClick="@(() => Noter(4))">Bien (4)</MudButton>
+                    <MudButton Variant="Variant.Filled" Color="Color.Success" OnClick="@(() => Noter(5))">Facile (5)</MudButton>
+                </div>
+            }
+        </MudPaper>
+        <MudText Typo="Typo.caption" Class="mt-2 mud-text-secondary text-center">
+            Carte @(_reviewIndex + 1) / @_due.Count — @_cartes.Count cartes au total
+        </MudText>
+    }
+}
+else
+{
+    <div class="d-flex align-center justify-space-between mb-3">
+        <MudText Typo="Typo.body2" Class="mud-text-secondary">
+            @_cartes.Count carte@(_cartes.Count > 1 ? "s" : "") — @_dueCount à réviser aujourd'hui
+        </MudText>
+        <div style="display:flex; gap:8px;">
+            @if (_dueCount > 0)
+            {
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.PlayArrow" OnClick="@DemarrerRevision">
+                    Réviser (@_dueCount)
+                </MudButton>
+            }
+            <MudButton Variant="Variant.Outlined" Color="Color.Secondary" StartIcon="@Icons.Material.Filled.Add" OnClick="@AjouterManuel">
+                Ajouter
+            </MudButton>
+        </div>
+    </div>
+
+    @if (_chargement)
+    {
+        <div class="d-flex justify-center pa-8"><MudProgressCircular Indeterminate /></div>
+    }
+    else if (_cartes.Count == 0)
+    {
+        <MudPaper Class="pa-8 text-center" Elevation="0" Style="border-radius:12px;">
+            <MudIcon Icon="@Icons.Material.Filled.Style" Size="Size.Large" Class="mud-text-secondary mb-3" />
+            <MudText Typo="Typo.body1" Class="mb-2">Aucune carte pour l'instant</MudText>
+            <MudText Typo="Typo.body2" Class="mud-text-secondary">
+                Depuis la lecture d'un verset, clique sur l'icone epingle pour l'ajouter a tes cartes.
+            </MudText>
+        </MudPaper>
+    }
+    else
+    {
+        @foreach (var c in _cartes.OrderBy(x => x.ProchaineRevision ?? DateTime.MinValue))
+        {
+            <MudPaper Class="mb-2 pa-3" Elevation="0" Style="border-radius:10px; cursor:pointer;" @onclick="@(() => Navigation.NavigateTo($"/lecture/{c.Slug}/{c.Chapitre}/{c.Verset}"))">
+                <div class="d-flex align-center justify-space-between">
+                    <div style="flex:1;">
+                        <MudText Typo="Typo.caption" Class="mud-text-secondary">@c.Reference</MudText>
+                        <MudText Typo="Typo.body2" Style="line-height:1.6;">@c.Texte</MudText>
+                    </div>
+                    <div class="d-flex flex-column align-end ml-3">
+                        @if (c.EstDue)
+                        {
+                            <MudChip T="string" Size="Size.Small" Color="Color.Warning">À réviser</MudChip>
+                        }
+                        else
+                        {
+                            <MudChip T="string" Size="Size.Small" Color="Color.Default">
+                                J+@((c.ProchaineRevision!.Value - DateTime.UtcNow).Days)
+                            </MudChip>
+                        }
+                        <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error"
+                                       OnClick="@(() => Supprimer(c.Id))" />
+                    </div>
+                </div>
+            </MudPaper>
+        }
+    }
+}
+
+@code {
+    private List<MemorisationCarte> _cartes = new();
+    private List<MemorisationCarte> _due = new();
+    private int _reviewIndex;
+    private bool _revealed;
+    private bool _reviewMode;
+    private bool _chargement = true;
+    private int _dueCount;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await ChargerAsync();
+    }
+
+    private async Task ChargerAsync()
+    {
+        _chargement = true;
+        _cartes = await MemoService.GetAllAsync();
+        _dueCount = _cartes.Count(c => c.EstDue);
+        _chargement = false;
+    }
+
+    private void DemarrerRevision()
+    {
+        _due = _cartes.Where(c => c.EstDue).OrderBy(c => c.ProchaineRevision).ToList();
+        _reviewIndex = 0;
+        _revealed = false;
+        _reviewMode = true;
+    }
+
+    private void Reveler() => _revealed = true;
+
+    private async Task Noter(int q)
+    {
+        var carte = _due[_reviewIndex];
+        await MemoService.ReviserAsync(carte, q);
+        _revealed = false;
+        _reviewIndex++;
+        if (_reviewIndex >= _due.Count)
+        {
+            _reviewMode = false;
+            await ChargerAsync();
+            Snackbar.Add("Revision terminee !", Severity.Success);
+        }
+    }
+
+    private async Task Supprimer(string id)
+    {
+        await MemoService.SupprimerAsync(id);
+        await ChargerAsync();
+        Snackbar.Add("Carte supprimée", Severity.Info);
+    }
+
+    private async Task AjouterManuel()
+    {
+        // Navigate to home to pick a verse; for now, prompt via snackbar
+        Snackbar.Add("Ouvre un verset et clique sur l'icone epingle pour l'ajouter.", Severity.Info);
+    }
+
+    public void Dispose() { }
+}

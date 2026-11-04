@@ -14,6 +14,7 @@ builder.Services.AddScoped<SearchIndexService>();
 builder.Services.AddScoped<IndexedDbService>();
 builder.Services.AddSingleton<ThemeService>();
 builder.Services.AddScoped<ReadingPlanService>();
+builder.Services.AddScoped<MemorisationService>();
 builder.Services.AddMudServices();
 
 await builder.Build().RunAsync();

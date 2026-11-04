@@ -127,7 +127,7 @@ else if (_versetDuJour != null)
         var v = _versetDuJour.Value;
         var refStr = $"{v.Livre.NomLivre} {v.Chapitre.Numero}:{v.Verset.Numero}";
         var siteUrl = "https://bibeli.vercel.app";
-        var text = $"✨ Verset Du Jour ✨\n\n\"{v.Verset.TextePropre}\" — {refStr} (LSG)\n\n📖 {siteUrl}";
+        var text = $"Verset Du Jour\n\n\"{v.Verset.TextePropre}\" — {refStr} (LSG)\n\n{siteUrl}";
         try { await Js.InvokeVoidAsync("bibleUtils.shareOrCopy", text); }
         catch (Exception ex) { Console.Error.WriteLine($"[Index] Échec partage texte: {ex.Message}"); }
     }

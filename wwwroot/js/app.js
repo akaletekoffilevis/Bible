@@ -21,7 +21,7 @@ window.bibleDb = {
                 };
                 request.onupgradeneeded = function(event) {
                     var db = event.target.result;
-                    ['bookmarks', 'notes', 'highlights', 'history', 'progress', 'planProgress', 'books'].forEach(function(store) {
+                    ['bookmarks', 'notes', 'highlights', 'history', 'progress', 'planProgress', 'books', 'memorisation', 'stats', 'themes'].forEach(function(store) {
                         if (!db.objectStoreNames.contains(store)) {
                             db.createObjectStore(store, { keyPath: 'id' });
                         }
@@ -572,7 +572,7 @@ window.bibleImage = {
             ctx.shadowOffsetY = 1;
             ctx.font = 'bold 20px ' + titleFont;
             ctx.fillStyle = palette.accent;
-            ctx.fillText('✨ ' + title + ' ✨', 300, startY);
+            ctx.fillText(title, 300, startY);
             ctx.shadowColor = 'transparent';
             ctx.shadowBlur = 0;
             ctx.fillStyle = palette.accent + '40';
@@ -630,7 +630,7 @@ window.bibleImage = {
 
         ctx.font = '11px sans-serif';
         ctx.fillStyle = palette.text + '70';
-        ctx.fillText('📖 ' + siteUrl, 300, canvasH - 16);
+        ctx.fillText(siteUrl, 300, canvasH - 16);
 
         return canvas;
     },
@@ -653,7 +653,7 @@ window.bibleImage = {
     share: function (texte, reference, url) {
         var self = this;
         var siteUrl = url || 'https://bibeli.vercel.app';
-        var shareText = '"' + texte + '" — ' + reference + ' (LSG)\n\n📖 ' + siteUrl;
+        var shareText = '"' + texte + '" — ' + reference + ' (LSG)\n\n' + siteUrl;
 
         // 1. Try text-only share first (works on all mobile browsers)
         if (navigator.share) {
@@ -717,7 +717,7 @@ window.bibleImage = {
     shareVersetDuJour: function (texte, reference, url) {
         var self = this;
         var siteUrl = url || 'https://bibeli.vercel.app';
-        var shareText = '✨ Verset Du Jour ✨\n\n"' + texte + '" — ' + reference + ' (LSG)\n\n📖 ' + siteUrl;
+        var shareText = 'Verset Du Jour\n\n"' + texte + '" — ' + reference + ' (LSG)\n\n' + siteUrl;
 
         // 1. Try text-only share first (works on all mobile browsers)
         if (navigator.share) {

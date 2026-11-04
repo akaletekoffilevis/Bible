@@ -103,4 +103,24 @@
   <url><loc>https://bibeli.vercel.app/lecture/3-jean/1</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
   <url><loc>https://bibeli.vercel.app/lecture/jude/1</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
   <url><loc>https://bibeli.vercel.app/lecture/apocalypse/1</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url>
+    <loc>https://bibeli.vercel.app/concordance</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://bibeli.vercel.app/memorisation</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://bibeli.vercel.app/statistiques</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://bibeli.vercel.app/enfant</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
 </urlset>

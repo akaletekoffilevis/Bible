@@ -40,6 +40,30 @@
             @Body
         </MudContainer>
     </MudMainContent>
+
+    <!-- Bottom navigation (mobile only) -->
+    <nav class="mobile-bottom-nav" aria-label="Navigation mobile">
+        <a href="/" class="mbn-item">
+            <span class="material-icons">home</span>
+            <span>Accueil</span>
+        </a>
+        <a href="/recherche" class="mbn-item">
+            <span class="material-icons">search</span>
+            <span>Recherche</span>
+        </a>
+        <a href="/memorisation" class="mbn-item">
+            <span class="material-icons">style</span>
+            <span>Memoriser</span>
+        </a>
+        <a href="/concordance" class="mbn-item">
+            <span class="material-icons">library_books</span>
+            <span>Themes</span>
+        </a>
+        <button class="mbn-item" @onclick="DrawerToggle">
+            <span class="material-icons">menu</span>
+            <span>Menu</span>
+        </button>
+    </nav>
 </MudLayout>
 
 @if (_showConsent)
@@ -66,21 +90,28 @@
     {
         PaletteLight = new PaletteLight
         {
-            Primary = "#1a237e",
-            Secondary = "#3949ab",
-            AppbarBackground = "#1a237e",
+            Primary = "#1e3a8a",
+            Secondary = "#c9a227",
+            AppbarBackground = "#1e3a8a",
             Surface = "#ffffff",
-            Background = "#f5f5f5"
+            Background = "#faf7f2",
+            TextPrimary = "#1f2937",
+            TextSecondary = "#4b5563",
+            DrawerBackground = "#ffffff",
+            DrawerText = "#1f2937"
         },
         PaletteDark = new PaletteDark
         {
-            Primary = "#7986cb",
-            Secondary = "#9fa8da",
-            AppbarBackground = "#121212",
-            Surface = "#1e1e1e",
-            Background = "#121212",
-            Dark = "#2d2d2d",
-            DrawerBackground = "#1e1e1e"
+            Primary = "#93c5fd",
+            Secondary = "#fbbf24",
+            AppbarBackground = "#0f1729",
+            Surface = "#1a2236",
+            Background = "#0f1729",
+            TextPrimary = "#e5e7eb",
+            TextSecondary = "#9ca3af",
+            Dark = "#1a2236",
+            DrawerBackground = "#1a2236",
+            DrawerText = "#e5e7eb"
         }
     };
 
