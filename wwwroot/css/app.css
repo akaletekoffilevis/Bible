@@ -52,10 +52,12 @@ code { color: #c02d76; }
     --skeleton-color: rgba(0,0,0,0.06);
     --scrollbar-thumb: rgba(0,0,0,0.15);
     --verse-shadow: rgba(0,0,0,0.04);
-    --verse-hover-bg: var(--mud-palette-table-hover, rgba(0,0,0,0.03));
-    --accent: #c9a227;
-    --radius: 12px;
+    --verse-hover-bg: rgba(37, 99, 235, 0.04);
+    --accent: #2563eb;
+    --radius: 10px;
     --ease: cubic-bezier(0.22, 1, 0.36, 1);
+    --surface: #ffffff;
+    --bg: #f1f5f9;
 }
 
 .mud-theme-dark {
@@ -166,8 +168,7 @@ body {
 
 .verset-card:hover {
     background-color: var(--verse-hover-bg);
-    border-color: var(--mud-palette-primary, #1a237e)20;
-    box-shadow: 0 2px 8px var(--verse-shadow);
+    border-color: var(--mud-palette-primary, #2563eb)30;
 }
 
 .verset-card-body {

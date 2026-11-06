@@ -11,21 +11,20 @@
 <MudThemeProvider Theme="_theme" IsDarkMode="ThemeService.IsDarkMode" @key="ThemeService.IsDarkMode" />
 <MudDialogProvider />
 <MudSnackbarProvider />
+<MudPopoverProvider />
 
     <MudLayout>
-    <MudAppBar>
-        <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" OnClick="@((e) => DrawerToggle())" Size="Size.Medium" />
+    <MudAppBar Elevation="0" Style="border-bottom:1px solid var(--mud-palette-divider); backdrop-filter:blur(8px);">
+        <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Default" OnClick="@((e) => DrawerToggle())" Size="Size.Medium" />
         @if (_showBackButton)
         {
-            <MudIconButton Icon="@Icons.Material.Filled.ArrowBack" Color="Color.Inherit" OnClick="@(() => Navigation.NavigateTo(_backUrl))" Class="mr-1" Size="Size.Medium" />
+            <MudIconButton Icon="@Icons.Material.Filled.ArrowBack" Color="Color.Default" OnClick="@(() => Navigation.NavigateTo(_backUrl))" Size="Size.Medium" />
         }
-        <MudText Typo="Typo.h6" Class="ml-2" Style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width: 50vw;">@_pageTitle</MudText>
+        <MudText Typo="Typo.subtitle1" Class="ml-2 font-weight-bold" Style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width: 60vw;">@_pageTitle</MudText>
         <MudSpacer />
-        <MudIconButton Icon="@Icons.Material.Filled.NearMe" Color="Color.Inherit" href="/reference" Size="Size.Medium" title="Navigation rapide" />
-        <MudIconButton Icon="@Icons.Material.Filled.Search" Color="Color.Inherit" href="/recherche" Size="Size.Medium" />
-        <MudIconButton Icon="@Icons.Material.Filled.Bookmark" Color="Color.Inherit" href="/favoris" Size="Size.Medium" />
-        <MudIconButton Icon="@Icons.Material.Filled.DarkMode" Color="Color.Inherit" OnClick="@(() => ThemeService.Toggle())" Size="Size.Medium" />
-        <MudIconButton Icon="@Icons.Material.Filled.Settings" Color="Color.Inherit" href="/parametres" Size="Size.Medium" />
+        <MudIconButton Icon="@Icons.Material.Filled.Search" Color="Color.Default" href="/recherche" Size="Size.Medium" />
+        <MudIconButton Icon="@Icons.Material.Filled.BookmarkBorder" Color="Color.Default" href="/favoris" Size="Size.Medium" />
+        <MudIconButton Icon="@Icons.Material.Filled.DarkMode" Color="Color.Default" OnClick="@(() => ThemeService.Toggle())" Size="Size.Medium" />
     </MudAppBar>
 
     <MudDrawer Open="_drawerOpen" OpenChanged="OnDrawerOpenChanged" Variant="_drawerVariant" Width="360px" ClipMode="@(_drawerVariant == DrawerVariant.Temporary ? DrawerClipMode.Never : DrawerClipMode.Always)">
@@ -90,28 +89,31 @@
     {
         PaletteLight = new PaletteLight
         {
-            Primary = "#1e3a8a",
-            Secondary = "#c9a227",
-            AppbarBackground = "#1e3a8a",
+            Primary = "#2563eb",
+            Secondary = "#0ea5e9",
+            AppbarBackground = "#ffffff",
             Surface = "#ffffff",
-            Background = "#faf7f2",
-            TextPrimary = "#1f2937",
-            TextSecondary = "#4b5563",
+            Background = "#f1f5f9",
+            TextPrimary = "#0f172a",
+            TextSecondary = "#475569",
             DrawerBackground = "#ffffff",
-            DrawerText = "#1f2937"
+            DrawerText = "#0f172a",
+            Divider = "#e2e8f0",
+            ActionDefault = "#475569"
         },
         PaletteDark = new PaletteDark
         {
-            Primary = "#93c5fd",
-            Secondary = "#fbbf24",
-            AppbarBackground = "#0f1729",
-            Surface = "#1a2236",
-            Background = "#0f1729",
-            TextPrimary = "#e5e7eb",
-            TextSecondary = "#9ca3af",
-            Dark = "#1a2236",
-            DrawerBackground = "#1a2236",
-            DrawerText = "#e5e7eb"
+            Primary = "#60a5fa",
+            Secondary = "#38bdf8",
+            AppbarBackground = "#0f172a",
+            Surface = "#1e293b",
+            Background = "#0b1120",
+            TextPrimary = "#f1f5f9",
+            TextSecondary = "#94a3b8",
+            Dark = "#1e293b",
+            DrawerBackground = "#0f172a",
+            DrawerText = "#f1f5f9",
+            Divider = "#1e293b"
         }
     };
 
