@@ -2,6 +2,7 @@
 @using BibleApp.Models
 @using BibleApp.Services
 @inject SearchIndexService SearchIndex
+@inject BibleService BibleService
 @inject NavigationManager Navigation
 @inject ISnackbar Snackbar
 @implements IDisposable
@@ -147,6 +148,8 @@ else
             {
                 _error = null;
                 _results = SearchIndex.Rechercher(_query);
+                // Load missing verse texts (chapter-level, small) in background
+                _ = ChargerTextesManquantsAsync(_results);
             }
         }
         catch (OperationCanceledException) { }
@@ -156,6 +159,28 @@ else
             _results.Clear();
             Console.Error.WriteLine($"[Recherche] Échec recherche: {ex.Message}");
         }
+    }
+
+    private async Task ChargerTextesManquantsAsync(List<SearchResult> results)
+    {
+        var missing = results.Where(r => string.IsNullOrEmpty(r.Texte)).ToList();
+        if (missing.Count == 0) return;
+        var byChap = missing.GroupBy(r => (r.Slug, r.Chapitre));
+        foreach (var g in byChap)
+        {
+            try
+            {
+                var chap = await BibleService.GetChapitreAsync(g.Key.Slug, g.Key.Chapitre);
+                if (chap == null) continue;
+                foreach (var r in g)
+                {
+                    var v = chap.ContenuVersets.FirstOrDefault(x => x.Numero == r.Verset);
+                    if (v != null) r.Texte = v.TextePropre;
+                }
+            }
+            catch { }
+        }
+        await InvokeAsync(StateHasChanged);
     }
 
     private async Task Reessayer()

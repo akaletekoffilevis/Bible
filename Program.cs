@@ -10,7 +10,8 @@ builder.RootComponents.Add<HeadOutlet>("head::after");
 
 builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
 builder.Services.AddScoped<BibleService>();
-builder.Services.AddScoped<SearchIndexService>();
+builder.Services.AddScoped<SearchIndexService>(sp =>
+    new SearchIndexService(sp.GetRequiredService<BibleService>(), sp.GetRequiredService<HttpClient>()));
 builder.Services.AddScoped<IndexedDbService>();
 builder.Services.AddSingleton<ThemeService>();
 builder.Services.AddScoped<ReadingPlanService>();

@@ -79,18 +79,18 @@ else
                         else if (_openActionsVerset == vNum)
                         {
                             <span class="verse-actions-popup">
-                                <button @onclick="@(async () => { await AjouterMarquePage(verset); _openActionsVerset = -1; })" title="Marquer"><span class="material-icons">bookmark_add</span></button>
-                                <button @onclick="@(async () => { await AjouterNote(verset); _openActionsVerset = -1; })" title="Note"><span class="material-icons">edit_note</span></button>
-                                <button @onclick="@(() => { BasculerHighlight(verset); _openActionsVerset = -1; })" title="Surligner"><span class="material-icons">format_paint</span></button>
-                                <button @onclick="@(async () => { await PartagerVerset(verset); _openActionsVerset = -1; })" title="Partager"><span class="material-icons">share</span></button>
-                                <button @onclick="@(async () => { await GenererImage(verset); _openActionsVerset = -1; })" title="Image"><span class="material-icons">image</span></button>
-                                <button @onclick="@(async () => { await AjouterMemorisation(verset); _openActionsVerset = -1; })" title="Memoriser"><span class="material-icons">push_pin</span></button>
-                                <button @onclick="@(() => _openActionsVerset = -1)" title="Fermer"><span class="material-icons">close</span></button>
+                                <button @onclick="@(async () => { await AjouterMarquePage(verset); _openActionsVerset = -1; })" title="Marquer"><MudIcon Icon="@Icons.Material.Filled.BookmarkAdd" Size="Size.Small" /></button>
+                                <button @onclick="@(async () => { await AjouterNote(verset); _openActionsVerset = -1; })" title="Note"><MudIcon Icon="@Icons.Material.Filled.EditNote" Size="Size.Small" /></button>
+                                <button @onclick="@(() => { BasculerHighlight(verset); _openActionsVerset = -1; })" title="Surligner"><MudIcon Icon="@Icons.Material.Filled.FormatPaint" Size="Size.Small" /></button>
+                                <button @onclick="@(async () => { await PartagerVerset(verset); _openActionsVerset = -1; })" title="Partager"><MudIcon Icon="@Icons.Material.Filled.Share" Size="Size.Small" /></button>
+                                <button @onclick="@(async () => { await GenererImage(verset); _openActionsVerset = -1; })" title="Image"><MudIcon Icon="@Icons.Material.Filled.Image" Size="Size.Small" /></button>
+                                <button @onclick="@(async () => { await AjouterMemorisation(verset); _openActionsVerset = -1; })" title="Memoriser"><MudIcon Icon="@Icons.Material.Filled.PushPin" Size="Size.Small" /></button>
+                                <button @onclick="@(() => _openActionsVerset = -1)" title="Fermer"><MudIcon Icon="@Icons.Material.Filled.Close" Size="Size.Small" /></button>
                             </span>
                         }
                         else
                         {
-                            <button class="verse-actions-btn" @onclick="@(() => _openActionsVerset = vNum)" title="Actions" aria-label="Actions du verset"><span class="material-icons">more_vert</span></button>
+                            <button class="verse-actions-btn" @onclick="@(() => _openActionsVerset = vNum)" title="Actions" aria-label="Actions du verset"><MudIcon Icon="@Icons.Material.Filled.MoreVert" Size="Size.Small" /></button>
                         }
                     </div>
                 </div>

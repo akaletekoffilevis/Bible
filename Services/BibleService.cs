@@ -50,22 +50,36 @@ public class BibleService
 
         try
         {
-            livre = await _http.GetFromJsonAsync<Livre>($"data/books/{slug}.json");
+            var compact = await _http.GetFromJsonAsync<LivreCompact>($"data/books/{slug}.json");
+            if (compact == null) return null;
 
-            if (livre != null && string.IsNullOrEmpty(livre.Abreviation))
+            livre = new Livre
             {
-                var idx = await GetIndexAsync();
-                var entry = idx.FirstOrDefault(i => i.Slug == slug);
-                if (entry != null)
-                    livre.Abreviation = entry.Abreviation;
+                NomLivre = compact.N,
+                Abreviation = null,
+            };
+            for (int i = 0; i < compact.C.Count; i++)
+            {
+                var chap = new Chapitre { NumeroChapitre = (i + 1).ToString() };
+                int vnum = 1;
+                foreach (var txt in compact.C[i])
+                {
+                    chap.ContenuVersets.Add(new Verset { NumeroVerset = vnum.ToString(), Texte = txt });
+                    vnum++;
+                }
+                livre.ContenuChapitre.Add(chap);
             }
 
-            if (livre != null)
+            // Fill abbreviation from index
+            var idx = await GetIndexAsync();
+            var entry = idx.FirstOrDefault(i => i.Slug == slug);
+            if (entry != null)
             {
-                _cache[slug] = livre;
-                _ = CacheEnIndexedDbAsync(slug, livre);
+                livre.Abreviation = entry.Abreviation;
             }
 
+            _cache[slug] = livre;
+            _ = CacheEnIndexedDbAsync(slug, livre);
             return livre;
         }
         catch (Exception ex)
@@ -93,6 +107,25 @@ public class BibleService
 
     public async Task<Chapitre?> GetChapitreAsync(string slug, int chapitre)
     {
+        // Try chapter-level file first (much smaller)
+        try
+        {
+            var verses = await _http.GetFromJsonAsync<List<string>>($"data/chapters/{slug}/{chapitre}.json");
+            if (verses != null)
+            {
+                var chap = new Chapitre { NumeroChapitre = chapitre.ToString() };
+                int vnum = 1;
+                foreach (var txt in verses)
+                {
+                    chap.ContenuVersets.Add(new Verset { NumeroVerset = vnum.ToString(), Texte = txt });
+                    vnum++;
+                }
+                return chap;
+            }
+        }
+        catch (Exception ex) { Console.Error.WriteLine($"[BibleService] Échec chapitre {slug}/{chapitre}: {ex.Message}"); }
+
+        // Fallback to full book
         var livre = await GetLivreAsync(slug);
         return livre?.ContenuChapitre.FirstOrDefault(c => c.Numero == chapitre);
     }
@@ -115,7 +148,6 @@ public class BibleService
 
         var slug = await ResolveSlugAsync(livrePart);
 
-        // If livrePart contains the chapter number (e.g. "Matthieu 5" in "Matthieu 5:7")
         if (slug == null && livrePart.Contains(' '))
         {
             var words = livrePart.Split(' ', StringSplitOptions.RemoveEmptyEntries);
@@ -222,24 +254,56 @@ public class BibleService
 
     public async Task<(Livre Livre, Chapitre Chapitre, Verset Verset)?> GetVersetDuJourAsync()
     {
+        // Use pre-computed file
+        try
+        {
+            var list = await _http.GetFromJsonAsync<List<VersetDuJourEntry>>("data/verset-du-jour.json");
+            if (list != null && list.Count > 0)
+            {
+                var dayOfYear = DateTime.UtcNow.DayOfYear - 1;
+                if (dayOfYear >= list.Count) dayOfYear = list.Count - 1;
+                var e = list[dayOfYear];
+                var chap = await GetChapitreAsync(e.Slug, e.Chapitre);
+                var verset = chap?.ContenuVersets.FirstOrDefault(v => v.Numero == e.Verset);
+                var livre = await GetLivreAsync(e.Slug);
+                if (livre != null && chap != null && verset != null)
+                    return (livre, chap, verset);
+            }
+        }
+        catch (Exception ex) { Console.Error.WriteLine($"[BibleService] verset-du-jour: {ex.Message}"); }
+
+        // Fallback to random
         var index = await GetIndexAsync();
         var seed = DateTime.UtcNow.Date.Ticks;
-        // Décalage aléatoire pour changer le verset d'aujourd'hui sans impacter les autres jours
         if (DateTime.UtcNow.Date == new DateTime(2026, 5, 14))
             seed += 54321;
         var rng = new Random((int)(seed % int.MaxValue));
-
         var bookIdx = rng.Next(index.Count);
         var slug = index[bookIdx].Slug;
-
-        var livre = await GetLivreAsync(slug);
-        if (livre == null || livre.ContenuChapitre.Count == 0) return null;
-
-        var chapIdx = rng.Next(livre.ContenuChapitre.Count);
-        var chapitre = livre.ContenuChapitre[chapIdx];
+        var livre2 = await GetLivreAsync(slug);
+        if (livre2 == null || livre2.ContenuChapitre.Count == 0) return null;
+        var chapIdx = rng.Next(livre2.ContenuChapitre.Count);
+        var chapitre = livre2.ContenuChapitre[chapIdx];
         if (chapitre.ContenuVersets.Count == 0) return null;
-
         var versetIdx = rng.Next(chapitre.ContenuVersets.Count);
-        return (livre, chapitre, chapitre.ContenuVersets[versetIdx]);
+        return (livre2, chapitre, chapitre.ContenuVersets[versetIdx]);
     }
+
+    private class VersetDuJourEntry
+    {
+        [System.Text.Json.Serialization.JsonPropertyName("slug")]
+        public string Slug { get; set; } = "";
+        [System.Text.Json.Serialization.JsonPropertyName("chapitre")]
+        public int Chapitre { get; set; }
+        [System.Text.Json.Serialization.JsonPropertyName("verset")]
+        public int Verset { get; set; }
+    }
+}
+
+public class LivreCompact
+{
+    [System.Text.Json.Serialization.JsonPropertyName("n")]
+    public string N { get; set; } = "";
+    [System.Text.Json.Serialization.JsonPropertyName("c")]
+    public List<List<string>> C { get; set; } = [];
 }

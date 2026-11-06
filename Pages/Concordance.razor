@@ -31,7 +31,7 @@ else if (_themeActif == null)
             <MudItem xs="6" sm="4" md="3">
                 <MudPaper Class="pa-4 text-center" Elevation="0" Style="border-radius:12px; cursor:pointer;"
                           @onclick="@(() => OuvrirTheme(t))">
-                    <span class="material-icons" style="font-size:2.5rem; color:var(--mud-palette-primary);">@t.Icone</span>
+                    <MudIcon Icon="@IconeMud(t.Icone)" Size="Size.Large" Style="font-size:2.5rem; color:var(--mud-palette-primary);" />
                     <MudText Typo="Typo.body1" Class="font-weight-medium">@t.Nom</MudText>
                     <MudText Typo="Typo.caption" Class="mud-text-secondary">@t.Versets.Count versets</MudText>
                 </MudPaper>
@@ -44,7 +44,7 @@ else
     <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.ArrowBack"
                OnClick="@(() => _themeActif = null)" Class="mb-3">Tous les thèmes</MudButton>
     <MudText Typo="Typo.h6" Class="mb-3 d-flex align-center">
-        <span class="material-icons mr-2" style="color:var(--mud-palette-primary);">@_themeActif.Icone</span>
+        <MudIcon Icon="@IconeMud(_themeActif.Icone)" Size="Size.Medium" Style="color:var(--mud-palette-primary);" />
         @_themeActif.Nom
     </MudText>
 
@@ -74,6 +74,15 @@ else
     private List<ThemeVerset> _versetsTheme = new();
     private bool _chargement = true;
     private bool _chargementVersets;
+
+    private string IconeMud(string name)
+    {
+        if (string.IsNullOrWhiteSpace(name)) return Icons.Material.Filled.Label;
+        // snake_case -> PascalCase
+        var pascal = string.Concat(name.Split('_').Select(w => w.Length > 0 ? char.ToUpperInvariant(w[0]) + w[1..] : ""));
+        var field = typeof(Icons.Material.Filled).GetField(pascal, System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static);
+        return (field?.GetValue(null) as string) ?? Icons.Material.Filled.Label;
+    }
 
     protected override async Task OnInitializedAsync()
     {
